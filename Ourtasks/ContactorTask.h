@@ -16,65 +16,64 @@
 
 /* 
 =========================================      
-CAN msgs:
+CAN msgs: 
+suffix: "_i" = incoming msg; "_r" response msg
 
 Received CAN msgs directed into contactor function:
- (1) contactor command (also keep-alive)
+ (1) contactor command (also keep-alive) "cid_keepalive_i"
      payload[0]
        bit 7 - connect request
        bit 6 - reset critical error
- (2) poll (time sync)
- (3) function command (diagnostic poll)
+ (2) poll (time sync) "cid_gps_sync"
+ (3) function command (diagnostic poll) "cid_cmd_i"
     
-
 Sent by contactor function:
- (1) contactor command (response)
+ (1) contactor command "cid_keepalive_r" (response to "cid_keepalive_i")
      payload[0]
        bit 7 - faulted (code in payload[2])
        bit 6 - warning: minimum pre-chg immediate connect.
               (warning bit only resets with power cycle)
-		 bit 5 spare
-       but 4 spare
-		 bit[0]-[3]: program state code
+		 bit[0]-[3]: Current main state code
 
      payload[2] = critical error state error code
          0 = No fault
-         1 = contactor 1 de-energized, aux closed
-         2 = contactor 2 de-energized, aux closed
-         3 = battery string voltage (hv1) too low
-         4 = charging timeout and pre-charge voltage (hv3) not reached
-         7 = contactor #1 energized, after closure delay, abs(hv1-hv2) too large
-         8 = contactor #2 energized, after closure delay, hv3 too large
+         1 = battery string voltage (hv1) too low
+         2 = contactor 1 de-energized, aux1 closed
+         3 = contactor 2 de-energized, aux2 closed
+         4 = contactor #1 energized, after closure delay aux1 open
+         5 = contactor #2 energized, after closure delay aux2 open
+         6 = contactor #1 does not appear closed
+         7 = Timeout before pre-charge voltage reached cutoff
+         8 = Contactor #1 closed but voltage across it too big
+         9 = Contactor #2 closed but voltage across it too big
+
 		payload[3]
+         bit[0]-[3] - current substate CONNECTING code
+         bit[4]-[7] - current substate (spare) code
 
-       bit 7 - contactor #1 energized
-       bit 6 - contactor #2, or pre-chg relay, energized
-       bit 5 - contactor #1 aux 
-       bit 4 - contactor #2 aux 
-       bit 3 - interlock FET on
-       bit 2 - spare
-       bit 1 - spare
-       bit 0 - spare
-      
- poll (response) & heartbeat
- (2)  hv #1 : current #1  battery string voltage:current
- (3)	hv #2 : hv #3       DMOC+:DMOC- voltages
+ poll  (response to "cid_gps_sync") & heartbeat
+ (2)  "cid_msg1" hv #1 : current #1  battery string voltage:current
+ (3)	"cid_msg2" hv #2 : hv #3       DMOC+:DMOC- voltages
 
- function command (response)
- (4)  conditional on payload[0]--
+ function command "cid_cmd_r"(response to "cid_cmd_i")
+ (4)  conditional on payload[0], for example(!)--
       - ADC ct for calibration purposes hv1
       - ADC ct for calibration purposes hv2
       - ADC ct for calibration purposes hv3
       - ADC ct for calibration purposes current1
       - ADC ct for calibration purposes current2
-      - Summation for pre-charge resistor heating
       - Duration: (Energize coil 1 - aux 1)
       - Duration: (Energize coil 2 - aux 2)
       - Duration: (Drop coil 1 - aux 1)
       - Duration: (Drop coil 2 - aux 2)
       - volts: 12v CAN supply
       - volts: 5v regulated supply
-      ...
+      ... (many and sundry)
+
+ heartbeat (sent in absence of keep-alive msgs)
+ (5)  "cid_hb1" Same as (2) above
+ (6)  "cid_hb2" Same as (3) above
+
 =========================================    
 NOTES:
 1. The command/keep-alive msgs are sent
@@ -119,6 +118,8 @@ NOTES:
 #define CNCTOUT03X2  (1 << 3) // 1 = aux #2 closed
 #define CNCTOUT04EN  (1 << 4) // 1 = DMOC enable FET
 #define CNCTOUT05KA  (1 << 5) // 1 = CAN msg queue: KA status
+#define CNCTOUT06KAw (1 << 6) // 1 = contactor #1 energized & pwm'ed
+#define CNCTOUT07KAw (1 << 7) // 1 = contactor #2 energized & pwm'ed
 
 /* AUX contact pins. */
 #define AUX1_GPIO_REG GPIOA
@@ -130,6 +131,8 @@ NOTES:
 #define CMDCONNECT (1 << 7) // 1 = Connect requested; 0 = Disconnect requested
 #define CMDRESET   (1 << 6) // 1 = Reset fault requested; 0 = no command
 
+/* Number of different CAN id msgs this function sends. */
+# define NUMCANMSGS 6
 
 /* Fault codes */
 enum contactor_faultcode
@@ -165,6 +168,21 @@ enum contactor_substateC
 	CONNECTING4,
 };
 
+/* Function command response payload codes. */
+enum contactor_cmd_codes
+{
+	ADCRAW5V,
+	ADCRAW12V,
+	ADCRAWHV1,
+	ADCRAWHV2,
+	ADCRAWHV3,
+	ADCRAWCUR1,
+	ADCRAWCUR2,
+	SUPPLY5V,
+	SUPPLY12V,
+};
+
+
 /* Working struct for Contactor function/task. */
 // Prefixes: i = scaled integer, f = float
 // Suffixes: k = timer ticks, t = milliseconds
@@ -178,15 +196,18 @@ struct CONTACTORFUNCTION
 
 	/* Output status */
 	uint32_t outstat;
+	uint32_t outstat_prev;
 
 	/* Current fault code */
-	uint8_t faultcode;
+	enum contactor_faultcode faultcode;
 
 /* In the disconnect state the battery string voltage must be above the following. */
 	uint32_t ibattlow;   // Minimum battery volts required to connect
 
 /* With two contactor config, (hv1-hv2) max when contactor #1 closes */
+/* In one contactor config, (hv1-hv2) max when contactor #2 closes */
 	uint32_t ihv1mhv2max;
+
 
 	// Parameters converted to scaled integer or timer ticks
 	uint32_t iprechgendv;// Prep-charge end volts threshold
@@ -242,12 +263,13 @@ struct CONTACTORFUNCTION
 	/* PWM struct */
 	TIM_OC_InitTypeDef sConfigOCn; // 'n' - serves ch3 and ch4
 	
+	enum contactor_state state;         // Contactor main state
+	enum contactor_substateC substateC; // State within CONNECTING
+
+	/* CAN msgs */
+	struct CANTXQMSG canmsg[5];
 
 
-	uint8_t state;         // Contactor main state
-	uint8_t substateC;     // State within CONNECTING
-	uint8_t pwm1state;
-	uint8_t pwm2state;
 };
 
 extern osThreadId ContactorTaskHandle;

@@ -5,6 +5,8 @@
 * Description        : Load parameter struct 
 *******************************************************************************/
 
+#include "contactor_idx_v_struct.h"
+
 /* *************************************************************************
  * static void contactor_idx_v_struct_hardcode_params(struct struct CONTACTORLC* p);
  * @brief	: Init struct from hard-coded parameters (rather than database params in highflash)
@@ -58,6 +60,9 @@ struct CONTACTORLC
 	p->size       = 30;
 	p->crc        = 0;
    p->version    = 1;
+
+	/* Bits that define the hw features. */
+	p->hwconfig   = 0;  // None of the additional hw features!
 
 	p->fdiffb4    = 15.0; // hv1-hv2 voltage difference before closing (volts)
 	p->fdiffafter = 2.0;  // allowable hv1-hv2 voltage difference after closure (volts)

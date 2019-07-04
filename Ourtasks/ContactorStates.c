@@ -107,12 +107,13 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 	}
 
 	/* JIC.  Be sure Updates have both coils de-energized. */
-	pcf->outstat &= ~(CNCTOUT00K1 | CNCTOUT01K2);
+	pcf->outstat &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT00K1w | CNCTOUT00K2w);
 }
 /* *************************************************************************
  * void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf);
  * @brief	: CONNECTING state
  * *************************************************************************/
+}/* ====================================================================== */
 void static transition_connecting(struct CONTACTORFUNCTION* pcf)
 { // Intialize disconnected state
 
@@ -133,6 +134,7 @@ void static transition_connecting(struct CONTACTORFUNCTION* pcf)
 	new_state(pcf,CONNECTING);
 	return;
 }
+/* ====================================================================== */
 void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 {
 	switch(pcf->substateC)
@@ -174,6 +176,7 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 		{ // TIM4 CH3 Lower PWM from 100%
 			pcf->sConfigOCn.Pulse = pcf->ipwmpct1;
 			HAL_TIM_PWM_ConfigChannel(&htim4, &pcf->sConfigOCn, TIM_CHANNEL_3);
+			pcf->outstat |= CNCTOUT00K1w; // Save state of energization
 		}
 
 		/* Set one-shot timer for a minimum pre-charge duration. */
@@ -181,7 +184,7 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 
 		pcf->substateC = CONNECT_C2;
 		break;
-
+/* ...................................................................... */
 	case CONNECT_C2:  // Minimum pre-charge duration delay
 		if ((pcf->evstat & CNCTEVTIMER2) != 0)
 		{ // Timer2 timed out before cutoff voltage reached
@@ -193,6 +196,7 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 		if ((pcf->evstat & CNCTEVHV) != 0)
 		{ // Here, new readings available
 			pcf->evstat &= ~CNCTEVHV; // Clear new reading bit
+
 			if ((pcf->lc.hwconfig & ONECONTACTOR) == 0)
 			{ // Here, one contactor
 				if ((pcf->hv1 - pcf->hv2) < pcf->iprechgendv)
@@ -202,8 +206,8 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 
 					pcf->outstat |= CNCTOUT00K2; // Save state of energization
 
-					/* Set one-shot timer for contactor 2 closure duration. */
-					xTimerChangePeriod(pcf->swtimer2,pcf->open2_k, 2); 
+					/* Set one-shot timer for contactor (relay) 2 closure duration. */
+					xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
 					pcf->substateC = CONNECT_C3;
 					return;			
 				}
@@ -217,7 +221,7 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 					pcf->outstat |= CNCTOUT00K2; // Save state of energization
 
 					/* Set one-shot timer for contactor 2 closure duration. */
-					xTimerChangePeriod(pcf->swtimer2,pcf->open2_k, 2); 
+					xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
 
 					pcf->substateC = CONNECT_C3;
 					return;
@@ -226,11 +230,31 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 		}
 		// Here, event was not relevant
 		break;
+/* ...................................................................... */
+	case CONNECT_C3:  // Contactor #2 close
 
-	case CONNECT_C3:  // Additional pre-charge delay, voltage test
+		if ((pcf->evstat & CNCTEVTIMER2) != 0)
+		{ // Timer2 timed out: Contactor #2 should be closed
+			if (((pcf->hv1-pcf->hv2) > pcf->ihv1mhv2max))
+			{ // Here, something not right with contactor closing
+				// TODO faulting
+			}
+					
+			/* If this contactor is to be PWM'ed drop down from 100%. */
+			if ((pcf->hwconfig & PWMCONTACTOR1) != 0)
+			{ // TIM4 CH3 Lower PWM from 100%
+				pcf->sConfigOCn.Pulse = pcf->ipwmpct1;
+				HAL_TIM_PWM_ConfigChannel(&htim4, &pcf->sConfigOCn, TIM_CHANNEL_3);
+				pcf->outstat |= CNCTOUT00K2w; // Save state of energization
+			}
+			new_state(pcf,CONNECTED);
+		}
+		/* event not relevant. Continue waiting for timer2 */
 		break;
-	case CONNECT_C4:  // Contactor #2 closure delay
-		break;
+		
+/* ====================================================================== */
+
 
 	}	
+	return;
 }

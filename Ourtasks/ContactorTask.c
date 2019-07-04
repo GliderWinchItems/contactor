@@ -220,22 +220,22 @@ void contactor_init_params(void)
 	/* Load parameters into working struct. */
 	contactor_idx_v_struct_hardcode_params(plc);
 
-	/* Initialize working struct. */
+	/* Convert float into scaled int */
 	pcf->sivdiff = (plc->fvdiff * (1<<SCALE16) );
 	pcf->sivlo   = (plc->fvlo   * (1<<SCALE16) );
 
 	/* Convert ms (_t) into timer ticks (_k). */
-	pcf->prechgmax_k= pdMS_TO_TICKS(plc>prechgmax_t;// allowable delay for diffafter to reach closure point (timeout delay ms)
-	pcf->close1_k   = pdMS_TO_TICKS(plc>close1_t;   // contactor #1 coil energize-closure (timeout delay ms)
-	pcf->close2_k   = pdMS_TO_TICKS(plc>close2_t;   // contactor #2 coil energize-closure (timeout delay ms)
-	pcf->open1_k    = pdMS_TO_TICKS(plc>open1_t;    // contactor #1 coil de-energize-open (timeout delay ms)
-	pcf->open2_k    = pdMS_TO_TICKS(plc>open2_t;    // contactor #2 coil de-energize-open (timeout delay ms)
-	pcf->auxoc1_k	 = pdMS_TO_TICKS(plc>auxoc1_t;   // aux open/close diff from contactor coil #1 (duration ms)
-	pcf->auxoc2_k	 = pdMS_TO_TICKS(plc>auxoc2_t;   // aux open/close diff from contactor coil #2 (duration ms)
-	pcf->hv2stable_k= pdMS_TO_TICKS(plc>hv2stable_t;// hv 2 reading stable after closer (duration ms)
-	pcf->keepalive_k= pdMS_TO_TICKS(plc>keepalive_t;// keep-alive timeout (timeout delay ms)
-	pcf->hbct1_k    = pdMS_TO_TICKS(plc>hbct1_t;    // Heartbeat ct: ticks between sending msgs hv1:cur1
-	pcf->hbct2_k    = pdMS_TO_TICKS(plc>hbct2_t;    // Heartbeat ct: ticks between sending msgs hv2:cur2
+	pcf->prechgmax_k= pdMS_TO_TICKS(plc>prechgmax_t);// allowable delay for diffafter to reach closure point (timeout delay ms)
+	pcf->close1_k   = pdMS_TO_TICKS(plc>close1_t);   // contactor #1 coil energize-closure (timeout delay ms)
+	pcf->close2_k   = pdMS_TO_TICKS(plc>close2_t);   // contactor #2 coil energize-closure (timeout delay ms)
+	pcf->open1_k    = pdMS_TO_TICKS(plc>open1_t);    // contactor #1 coil de-energize-open (timeout delay ms)
+	pcf->open2_k    = pdMS_TO_TICKS(plc>open2_t);    // contactor #2 coil de-energize-open (timeout delay ms)
+	pcf->auxoc1_k	 = pdMS_TO_TICKS(plc>auxoc1_t);   // aux open/close diff from contactor coil #1 (duration ms)
+	pcf->auxoc2_k	 = pdMS_TO_TICKS(plc>auxoc2_t);   // aux open/close diff from contactor coil #2 (duration ms)
+	pcf->hv2stable_k= pdMS_TO_TICKS(plc>hv2stable_t);// hv 2 reading stable after closer (duration ms)
+	pcf->keepalive_k= pdMS_TO_TICKS(plc>keepalive_t);// keep-alive timeout (timeout delay ms)
+	pcf->hbct1_k    = pdMS_TO_TICKS(plc>hbct1_t);    // Heartbeat ct: ticks between sending msgs hv1:cur1
+	pcf->hbct2_k    = pdMS_TO_TICKS(plc>hbct2_t);    // Heartbeat ct: ticks between sending msgs hv2:cur2
 
 	/* Status bits for state machine. */
 	pcf->statusbits = 0;   
@@ -257,6 +257,25 @@ void contactor_init_params(void)
    pcf->ipwmpct1 = pcf->lc.fpwmpct1 * 0.01 * (htim4.Init.Period + 1) - 1;
    pcf->ipwmpct2 = pcf->lc.fpwmpct2 * 0.01 * (htim4.Init.Period + 1) - 1;
 
+	/* Init fixed data in CAN msgs */
+	for (i = 0; i < NUMCANMSGS; i++)
+	{
+		pcf->canmsg[i].pctl = pctl0;   // Control block for CAN module (CAN 1)
+		pcf->canmsg[i].maxretryct = 8; //
+		pcf->canmsg[i].bits = 0;       //
+		pcf->canmsg[i].can.dlc = 8;    // Default payload size (modified when loaded and sent)
+	}
+	// CAN ids
+	pcf->canmsg[0].can.id  = pcf->lc.cid_keepalive_r;
+	pcf->canmsg[1].can.id  = pcf->lc.cid_msg1;
+	pcf->canmsg[2].can.id  = pcf->lc.cid_msg2;
+	pcf->canmsg[3].can.id  = pcf->lc.cid_cmd_r;
+	pcf->canmsg[4].can.id  = pcf->lc.cid_hb1;
+	pcf->canmsg[5].can.id  = pcf->lc.cid_hb2;
+
+	pcf->canmsg[0].can.dlc = 4;
+
+	
 	return 0;
 }
 

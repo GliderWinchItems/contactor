@@ -20,6 +20,7 @@
 #define ONECONTACTOR  (1 << 4)  // 1 = One contactor; one small pre-charge relay
 #define PWMCONTACTOR1 (1 << 5)  // 1 = PWM'ing is used on coil #1
 #define PWMCONTACTOR2 (1 << 6)  // 1 = PWM'ing is used on coil #2
+#define PWMNOHVSENSOR (1 << 7)  // 1 = No high voltage sensor, (ignore hv readings)
 
 /* Calibration parameter, float */
 struct CNTCTCALF
@@ -104,7 +105,7 @@ struct CONTACTORLC
 	uint32_t cid_hb1;    // CANID-Heartbeat msg volt1:cur1 (volts:amps)
 	uint32_t cid_hb2;    // CANID-Heartbeat msg volt2:cur2 (volts:amps)
    uint32_t cid_msg1;   // CANID-contactor poll response msg: volt1:cur1 (volts:amps)
-   uint32_t cid_msg1;   // CANID-contactor poll response msg: volt2:cur2 (volts:amps)
+   uint32_t cid_msg2;   // CANID-contactor poll response msg: volt2:cur2 (volts:amps)
 	uint32_t cid_cmd_r;  // CANID_CMD_CNTCTR1R
 	uint32_t cid_keepalive_r; // CANID-keepalive response (status)
 

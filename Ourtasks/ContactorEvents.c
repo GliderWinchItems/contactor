@@ -83,6 +83,35 @@ void ContactorEvents_05(struct CONTACTORFUNCTION* pcf)
  * *************************************************************************/
 void ContactorEvents_06(struct CONTACTORFUNCTION* pcf)
 {
+/*
+enum contactor_cmd_codes
+{
+	ADCRAW5V,         // PA0 IN0  - 5V sensor supply
+	ADCRAWCUR1,       // PA5 IN5  - Current sensor: total battery current
+	ADCRAWCUR2,       // PA6 IN6  - Current sensor: motor
+	ADCRAW12V,        // PA7 IN7  - +12 Raw power to board
+	ADCINTERNALTEMP,  // IN17     - Internal temperature sensor
+	ADCINTERNALVREF,  // IN18     - Internal voltage reference
+	UARTWHV1,
+	UARTWHV2,
+	UARTWHV3,
+	CAL5V,
+	CAL12V,
+};
+
+
+*/
+	/* Switch on first payload byte response code */
+	switch (pcf->pmbx_cid_cmd_i.ncan.cd.uc[0])
+	{
+	case 0: // ADCRAW5V
+		pcf->pmbx_cid_cmd_i.ncan.dlc = 3;
+		pcf->pmbx_cid_cmd_i.ncan.cd.uc[0] = pcf->pmbx_cid_cmd_i.ncan.cd.uc[0];
+// TODO		pcf->pmbx_cid_cmd_i.ncan.cd.uc[1] = pcf->
+		break;
+
+
+	}
 }
 /* *************************************************************************
  * void ContactorEvents_07(struct CONTACTORFUNCTION* pcf);
