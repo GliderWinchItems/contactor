@@ -19,10 +19,10 @@
 
 
 /* *************************************************************************
- * void ContactorUpates(struct CONTACTORFUNCTION* pcf);
+ * void ContactorUpdates(struct CONTACTORFUNCTION* pcf);
  * @brief	: Update outputs based on bits set
  * *************************************************************************/
-void ContactorUpates(struct CONTACTORFUNCTION* pcf)
+void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 {
 	/* Queue KA response CAN msg. */
 	if ((pcf->outstat & CNCTOUT05KA) != 0)
@@ -99,6 +99,13 @@ void ContactorUpates(struct CONTACTORFUNCTION* pcf)
 			HAL_TIM_PWM_ConfigChannel(&htim4, &pcf->sConfigOCn, TIM_CHANNEL_4);
 			pcf->outstat_prev &= ~(pcf->outstat & CNCTOUT07KAw);		
 		}
-	}	
+	}
+
+	/* Queue keep-alive status CAN msg */
+	if ((pcf->outstat & CNCTOUT05KA) != 0)
+	{
+		pcf->outstat &= !CNCTOUT05KA;	
+		contactor_msg_ka(pcf);
+	}
 }
 

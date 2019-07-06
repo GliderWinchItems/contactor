@@ -134,6 +134,20 @@ NOTES:
 /* Number of different CAN id msgs this function sends. */
 # define NUMCANMSGS 6
 
+/* High Voltage readings arrive in on uart line. */
+#define NUMHV 3       // Number of hv readings
+#define	IDXHV1  0 // High voltage reading: battery string side of contactor
+#define	IDXHV2, 1 // High voltage reading: DMOC+ side of contactor
+#define	IDXHV3, 2 // High voltage reading: across pre-charge resistor (two contactors)
+
+/* High voltage readings */
+#define HVSCALE 65536  // Scale factor for float->integer
+struct CNCNTHV
+{
+   float fhv;     // Calibrated: Float
+	uint16_t hv;   // Raw reading as received from uart
+};
+
 /* Fault codes */
 enum contactor_faultcode
 {
@@ -147,6 +161,7 @@ enum contactor_faultcode
    PRECHGVOLT_NOTREACHED,
 	CONTACTOR1_CLOSED_VOLTSTOOBIG,
 	CONTACTOR2_CLOSED_VOLTSTOOBIG,
+	KEEP_ALIVE_TIMER_TIMEOUT,
 }
 
 enum contactor_state
@@ -171,17 +186,29 @@ enum contactor_substateC
 /* Function command response payload codes. */
 enum contactor_cmd_codes
 {
-	ADCRAW5V,
-	ADCRAW12V,
-	ADCRAWHV1,
-	ADCRAWHV2,
-	ADCRAWHV3,
-	ADCRAWCUR1,
-	ADCRAWCUR2,
-	SUPPLY5V,
-	SUPPLY12V,
+	ADCRAW5V,         // PA0 IN0  - 5V sensor supply
+	ADCRAWCUR1,       // PA5 IN5  - Current sensor: total battery current
+	ADCRAWCUR2,       // PA6 IN6  - Current sensor: motor
+	ADCRAW12V,        // PA7 IN7  - +12 Raw power to board
+	ADCINTERNALTEMP,  // IN17     - Internal temperature sensor
+	ADCINTERNALVREF,  // IN18     - Internal voltage reference
+	UARTWHV1,
+	UARTWHV2,
+	UARTWHV3,
+	CAL5V,
+	CAL12V,
 };
 
+/* CAN msg array index names. */
+enum CANCMD_R
+{
+CID_KA_R,
+CID_MSG1,
+CID_MSG2,
+CID_CMD_R,
+CID_HB1,
+CID_HB2,
+};
 
 /* Working struct for Contactor function/task. */
 // Prefixes: i = scaled integer, f = float
@@ -189,7 +216,7 @@ enum contactor_cmd_codes
 struct CONTACTORFUNCTION
 {
    // Parameter loaded either by high-flash copy, or hard-coded subroutine
-	struct CONTACTORLC lc; // Parameters 
+	struct CONTACTORLC lc; // Parameters for contactors
 
 	/* Events status */
 	uint32_t evstat;
@@ -240,10 +267,8 @@ struct CONTACTORFUNCTION
 	TimerHandle_t swtimer2; // Software timer2: multiple purpose delay
 	TimerHandle_t swtimer3; // Software timer3: uart RX/keep-alive
 
-	/* High Voltage sensors communicating via uart. */
-	uint16_t hv1; // High voltage reading: battery string side of contactor
-	uint16_t hv2; // High voltage reading: DMOC+ side of contactor
-	uint16_t hv3; // High voltage reading: across pre-charge resistor (two contactors)
+	/* High voltage readings */
+	struct CNCNTHV hv[NUMHV];
 
 	/* Pointers to incoming CAN msg mailboxes. */
 	struct MAILBOXCAN* pmbx_cid_cmd_i;      //
@@ -263,14 +288,25 @@ struct CONTACTORFUNCTION
 	/* PWM struct */
 	TIM_OC_InitTypeDef sConfigOCn; // 'n' - serves ch3 and ch4
 	
-	enum contactor_state state;         // Contactor main state
-	enum contactor_substateC substateC; // State within CONNECTING
+	uint8_t state;      // Contactor main state
+	uint8_t substateC;  // State within CONNECTING (0-15)
+	uint8_t substateX;  // spare substate (0-15)
 
 	/* CAN msgs */
-	struct CANTXQMSG canmsg[5];
-
+	struct CANTXQMSG canmsg[NUMCANMSGS];
 
 };
+
+/* *************************************************************************/
+osThreadId xContactorTaskCreate(uint32_t taskpriority);
+/* @brief	: Create task; task handle created is global for all to enjoy!
+ * @param	: taskpriority = Task priority (just as it says!)
+ * @return	: ContactorTaskHandle
+ * *************************************************************************/
+void StartContactorTask(void const * argument);
+/*	@brief	: Task startup
+ * *************************************************************************/
+
 
 extern osThreadId ContactorTaskHandle;
 

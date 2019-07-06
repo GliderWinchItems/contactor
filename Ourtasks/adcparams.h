@@ -36,6 +36,7 @@ Internal reference: 1.16 1.20 1.24 V
 
 #define ADC1DMANUMSEQ        16 // Number of DMA scan sequences in 1/2 DMA buffer
 #define ADC1IDX_ADCSCANSIZE   6 // Number ADC channels read
+#define ADCSCALE          65536 // ADC integer scaling
 
 /* ADC reading sequence/array indices                         */
 /* These indices -=>MUST<= match the hardware ADC scan sequence    */
@@ -105,24 +106,22 @@ struct ADCCHANNEL
 	union ADCCALREADING readfilt;// Calibrated and filtered
 	struct IIR_L_PARAM iirks; // iir: k and scale
 	struct IIRFILTERL iir;    // Intermediate filter params
-	float	foffset;            // Offset: float
-	float	fscale;             // Scale:  float
+	float	   foffset;         // Offset: float
+	float	   fscale;          // Scale:  float
 	int32_t  ioffset;         // Offset: scaled int
    int32_t  iscale;          // Scale:  scaled int
-	uint8_t filttype;   // Type of result filtering
-	uint8_t calibtype;  // Calibration type
-	uint8_t comptype;   // Compensation type
+	uint16_t sum;             // Sum of 1/2 DMA buffer
+	uint8_t  filttype;        // Type of result filtering
+	uint8_t  calibtype;       // Calibration type
+	uint8_t  comptype;        // Compensation type
 };
-
 
 /* struct allows pointer to access raw and calibrated ADC1 data. */
-struct ADC1DATA
+struct ADCDATA
 {
-  struct ADCCHANNEL	[ADC1IDX_ADCSCANSIZE]; // Everything for the channel
-  uint16_t   adcs1sum[ADC1IDX_ADCSCANSIZE]; // Sum of 1/2 DMA buffer for each channel
-  uint32_t ctr; // Running count of updates.
+  struct ADCCHANNEL	chan; // Everything for the channel
+  uint32_t           ctr;  // Running count of updates.
 };
-
 
 /* *************************************************************************/
 void adcparams_init(void);

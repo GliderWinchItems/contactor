@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include "common_can.h"
 #include "iir_filter_lx.h"
+#include "ContactorTask.h"
 
 #ifndef __CONTACTOR_IDX_V_STRUCT
 #define __CONTACTOR_IDX_V_STRUCT
@@ -23,10 +24,11 @@
 #define PWMNOHVSENSOR (1 << 7)  // 1 = No high voltage sensor, (ignore hv readings)
 
 /* Calibration parameter, float */
+// Use double for F103 to save float->double conversions
 struct CNTCTCALF
 {
-	float offset;
-	float scale;
+	double offset;
+	double scale;
 };
 /* Calibration parameters, scaled integer */
 struct CNTCTCALSI
@@ -95,11 +97,11 @@ struct CONTACTORLC
 	int32_t toohot;      // Threshold of summation for pre-charge R too hot
 
 /* Calibrations (offset, scale) */
-	struct CNTCTCALF fcalcur1; // Motor current
-	struct CNTCTCALF fcalcur2; // spare
-	struct CNTCTCALF fcalhv1;  // Battery_minus-to-contactor #1 Battery_plus
-	struct CNTCTCALF fcalhv2;  // Battery_minus-to-contactor #1 DMOC_plus
-	struct CNTCTCALF fcalhv3;  // Battery_minus-to-contactor #2 DMOC_minus
+	// ADC channels
+	struct CNTCTCALF fcaladc[ADC1IDX_ADCSCANSIZE];
+
+	// High voltage from uart
+	struct CNTCTCALF fcalhv[NUMHV]; 
 
 /* Send CAN ids  */
 	uint32_t cid_hb1;    // CANID-Heartbeat msg volt1:cur1 (volts:amps)

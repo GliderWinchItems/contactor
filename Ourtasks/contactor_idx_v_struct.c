@@ -79,8 +79,8 @@ struct CONTACTORLC
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2
 
 	// Calibrations (offset, scale)
-	p->fcalcur1= {0.0, 0.005};  // amps/ADC_count
-	p->fcalcur2= {0.0, 0.006};  // amps/ADC_count
+	p->fcalcur1= {0.0, 0.005};  // amps/ADC_count: Battery string current
+	p->fcalcur2= {0.0, 0.006};  // amps/ADC_count: spare
 	p->fcalhv1 = {0.0, 1.2E-4}; // volts/ADC_count:Battery_minus-to-contactor #1 Battery_plus
 	p->fcalhv2 = {0.0, 1.3E-4}; // volts/ADC_count:Battery_minus-to-contactor #1 DMOC_plus
 	p->fcalhv3 = {0.0, 1.3E-4}; // volts/ADC_count:Battery_minus-to-contactor #2 DMOC_minus

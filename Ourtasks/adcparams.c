@@ -66,11 +66,9 @@ Avg_Slope = Average Slope for curve between Temperature vs. V SENSE (given in
 /* Calibration values common to all ADC modules. */
 struct ADCCALCOMMON adcommon;
 
-/* ADC1 parameters, calibrations, filtering, ... */
-struct ADCCHANNELSTUFF adc1channelstuff[ADC1IDX_ADCSCANSIZE];
-
 /* Raw and calibrated ADC1 readings. */
-struct ADC1DATA adc1data;
+struct ADCCHANNEL adc1chan[ADC1IDX_ADCSCANSIZE];
+uint32_t adc1ctr;  // Running count of updates.
 
 /* *************************************************************************
  * void adcparams_init(void);

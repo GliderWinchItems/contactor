@@ -17,9 +17,8 @@
 
 #define SWTIM1 500
 
-static uint16_t uartline(struct SERIALRCVBCB* prbcb);
 static void contactor_idx_v_struct_hardcode_params(struct struct CONTACTORLC* p);
-void StartContactorTask(void const * argument);
+static void contactor_init_params(void);
 
 uint32_t adcsumdb[6];
 uint32_t adcdbctr = 0;
@@ -135,6 +134,11 @@ void StartContactorTask(void const * argument)
 		xTaskNotifyWait(noteused, 0, &noteval, portMAX_DELAY);
 		noteused = 0;	// Accumulate bits in 'noteval' processed.
   /* ========= Events =============================== */
+// NOTE: this could be made into a loop that shifts 'noteval' bits
+// and calls from table of addresses.  This would have an advantage
+// if the high rate bits are shifted out first since a test for
+// no bits left could end the testing early.
+		// Check notification and deal with it if set.
 		if (noteval & CNCTBIT00)
 		{ // ADC readings ready
 			noteused |= CNCTBIT00; // We handled the bit
@@ -150,17 +154,17 @@ void StartContactorTask(void const * argument)
 			noteused |= CNCTBIT02; // We handled the bit
 		}
 		else if (noteval & CNCTBIT03)
-		{ // TIMER3: uart RX keep alive
+		{ // TIMER3: uart RX keep alive timed out
 			noteused |= CNCTBIT03; // We handled the bit
 			ContactorEvents_03(pcf);			
 		}
 		else if (noteval & CNCTBIT04)
-		{ // TIMER1: Command Keep Alive
+		{ // TIMER1: Command Keep Alive duration tick
 			noteused |= CNCTBIT04; // We handled the bit
 			ContactorEvents_04(pcf);
 		}
 		else if (noteval & CNCTBIT05)
-		{ // TIMER2: Multiple use Delay
+		{ // TIMER2: Multiple use Delay timed out
 			noteused |= CNCTBIT05; // We handled the bit
 		}
 		else if (noteval & CNCTBIT06) 
@@ -179,6 +183,11 @@ void StartContactorTask(void const * argument)
 			ContactorEvents_08(pcf);
 		}
   /* ========= States =============================== */
+		if (pcf->evstat == CNCTEVTIMER1)	// Show that TIMER1 timed out
+		{
+			transition_faulting(pcf,KEEP_ALIVE_TIMER_TIMEOUT);
+		}
+
 		switch (pcf->state)
 		{
 		case DISCONNECTED:
@@ -195,7 +204,7 @@ void StartContactorTask(void const * argument)
 			break;
 		case FAULTED:
 			ContactorStates_faulted(pcf);
-			break;
+			break;ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 		case RESETTING:
 			ContactorStates_resetting(pcf);
 			break;
@@ -204,14 +213,14 @@ void StartContactorTask(void const * argument)
 			break;
 		}
   /* ========= Update outputs ======================= */
+		ContactorUpdates(pcf);
   }
 }
 /* *************************************************************************
- * void contactor_init_params(void);
- * @brief	: Init struct(s) for ContactorTask
- * @return	: 0
+ * static void contactor_init_params(void);
+ * @brief	: init working struct.
  * *************************************************************************/
-void contactor_init_params(void)
+static void contactor_init_params(void)
 {
 	// Convenience pointers 
 	struct CONTACTORFUNCTION* pcf = &contactorfunction;
@@ -246,10 +255,10 @@ void contactor_init_params(void)
 	pcf->pmbx_cid_keepalive_i =  MailboxTask_add(pctl0,plc->lc.cid_keepalive_i,NULL,CNCTBIT07,0,23);
 	pcf->pmbx_cid_gps_sync    =  MailboxTask_add(pctl0,plc->lc.cid_gps_sync,   NULL,CNCTBIT08,0,23);
 
-	/* PWM struct */
+	/* PWM working struct for switching PWM values */
 	sConfigOCn.
 	sConfigOCn.OCMode = TIM_OCMODE_PWM1;
-	sConfigOCn.Pulse = 0;	// New PWM value goes here
+	sConfigOCn.Pulse = 0;	// New PWM value inserted here during execution
 	sConfigOCn.OCPolarity = TIM_OCPOLARITY_HIGH;
 	sConfigOCn.OCFastMode = TIM_OCFAST_DISABLE;
 
@@ -257,7 +266,7 @@ void contactor_init_params(void)
    pcf->ipwmpct1 = pcf->lc.fpwmpct1 * 0.01 * (htim4.Init.Period + 1) - 1;
    pcf->ipwmpct2 = pcf->lc.fpwmpct2 * 0.01 * (htim4.Init.Period + 1) - 1;
 
-	/* Init fixed data in CAN msgs */
+	/* Pre-load fixed data in CAN msgs */
 	for (i = 0; i < NUMCANMSGS; i++)
 	{
 		pcf->canmsg[i].pctl = pctl0;   // Control block for CAN module (CAN 1)
@@ -265,15 +274,16 @@ void contactor_init_params(void)
 		pcf->canmsg[i].bits = 0;       //
 		pcf->canmsg[i].can.dlc = 8;    // Default payload size (modified when loaded and sent)
 	}
-	// CAN ids
-	pcf->canmsg[0].can.id  = pcf->lc.cid_keepalive_r;
-	pcf->canmsg[1].can.id  = pcf->lc.cid_msg1;
-	pcf->canmsg[2].can.id  = pcf->lc.cid_msg2;
-	pcf->canmsg[3].can.id  = pcf->lc.cid_cmd_r;
-	pcf->canmsg[4].can.id  = pcf->lc.cid_hb1;
-	pcf->canmsg[5].can.id  = pcf->lc.cid_hb2;
+	// Pre-load CAN ids
+	pcf->canmsg[CID_KA_R ].can.id  = pcf->lc.cid_keepalive_r;
+	pcf->canmsg[CID_MSG1 ].can.id  = pcf->lc.cid_msg1;
+	pcf->canmsg[CID_MSG2 ].can.id  = pcf->lc.cid_msg2;
+	pcf->canmsg[CID_CMD_R].can.id  = pcf->lc.cid_cmd_r;
+	pcf->canmsg[CID_HB1  ].can.id  = pcf->lc.cid_hb1;
+	pcf->canmsg[CID_HB2  ].can.id  = pcf->lc.cid_hb2;
 
 	pcf->canmsg[0].can.dlc = 4;
+
 
 	
 	return 0;
