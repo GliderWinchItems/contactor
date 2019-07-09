@@ -49,7 +49,7 @@ struct ADCDMATSKBLK* adctask_init(ADC_HandleTypeDef* phadc,\
 	if (ADC1IDX_ADCSCANSIZE != phadc->Init.NbrOfConversion) morse_trap(61);//return NULL;
 
 	/* ADC DMA summation length must match 1/2 DMA buffer sizing. */
-	if (ADCFASTSUM16SIZE != ADC1DMANUMSEQ) morse_trap(62);//return NULL;
+	if (ADCFASTSUM16SIZE != ADC1DMANUMSEQ) morse_trap(62);
 
 	/* length = total number of uint16_t in dma buffer */
 	uint32_t length = ADC1DMANUMSEQ * 2 * phadc->Init.NbrOfConversion;
@@ -61,7 +61,7 @@ taskENTER_CRITICAL();
 
 	/* Get dma buffer allocated */
 	pdma = (uint16_t*)calloc(length, sizeof(uint16_t));
-	if (pdma == NULL) {taskEXIT_CRITICAL();morse_trap(63);}//return NULL;}
+	if (pdma == NULL) {taskEXIT_CRITICAL();morse_trap(63);}
 
 	/* Populate our control block */
 /* The following reproduced for convenience--

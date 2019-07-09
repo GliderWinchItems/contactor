@@ -24,13 +24,18 @@ Internal reference: 1.16 1.20 1.24 V
 #include "ADCTask.h"
 
 /* *************************************************************************
- * void adcparamsinit_init_common(struct ADCCALCOMMON* padccommon, struct ADCCHANNELSTUFF* pacsx);
+ * void adcparamsinit_init_common(struct ADCFUNCTION padc);
  *	@brief	: Initialize struct with parameters common to all ADC for this =>board<=
  * @param	: padccommon = pointer to struct holding parameters
  * @param	: pacsx = Pointer to struct "everything" for this ADC module
  * *************************************************************************/
-void adcparamsinit_init_common(struct ADCCALCOMMON* padccommon, struct ADCCHANNELSTUFF* pacsx)
+void adcparamsinit_init_common(struct ADCFUNCTION padc)
 {
+
+	
+	
+
+
 	padccommon->sensor5vcal    = 0.54 / ADCSEQNUM;	// 5v->Vdd divide ratio
 	padccommon->sensor5vcalVdd = padccommon->sensor5vcal / 3.3; // Precompute: adjust for Vdd
 	padccommon->fvddratio      = (100.0/(4095.0 * ADCSEQNUM));  // Ratiometric: Percent
@@ -54,8 +59,6 @@ void adcparamsinit_init_common(struct ADCCALCOMMON* padccommon, struct ADCCHANNE
 
 	return;
 }
-
-
 
 /* *************************************************************************
  * void adcparamsinit_init(struct ADCCHANNELSTUFF* pacsx);
@@ -88,6 +91,12 @@ void adcparamsinit_init_common(struct ADCCALCOMMON* padccommon, struct ADCCHANNE
 #define ADC1PARAM_CALIBTYPE_RAW_UI 4    // No calibration applied: UNSIGNED INT
 */
 
+/*
+Notes:
+1. Scale is based on sum of 16 ADC readings (i.e. the sum of 1/2 the DMA buffer).
+
+*/
+
 void adcparamsinit_init(struct ADCCHANNELSTUFF* pacsx)
 {
 	struct ADCCHANNELSTUFF* pacs; // Use pointer for convenience
@@ -101,8 +110,8 @@ void adcparamsinit_init(struct ADCCHANNELSTUFF* pacsx)
 	pacs->xprms.comptype  = ADC1PARAM_COMPTYPE_NONE; // No temperature compensation
 
 	// Calibration coefficients.
-	pacs->cal.f[0] = 0.0;  // Offset
-	pacs->cal.f[1] = 1.0;  // Scale (jic calibration not skipped)
+	pacs->cal.f[0] = 0.0;         // Offset
+	pacs->cal.f[1] = 5.03663E-05; // Scale
 
 	// Filter initialize, coefficients, and pre-computed value. */
 	pacs->fpw.iir_f1.skipctr  = 12;    // Initial readings skip count

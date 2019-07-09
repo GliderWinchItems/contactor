@@ -14,28 +14,68 @@
 
 /* Parameters for ADC reading */
 // Flointing pt params are converted to scaled integers during initialization
-struct ADCCALCONTACTOR
+
+
+/* Internal sensor calibration. (Only applies to ADC1) */
+struct ADC1CALINTERNAL
 {
-	double	offset;	//	Offset
-	double	scale;	//	Scale
 	struct IIR_L_PARAM iir; // Filter: Time constant, integer scaling
+	uint32_t adcvdd;   // (ADC reading) for calibrating Vdd (3.3v)
+	uint32_t adctemp;  // (ADC reading) of internal temperature sensor
+	double   dvdd;     // (double) measured Vdd (volts)
 };
 
-// ADC 
-// Naming convention--"cid" - CAN ID
+/* Absolute (non-ratiometric) sensor calibration. */
+/*
+The calibrated results are adjusted for Vdd variations by using the
+internal voltage reference, and the internal voltage reference is
+adjusted for temperature by using the internal temperature reference.
+*/
+struct ADCCALABS
+{
+	struct IIR_L_PARAM iir; // Filter: Time constant, integer scaling
+	uint32_t adcvn;    // (ADC reading) vn 
+   uint32_t dvn;      // (double) measured vn (volts)
+};
+
+
+/* 5v supply ratiometric calibration, e.g. Hall effect sensors. */
+/*
+Jumpering to 5v provides a measurement of the 5v->Vdd (3.3v) resistor
+dividers to compute a ratio this adjusts the sensor readings for 
+changes in the 5v sensor supply.
+
+The sensor connected, with no current, provides the offset.  The 5v
+adc reading may have changed from the jumpered reading.
+
+Appling a known current and noting the adc reading calibrates the scale
+for the sensor. The current direction that reduces the adc reading
+from the no-current offset is negative.
+*/
+struct ADCCALHE
+{
+	struct IIR_L_PARAM iir; // Filter: Time constant, integer scaling
+	double   scale;     // 
+	uint32_t j5adcve;   // jumpered to 5v: adc reading HE input
+	uint32_t j5adcv5;   // jumpered to 5v: adc reading 5v input
+	uint32_t zeroadcve; // connected, no current: HE adc reading
+	uint32_t zeroadc5;  // connected, no current: 5v adc reading 
+	uint32_t caladcve;  // connected, cal current: adc reading
+	 int32_t calcur;    // connected, cal current: current
+};
+
+/* Parameters for ADC. */
 // LC = Local (sram) Copy of parameters
  struct ADCCONTACTORLC
  {
 	uint32_t size;			// Number of items in struct
  	uint32_t crc;			// crc-32 placed by loader
 	uint32_t version;		// struct version number
-	uint32_t hbct;			// Heartbeat ct: ticks between sending msgs
-	float vdd;           // Vrefint calibration: Vdd voltage for vrefave reading
-	float vrefave;       // Vrefint calibration: Average vref ADC readings at Vdd
-	struct ADCCALCONTACTOR cal_cur1; // Current calibration (offset & scale)
-	struct ADCCALCONTACTOR cal_cur2; // Current calibration (offset & scale)
-	struct ADCCALCONTACTOR cal_5v;   // 5v regulated voltage 
-	struct ADCCALCONTACTOR cal_12v;  // 12v raw CAN voltage
+	struct ADC1CALINTERNAL intern; // Vref and Temp internal sensors
+	struct ADCCALHE cal_cur1; // Hall-effect current calibration, battery string
+	struct ADCCALHE cal_cur2; // Hall-effect current calibration, spare 
+	struct ADCCALABS cal_5v;  // 5v regulated voltage 
+	struct ADCCALABS cal_12v; // 12v raw CAN voltage
  };
 
 /* **************************************************************************************/

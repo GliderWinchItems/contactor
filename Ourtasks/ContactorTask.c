@@ -102,12 +102,12 @@ void StartContactorTask(void const * argument)
 
 	/* Incoming ascii lines. */
 	pcf->prbcb3  = xSerialTaskRxAdduart(&huart3,1,CNCTBIT01,\
-		&noteval,8,8,48,0);	// 8 line buffers of 8 chars, char-by-char line mode
-	if (pcf->prbcb3 == NULL) morse_trap(15);
+	 &noteval,8,16,0,0);// 8 line buffers of 16 chars, no dma buff, char-by-char line mode
+	if (pcf->prbcb3 == NULL) morse_trap(40);
 
 	/* Init struct with working params */
 	contactor_idx_v_struct_hardcode_params(&contactorfunction);
-
+             
 	/* Create timer for keep-alive.  Auto-reload/periodic */
 	pcf->swtimer1 = xTimerCreate("swtim1",pdMS_TO_TICKS(pcf->keepalive_k ),pdTRUE,\
 		(void *) 0, swtim1_callback);

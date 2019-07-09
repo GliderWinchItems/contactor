@@ -55,7 +55,7 @@ void StartADCTask(void const * argument)
 	/* notification bits processed after a 'Wait. */
 	uint32_t noteused = 0;
 
-	/* Get buffers, "our" control block, and start ADC/DMA running. */
+	/* Get buffers, "our" control block, and ==>START<== ADC/DMA running. */
 	struct ADCDMATSKBLK* pblk = adctask_init(&hadc1,TSK02BIT02,TSK02BIT03,&noteval);
 	if (pblk == NULL) {morse_trap(15);}
 
@@ -90,8 +90,8 @@ void StartADCTask(void const * argument)
 		adcsumdb[5] = adc1data.adcs1sum[5];
 		adcdbctr += 1;
 
-		/* Compute internal reference, internal temperature, 5v sensor supply for adjustments to other readings. */
-//$		adcparams_internal(&adcommon, &adc1data);
+		/* Calibrate and filter ADC readings. */
+		adcparams_cal();
 
   }
 }

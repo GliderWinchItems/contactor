@@ -27,42 +27,40 @@ int adc_idx_v_struct_hardcode_params(struct ADCCONTACTORLC* p)
 	struct ADCCALCONTACTOR cal_12v;  // 12v raw CAN voltage
  };
 */
-	p->size     = 24;
-	p->crc      = 0;
+	p->size     = 24; // Number of items in list
+	p->crc      = 0;  // Do later
    p->version  = 1;
 
 	p->hbct     = 1000;  // Time (ms) between HB msg
 
 	// Vrefint calibration
-	p->vdd      = 3.005;	// Vdd for following vrefave
-	p->vrefave  = 1488.0;// ADC reading for above Vdd
+	p->vdd      = 3.005;	     // Vdd for following vrefave
+	p->vrefave  = (16*1488.0);// ADC reading (DMA sum) for above Vdd
 
 	// Internal temperature sensor calibration
-	p->v25      = 1710;  // 25 deg C ADC reading
-	p->slope    = 4.3;   // mv/degC slope of temperature sensor
+	p->v25      = (16*1710);  // 25 deg C ADC (DMA sum) reading
+	p->slope    = 4.3;        // mv/degC slope of temperature sensor
 
 	// ADC input calibrations
-	p->cal_cur1.offset    = 0.0;
-   p->cal_cur1.scale     = 1.4494E-4;
-	p->cal_cur1.iir.k     = 10; // Filter time constant
-	p->cal_cur1.iir.scale = 2;  // Integer scaling
+	p->cal_cur1.cald.offset    = -0.5;  // 1/2 Vdd
+   p->cal_cur1.cald.scale     = 1.4494E-4; // Vmeasured/ADCdmasumreading
+	p->cal_cur1.cali.iir.k     = 10;    // Filter time constant
+	p->cal_cur1.cald.iir.scale = 2;     // Integer scaling
 
-	p->cal_cur2.offset    = 0.0;
-   p->cal_cur2.scale     = 1.4494E-2;
-	p->cal_cur2.iir.k     = 10;
-	p->cal_cur2.iir.scale = 2;
+	p->cal_cur2.cald.offset    = -0.5;  // 1/2 Vdd
+   p->cal_cur2.cald.scale     = 1.4494E-2;
+	p->cal_cur2.cali.iir.k     = 10;
+	p->cal_cur2.cali.iir.scale = 2;
 
-	p->cal_5v.offset    = 0.0;
-   p->cal_5v.scale     = 0.0014494022;
-	p->cal_5v.iir.k     = 10;
-	p->cal_5v.iir.scale = 2;
+	p->cal_5v.cald.offset      = 0.0;
+   p->cal_5v.cald.scale       = 0.0014494022;
+	p->cal_5v.cali.iir.k       = 10;
+	p->cal_5v.cali.iir.scale   = 2;
 
-	p->cal_12v.offset   = 0.0;
-	p->cal_12v.scale    = 0.004891904;
-	p->cal_12v.iir.k     = 10;
-	p->cal_12v.iir.scale = 2;
-
-
+	p->cal_12v.cald.offset     = 0.0;
+	p->cal_12v.cald.scale      = 0.004891904;
+	p->cal_12v.cali.iir.k      = 10;
+	p->cal_12v.cali.iir.scale  = 2;
 
 	return 0;	
 }
