@@ -36,7 +36,8 @@ Internal reference: 1.16 1.20 1.24 V
 
 #define ADC1DMANUMSEQ        16 // Number of DMA scan sequences in 1/2 DMA buffer
 #define ADC1IDX_ADCSCANSIZE   6 // Number ADC channels read
-#define ADCSCALE1b          16  // ADC integer scaling
+#define ADCSCALE15b          15 // 2^15 scale 
+#define ADCSCALE16b          16 // 2^16 scale
 
 /* ADC reading sequence/array indices                         */
 /* These indices -=>MUST<= match the hardware ADC scan sequence    */
@@ -92,17 +93,24 @@ struct IIRFILTERL
 /* Working values for internal Vref and temperature sensors. */
 struct ADCINTERNAL
 {
-	struct IIRFILTERL iir;    // Intermediate filter params
+	struct IIRFILTERL iiradcvref; // Intermediate filter params: vref 
+	struct IIRFILTERL iiradctemp; // Intermediate filter params: temperature sensor
 
+	uint32_t adcfilvref;  // Filtered ADC[Vref]
+	uint32_t adcfiltemp;  // Filtered ADC[temperature]
 
+	uint32_t adcvref;    // Do I need this?
+	uint32_t adccmpvref; // scaled vref compensated for temperature
+
+	uint32_t vref;       // scaled vref computed from calibration params
 };
 
 /* Working values for absolute voltages adjusted using Vref. */
 struct ADCABSOLUTE
 {
-	struct IIRFILTERL iir;    // Intermediate filter params
-
-
+	struct IIRFILTERL iir;// Intermediate filter params
+	uint32_t adcfil;      // Filtered ADC reading
+	uint32_t ival;        // scaled int computed value (not divider scaled)
 };
 
 /* Working values for ratiometric sensors using 5v supply. */
@@ -111,7 +119,8 @@ struct ADCRATIOMETRIC
 	struct IIRFILTERL iir;    // Intermediate filter params
 	double drk5ke;    // Ratio k5/ke resistor dividers ratio (~1.0)
 	double drko;      // Offset ratio: double (~0.5)
-	int32_t irk5ke;   // Ratio k5/ke ratio: scale int (~65536)
+	uint32_t adcfil;  // Filtered ADC reading
+	int32_t irk5ke;   // Ratio k5/ke ratio: scale int (~32768)
 	int32_t irko;     // Offset ratio: scale int (~32768)
 	int32_t iI;       // integer result w offset, not scaled 
 	uint32_t iscale;  // scale factor as scaled integer
@@ -126,14 +135,13 @@ struct ADCCHANNEL
 /* struct allows pointer to access raw and calibrated ADC1 data. */
 struct ADCFUNCTION
 {
-	struct ADCCONTACTORLC lc; // Local Copy of parameters
-	struct ADCCHANNEL	chan[ADC1IDX_ADCSCANSIZE]; // ADC sums, calibrated endpt
-	struct ADCINTERNAL intern;     // Vref & temperature
-	struct ADCRATIOMETRIC cur1;    // Current sensor #1
-   struct ADCRATIOMETRIC cur2;    // Current sensor #2
-	struct struct ADCABSOLUTE v12; // Supply: raw 12v
-	struct struct ADCABSOLUTE v5;  // Supply: regulated 5v
-
+	struct ADCCONTACTORLC lc;    // Local Copy of parameters
+	struct ADCINTERNAL    intern;// Vref & temperature
+	struct ADCABSOLUTE    v12;   // Supply: raw 12v
+	struct ADCABSOLUTE    v5;    // Supply: regulated 5v
+	struct ADCRATIOMETRIC cur1;  // Current sensor #1
+   struct ADCRATIOMETRIC cur2;  // Current sensor #2
+	struct ADCCHANNEL	 chan[ADC1IDX_ADCSCANSIZE]; // ADC sums, calibrated endpt
 	uint32_t ctr; // Running count of updates.
 };
 

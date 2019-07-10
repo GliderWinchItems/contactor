@@ -40,7 +40,6 @@ struct GATEWAYPCTOCAN
 	uint8_t ctr;            // Data storing counter
 };
 
-
 /* Line buffer control block for one uart */
 struct SERIALRCVBCB
 {

@@ -33,13 +33,50 @@ int adc_idx_v_struct_hardcode_params(struct ADCCONTACTORLC* p)
 
 	p->hbct     = 1000;  // Time (ms) between HB msg
 
-	// Vrefint calibration
-	p->vdd      = 3.005;	     // Vdd for following vrefave
-	p->vrefave  = (16*1488.0);// ADC reading (DMA sum) for above Vdd
+/* Reproduced for convenience 
+struct ADC1CALINTERNAL
+{
+	struct IIR_L_PARAM iiradcvref; // Filter: adc readings: Vref 
+	struct IIR_L_PARAM iiradctemp; // Filter: adc readings: temperature
+	uint32_t adcvdd;   // (ADC reading) for calibrating Vdd (3.3v)
+	uint32_t adcrmtmp; // (ADC reading) room temperature reading
+	uint32_t rmtmp;    // Room temp for reading (deg C)
+	double dvdd;       // (double) measured Vdd (volts)
+	double dslope;     // (double) mv/degC temperature sensor slope
+};
+*/
+	p->calintern.iiradcvref.k     = 10;    // Filter time constant
+	p->calintern.iiradcvref.scale = 2;
+
+	p->calintern.iiradctemp.k     = 10;    // Filter time constant
+	p->calintern.iiradctemp.scale = 2;
+
+	p->calintern.dvdd   = 3.005;	    // Vdd for following vrefave
+	p->calintern.adcvdd = (16*1488.0);// ADC reading (DMA sum) for above Vdd
 
 	// Internal temperature sensor calibration
-	p->v25      = (16*1710);  // 25 deg C ADC (DMA sum) reading
-	p->slope    = 4.3;        // mv/degC slope of temperature sensor
+	p->adcvrmtmp = (16*1710);  // Room temp ADC (DMA sum) reading
+	p->rmtmp     = 27;         // Room temp for ADC reading     
+	p->dslope    = 4.3;        // mv/degC slope of temperature sensor
+
+/*  Reproduced for convenience 
+struct ADCCALHE
+{
+	struct IIR_L_PARAM iir; // Filter: Time constant, integer scaling
+	double   scale;     // Resistor ratio to scale to desired units
+	uint32_t j5adcve;   // jumpered to 5v: adc reading HE input
+	uint32_t j5adcv5;   // jumpered to 5v: adc reading 5v input
+	uint32_t zeroadcve; // connected, no current: HE adc reading
+	uint32_t zeroadc5;  // connected, no current: 5v adc reading 
+	uint32_t caladcve;  // connected, cal current: adc reading
+	 int32_t calcur;    // connected, cal current: current
+};
+*/
+	p->cal_cur1.iir.k     = 10;    // Filter time constant
+	p->cal_cur1.iir.scale = 2;
+
+
+
 
 	// ADC input calibrations
 	p->cal_cur1.cald.offset    = -0.5;  // 1/2 Vdd

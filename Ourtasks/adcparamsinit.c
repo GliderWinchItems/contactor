@@ -32,31 +32,6 @@ Internal reference: 1.16 1.20 1.24 V
 void adcparamsinit_init_common(struct ADCFUNCTION padc)
 {
 
-	
-	
-
-
-	padccommon->sensor5vcal    = 0.54 / ADCSEQNUM;	// 5v->Vdd divide ratio
-	padccommon->sensor5vcalVdd = padccommon->sensor5vcal / 3.3; // Precompute: adjust for Vdd
-	padccommon->fvddratio      = (100.0/(4095.0 * ADCSEQNUM));  // Ratiometric: Percent
-	padccommon->f5vsupplyprecal = 1.0/( (pacsx + ADC1IDX_5VOLTSUPPLY)->cal.f[1] * 4095 * ADCSEQNUM);
-	padccommon->f5vsupplyprecal_offset = (pacsx + ADC1IDX_5VOLTSUPPLY)->cal.f[0];
-
-	padccommon->tcoef        = 30E-6; // 30 typ, 50 max, (ppm/deg C)
-
-//	padccommon->ts_cal1      = (float)(*PTS_CAL1) * (float)ADC1DMANUMSEQ; // Factory calibration
-//	padccommon->ts_cal2      = *PTS_CAL2; // Factory calibration
-//	padccommon->ts_caldiff   = *PTS_CAL2 - *PTS_CAL1; // Pre-compute
-	padccommon->ts_80caldiff = (80.0 / (padccommon->ts_caldiff *(float)ADC1DMANUMSEQ)); // Pre-compute
-
-//	padccommon->uicaldiff    = *PTS_CAL2 - *PTS_CAL1; // Pre-compute
-	padccommon->ll_80caldiff = (80 * SCALE1) /(padccommon->uicaldiff);
-//	padccommon->ui_cal1      =	(*PTS_CAL1) * ADC1DMANUMSEQ;
-
-	/* Data sheet gave these values.  May not need them. */
-	padccommon->v25     = 0.76; // Voltage at 25 °C, typ
-	padccommon->slope   = 2.0;  // Average slope (mv/deg C), typ
-
 	return;
 }
 

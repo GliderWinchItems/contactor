@@ -19,10 +19,13 @@
 /* Internal sensor calibration. (Only applies to ADC1) */
 struct ADC1CALINTERNAL
 {
-	struct IIR_L_PARAM iir; // Filter: Time constant, integer scaling
+	struct IIR_L_PARAM iiradcvref; // Filter: adc readings: Vref 
+	struct IIR_L_PARAM iiradctemp; // Filter: adc readings: temperature
 	uint32_t adcvdd;   // (ADC reading) for calibrating Vdd (3.3v)
-	uint32_t adctemp;  // (ADC reading) of internal temperature sensor
-	double   dvdd;     // (double) measured Vdd (volts)
+	uint32_t adcrmtmp; // (ADC reading) room temperature reading
+	uint32_t rmtmp;    // Room temp for reading (deg C)
+	double dvdd;       // (double) measured Vdd (volts)
+	double dslope;     // (double) mv/degC temperature sensor slope
 };
 
 /* Absolute (non-ratiometric) sensor calibration. */
@@ -71,7 +74,7 @@ struct ADCCALHE
 	uint32_t size;			// Number of items in struct
  	uint32_t crc;			// crc-32 placed by loader
 	uint32_t version;		// struct version number
-	struct ADC1CALINTERNAL intern; // Vref and Temp internal sensors
+	struct ADC1CALINTERNAL calintern; // Vref and Temp internal sensors
 	struct ADCCALHE cal_cur1; // Hall-effect current calibration, battery string
 	struct ADCCALHE cal_cur2; // Hall-effect current calibration, spare 
 	struct ADCCALABS cal_5v;  // 5v regulated voltage 

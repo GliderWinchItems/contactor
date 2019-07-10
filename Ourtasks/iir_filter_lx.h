@@ -42,10 +42,11 @@ struct IIRFILTERL
 };
 
 /******************************************************************************/
-void iir_filter_lx_do(struct IIRFILTERL* pfil, int32_t* pval);
+int32_t iir_filter_lx_do(struct IIRFILTERL* pfil, int32_t* pval);
 /* @brief	: Pass an input value through the filter.
  * @param	: pfil = pointer to struct with filter stuff
  * @param	: pval = pointer to reading
+ * @return	: latest filtered value
 *******************************************************************************/
 void iir_filter_lx_double(struct IIRFILTERL* pfil);
 /* @brief	: Convert unscaled int to scaled double

@@ -29,10 +29,11 @@ static void iir_filter_lx_init(struct IIRFILTERL* pfil, int32_t* pval)
 	return;
 }
 /******************************************************************************
- * void iir_filter_lx_do(struct IIRFILTERL* pfil, int32_t* pval);
+ * int32_t iir_filter_lx_do(struct IIRFILTERL* pfil, int32_t* pval);
  * @brief	: Pass an input value through the filter.
  * @param	: pfil = pointer to struct with filter stuff
  * @param	: pval = pointer to reading
+ * @return	: latest filtered value
 *******************************************************************************/
 /*
 NOTE: It is expected that pfil-z has been initialized.
@@ -46,12 +47,9 @@ void iir_filter_lx_do(struct IIRFILTERL* pfil, int32_t* pval)
 		iir_filter_lx_init(pfil, pval);
 	}
 
-// NOTE: 'lx' version skips this conversion
 	/* Filter computation */
    pfil->z = pfil->z + ( (*pval) * (pfil->pprm->scale) - pfil->z) / (pfil->pprm->k); 
-//	pfil->d_out = pfil->z / (pfil->pprm->scale);
-	return;
-
+	return (pfil->z / (pfil->pprm->scale));
 }
 /******************************************************************************
  * void iir_filter_lx_double(struct IIRFILTERL* pfil);
