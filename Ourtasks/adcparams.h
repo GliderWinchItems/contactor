@@ -36,8 +36,7 @@ Internal reference: 1.16 1.20 1.24 V
 
 #define ADC1DMANUMSEQ        16 // Number of DMA scan sequences in 1/2 DMA buffer
 #define ADC1IDX_ADCSCANSIZE   6 // Number ADC channels read
-#define ADCSCALE15b          15 // 2^15 scale 
-#define ADCSCALE16b          16 // 2^16 scale
+#define ADCSCALEbits         16 // 2^16 scale
 
 /* ADC reading sequence/array indices                         */
 /* These indices -=>MUST<= match the hardware ADC scan sequence    */
@@ -109,6 +108,7 @@ struct ADCINTERNAL
 struct ADCABSOLUTE
 {
 	struct IIRFILTERL iir;// Intermediate filter params
+	double dscale;        // Computed from measurements
 	uint32_t adcfil;      // Filtered ADC reading
 	uint32_t ival;        // scaled int computed value (not divider scaled)
 };
@@ -119,11 +119,11 @@ struct ADCRATIOMETRIC
 	struct IIRFILTERL iir;    // Intermediate filter params
 	double drk5ke;    // Ratio k5/ke resistor dividers ratio (~1.0)
 	double drko;      // Offset ratio: double (~0.5)
+	double dscale;    // Scale factor
 	uint32_t adcfil;  // Filtered ADC reading
 	int32_t irk5ke;   // Ratio k5/ke ratio: scale int (~32768)
 	int32_t irko;     // Offset ratio: scale int (~32768)
 	int32_t iI;       // integer result w offset, not scaled 
-	uint32_t iscale;  // scale factor as scaled integer
 };
 
 struct ADCCHANNEL	

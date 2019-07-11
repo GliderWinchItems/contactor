@@ -39,6 +39,8 @@ void ContactorEvents_00(struct CONTACTORFUNCTION* pcf)
 void ContactorEvents_01(struct CONTACTORFUNCTION* pcf)
 {
 	contactor_hv_uartline(pcf);  // Extract readings from received line
+	contactor_hv_calibrate(pcf); // Calibrate raw ADC ticks to scale int volts
+	
 	xTimerReset(pcf->swtimer3,1); // Reset keep-alive timer
 	pcf->evstat &= ~CNCTEVTIMER3;	// Clear timeout bit 
 	pcf->evstat |= CNCTEVHV;      // Show new HV readings available

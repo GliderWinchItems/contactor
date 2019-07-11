@@ -35,8 +35,6 @@ struct CONTACTORLC
 	uint32_t hbct1_t;		// Heartbeat ct: ticks between sending msgs hv1:cur1
 	uint32_t hbct2_t;		// Heartbeat ct: ticks between sending msgs hv2:cur2
 	// Calibrations (offset, scale)
-	struct CNTCTCALF fcalcur1; // Motor current
-	struct CNTCTCALF fcalcur2; // spare
 	struct CNTCTCALF fcalhv1;  // Battery_minus-to-contactor #1 Battery_plus
 	struct CNTCTCALF fcalhv2;  // Battery_minus-to-contactor #1 DMOC_plus
 	struct CNTCTCALF fcalhv3;  // Battery_minus-to-contactor #2 DMOC_minus
@@ -64,7 +62,7 @@ struct CONTACTORLC
 	/* Bits that define the hw features. */
 	p->hwconfig   = 0;  // None of the additional hw features!
 
-	p->fdiffb4    = 15.0; // hv1-hv2 voltage difference before closing (volts)
+	p->ddiffb4    = 15.0; // hv1-hv2 voltage difference before closing (volts)
 	p->fdiffafter = 2.0;  // allowable hv1-hv2 voltage difference after closure (volts)
 	p->prechgmax_t= 6500; // allowable delay for diffafter to reach closure point (timeout delay ms)
 	p->close1_t   = 25;   // contactor #1 coil energize-closure (timeout delay ms)
@@ -78,12 +76,10 @@ struct CONTACTORLC
 	p->hbct1_t    = 1000; // Heartbeat ct: ticks between sending msgs hv1:cur1
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2
 
-	// Calibrations (offset, scale)
-	p->fcalcur1= {0.0, 0.005};  // amps/ADC_count: Battery string current
-	p->fcalcur2= {0.0, 0.006};  // amps/ADC_count: spare
-	p->fcalhv1 = {0.0, 1.2E-4}; // volts/ADC_count:Battery_minus-to-contactor #1 Battery_plus
-	p->fcalhv2 = {0.0, 1.3E-4}; // volts/ADC_count:Battery_minus-to-contactor #1 DMOC_plus
-	p->fcalhv3 = {0.0, 1.3E-4}; // volts/ADC_count:Battery_minus-to-contactor #2 DMOC_minus
+	// Calibrations ((filter tc/scale), offset, scale)
+	p->fcalhv1 = {{2,10}, 0.0, 6.77201E-3}; // volts/ADC_count:Battery_minus-to-contactor #1 Battery_plus
+	p->fcalhv2 = {{2,10}, 0.0, 6.77201E-3}; // volts/ADC_count:Battery_minus-to-contactor #1 DMOC_plus
+	p->fcalhv3 = {{2,10}, 0.0, 6.77201E-3}; // volts/ADC_count:Battery_minus-to-contactor #2 DMOC_minus
 
    //                 CANID_HEX      CANID_NAME       CAN_MSG_FMT     DESCRIPTION
 	p->cid_hb1;       = 0xFF800000; // CANID_HB_CNTCTR1V  : FF_FF : Contactor1: Heartbeat: High voltage1:Current sensor1

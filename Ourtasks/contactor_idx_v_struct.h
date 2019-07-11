@@ -25,6 +25,13 @@
 
 /* Calibration parameter, float */
 // Use double for F103 to save float->double conversions
+struct CNTCTCALHV
+{
+	struct IIR_L_PARAM iir; // Filter: Time constant, integer scaling
+	double dvcal;       // Calibration voltage applied
+	uint32_t adchv;     // ADC reading for calibration voltage
+	uint32_t offset;    // ADC reading for Sensor zero
+};
 struct CNTCTCALF
 {
 	double offset;
@@ -43,7 +50,7 @@ struct CONTACTORLC
 	uint32_t size;			// Number of items in struct
  	uint32_t crc;			// crc-32 placed by loader
 	uint32_t version;		// struct version number
-	float fdiffb4;       // hv1-hv2 voltage difference before closing (volts)
+	double ddiffb4;      // hv1-hv2 voltage difference before closing (volts)
 
 /* NOTE: 
    - all suffix _t parameters are times in milliseconds
@@ -97,11 +104,9 @@ struct CONTACTORLC
 	int32_t toohot;      // Threshold of summation for pre-charge R too hot
 
 /* Calibrations (offset, scale) */
-	// ADC channels
-	struct CNTCTCALF fcaladc[ADC1IDX_ADCSCANSIZE];
 
 	// High voltage from uart
-	struct CNTCTCALF fcalhv[NUMHV]; 
+	struct CNTCTCALHV calhv[NUMHV]; 
 
 /* Send CAN ids  */
 	uint32_t cid_hb1;    // CANID-Heartbeat msg volt1:cur1 (volts:amps)

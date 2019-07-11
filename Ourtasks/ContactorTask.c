@@ -109,7 +109,7 @@ void StartContactorTask(void const * argument)
 	contactor_idx_v_struct_hardcode_params(&contactorfunction);
              
 	/* Create timer for keep-alive.  Auto-reload/periodic */
-	pcf->swtimer1 = xTimerCreate("swtim1",pdMS_TO_TICKS(pcf->keepalive_k ),pdTRUE,\
+	pcf->swtimer1 = xTimerCreate("swtim1",pdMS_TO_TICKS(pcf->keepalive_k),pdTRUE,\
 		(void *) 0, swtim1_callback);
 	if (pcf->swtimer1 == NULL) {morse_trap(41);}
 
@@ -215,77 +215,5 @@ void StartContactorTask(void const * argument)
   /* ========= Update outputs ======================= */
 		ContactorUpdates(pcf);
   }
-}
-/* *************************************************************************
- * static void contactor_init_params(void);
- * @brief	: init working struct.
- * *************************************************************************/
-static void contactor_init_params(void)
-{
-	// Convenience pointers 
-	struct CONTACTORFUNCTION* pcf = &contactorfunction;
-	struct CONTACTORLC* plc &pcf->lc;
-
-	/* Load parameters into working struct. */
-	contactor_idx_v_struct_hardcode_params(plc);
-
-	/* Convert float into scaled int */
-	pcf->sivdiff = (plc->fvdiff * (1<<SCALE16) );
-	pcf->sivlo   = (plc->fvlo   * (1<<SCALE16) );
-
-	/* Convert ms (_t) into timer ticks (_k). */
-	pcf->prechgmax_k= pdMS_TO_TICKS(plc>prechgmax_t);// allowable delay for diffafter to reach closure point (timeout delay ms)
-	pcf->close1_k   = pdMS_TO_TICKS(plc>close1_t);   // contactor #1 coil energize-closure (timeout delay ms)
-	pcf->close2_k   = pdMS_TO_TICKS(plc>close2_t);   // contactor #2 coil energize-closure (timeout delay ms)
-	pcf->open1_k    = pdMS_TO_TICKS(plc>open1_t);    // contactor #1 coil de-energize-open (timeout delay ms)
-	pcf->open2_k    = pdMS_TO_TICKS(plc>open2_t);    // contactor #2 coil de-energize-open (timeout delay ms)
-	pcf->auxoc1_k	 = pdMS_TO_TICKS(plc>auxoc1_t);   // aux open/close diff from contactor coil #1 (duration ms)
-	pcf->auxoc2_k	 = pdMS_TO_TICKS(plc>auxoc2_t);   // aux open/close diff from contactor coil #2 (duration ms)
-	pcf->hv2stable_k= pdMS_TO_TICKS(plc>hv2stable_t);// hv 2 reading stable after closer (duration ms)
-	pcf->keepalive_k= pdMS_TO_TICKS(plc>keepalive_t);// keep-alive timeout (timeout delay ms)
-	pcf->hbct1_k    = pdMS_TO_TICKS(plc>hbct1_t);    // Heartbeat ct: ticks between sending msgs hv1:cur1
-	pcf->hbct2_k    = pdMS_TO_TICKS(plc>hbct2_t);    // Heartbeat ct: ticks between sending msgs hv2:cur2
-
-	/* Status bits for state machine. */
-	pcf->statusbits = 0;   
-	pcf->statusbits_prev = pcf->statusbits;
-
-	/* Add CAN Mailboxes                         CAN           CAN ID              Notify bit   Paytype */
-	pcf->pmbx_cid_cmd_i       =  MailboxTask_add(pctl0,plc->lc.cid_cmd_i,      NULL,CNCTBIT06,0,36);
-	pcf->pmbx_cid_keepalive_i =  MailboxTask_add(pctl0,plc->lc.cid_keepalive_i,NULL,CNCTBIT07,0,23);
-	pcf->pmbx_cid_gps_sync    =  MailboxTask_add(pctl0,plc->lc.cid_gps_sync,   NULL,CNCTBIT08,0,23);
-
-	/* PWM working struct for switching PWM values */
-	sConfigOCn.
-	sConfigOCn.OCMode = TIM_OCMODE_PWM1;
-	sConfigOCn.Pulse = 0;	// New PWM value inserted here during execution
-	sConfigOCn.OCPolarity = TIM_OCPOLARITY_HIGH;
-	sConfigOCn.OCFastMode = TIM_OCFAST_DISABLE;
-
-	// Convert PWM as percent to timer count
-   pcf->ipwmpct1 = pcf->lc.fpwmpct1 * 0.01 * (htim4.Init.Period + 1) - 1;
-   pcf->ipwmpct2 = pcf->lc.fpwmpct2 * 0.01 * (htim4.Init.Period + 1) - 1;
-
-	/* Pre-load fixed data in CAN msgs */
-	for (i = 0; i < NUMCANMSGS; i++)
-	{
-		pcf->canmsg[i].pctl = pctl0;   // Control block for CAN module (CAN 1)
-		pcf->canmsg[i].maxretryct = 8; //
-		pcf->canmsg[i].bits = 0;       //
-		pcf->canmsg[i].can.dlc = 8;    // Default payload size (modified when loaded and sent)
-	}
-	// Pre-load CAN ids
-	pcf->canmsg[CID_KA_R ].can.id  = pcf->lc.cid_keepalive_r;
-	pcf->canmsg[CID_MSG1 ].can.id  = pcf->lc.cid_msg1;
-	pcf->canmsg[CID_MSG2 ].can.id  = pcf->lc.cid_msg2;
-	pcf->canmsg[CID_CMD_R].can.id  = pcf->lc.cid_cmd_r;
-	pcf->canmsg[CID_HB1  ].can.id  = pcf->lc.cid_hb1;
-	pcf->canmsg[CID_HB2  ].can.id  = pcf->lc.cid_hb2;
-
-	pcf->canmsg[0].can.dlc = 4;
-
-
-	
-	return 0;
 }
 

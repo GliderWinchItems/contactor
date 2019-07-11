@@ -12,16 +12,16 @@ Later, this may be replaced with a "copy" of the flat file in high flash, genera
 by the java program from the sql database.
 */
 
-/*
-
-                    Min  Typ  Max 
-Internal reference: 1.16 1.20 1.24 V
-
-*/
-
 #include "adcparamsinit.h"
 #include "adcparams.h"
 #include "ADCTask.h"
+
+/*                   Min  Typ  Max 
+Internal reference F103: 1.16 1.20 1.26 V */
+Internal reference F407: 1.18 1.20 1.24 V */
+
+#define VREFMIN ((uint32_t)(1.15 * (1<<ADCSCALEbits))
+#define VREFMAX ((uint32_t)(1.25 * (1<<ADCSCALEbits))
 
 /* *************************************************************************
  * void adcparamsinit_init_common(struct ADCFUNCTION padc);
@@ -66,118 +66,109 @@ void adcparamsinit_init_common(struct ADCFUNCTION padc)
 #define ADC1PARAM_CALIBTYPE_RAW_UI 4    // No calibration applied: UNSIGNED INT
 */
 
-/*
-Notes:
-1. Scale is based on sum of 16 ADC readings (i.e. the sum of 1/2 the DMA buffer).
-
-*/
-
-void adcparamsinit_init(struct ADCCHANNELSTUFF* pacsx)
+void adcparamsinit_init(struct ADCFUNCTION* p);
 {
-	struct ADCCHANNELSTUFF* pacs; // Use pointer for convenience
+/* Reproduced for convenience 
+struct ADCFUNCTION
+{
+	struct ADCCONTACTORLC lc;    // Local Copy of parameters
+	struct ADCINTERNAL    intern;// Vref & temperature
+	struct ADCABSOLUTE    v12;   // Supply: raw 12v
+	struct ADCABSOLUTE    v5;    // Supply: regulated 5v
+	struct ADCRATIOMETRIC cur1;  // Current sensor #1
+   struct ADCRATIOMETRIC cur2;  // Current sensor #2
+	struct ADCCHANNEL	 chan[ADC1IDX_ADCSCANSIZE]; // ADC sums, calibrated endpt
+	uint32_t ctr; // Running count of updates.
+};
+struct ADCINTERNAL
+{
+	struct IIRFILTERL iiradcvref; // Intermediate filter params: vref 
+	struct IIRFILTERL iiradctemp; // Intermediate filter params: temperature sensor
 
-/* IN18 - Internal voltage reference */
-	pacs = pacsx + ADC1IDX_INTERNALVREF; // Point to "stuff" for this ADC channel
+	uint32_t adcfilvref;  // Filtered ADC[Vref]
+	uint32_t adcfiltemp;  // Filtered ADC[temperature]
 
-	// Filter type, calibration option, compensation option. */
-	pacs->xprms.filttype  = ADCFILTERTYPE_IIR1;      // Single pole IIR
-	pacs->xprms.calibtype = ADC1PARAM_CALIBTYPE_RAW_F; // Raw; no calibration applied
-	pacs->xprms.comptype  = ADC1PARAM_COMPTYPE_NONE; // No temperature compensation
+	uint32_t adcvref;    // Do I need this?
+	uint32_t adccmpvref; // scaled vref compensated for temperature
 
-	// Calibration coefficients.
-	pacs->cal.f[0] = 0.0;         // Offset
-	pacs->cal.f[1] = 5.03663E-05; // Scale
+	ddouble dvref;       // (double) vref computed from calibration params
+	uint32_t vref;       // (scaled) vref computed from calibration params
+}; */
 
-	// Filter initialize, coefficients, and pre-computed value. */
-	pacs->fpw.iir_f1.skipctr  = 12;    // Initial readings skip count
-	pacs->fpw.iir_f1.coef     = 0.9999;  // Filter coefficient (< 1.0)
-	pacs->fpw.iir_f1.onemcoef = (1 - pacs->fpw.iir_f1.coef);
+/* Internal sensors. */
+	// Pointers to filter constants 
+	p->intern.iiradcvref.pprm = &p->lc.calintern.iiradcvref;
+	p->intern.iiradctemp.pprm = &p->lc.calintern.iiradctemp;
 
-/* IN17 - Internal temperature sensor */
-	pacs = pacsx + ADC1IDX_INTERNALTEMP; // Point to "stuff" for this ADC channel
+	// Compute a scaled integer vref from measurements
+	double dadc  = p->lc.calintern.adcvdd; // ADC reading (~27360)
+	p->intern.dvref = p->lc.calintern.dvdd * (dadc / 65520.0);
+	p->intern.vref  = (dvref * (1 << ADCSCALEbits) ); // Scaled uint32_t; 
 
-	// Filter type, calibration option, compensation option. */
-	pacs->xprms.filttype  = ADCFILTERTYPE_IIR1;      // Single pole IIR
-	pacs->xprms.calibtype = ADC1PARAM_CALIBTYPE_RAW_F; // Raw; no calibration applied
-	pacs->xprms.comptype  = ADC1PARAM_COMPTYPE_NONE; // No temperature compensation
+	// Check for out-of-datasheet Vref spec 
+	if ( (p->lc.calintern.vref < (VREFMIN)) || 
+        (p->lc.calintern.vref > (VREFMAX)) )
+		morse_trap(81);
 
-	// Calibration coefficients.
-	pacs->cal.f[0] = 0.0;  // Offset
-	pacs->cal.f[1] = 1.0;  // Scale (jic calibration not skipped)
+/* Reproduced for convenience
+struct ADCABSOLUTE
+{
+	struct IIRFILTERL iir;// Intermediate filter params
+	double dscale;        // Computed from measurements
+	uint32_t adcfil;      // Filtered ADC reading
+	uint32_t ival;        // scaled int computed value (not divider scaled)
+}; */	
 
-	// Filter initialize, coefficients, and pre-computed value. */
-	pacs->fpw.iir_f1.skipctr  = 4; 	  // Initial readings skip count
-	pacs->fpw.iir_f1.coef     = 0.99;  // Filter coefficient (< 1.0)
-	pacs->fpw.iir_f1.onemcoef = (1 - pacs->fpw.iir_f1.coef);
+/* Absolute: 12v supply. */
+	p->v12.iir.pprm = &p->lc.cal_12v.iir; // Filter param pointer
+	p->v12.dscale = p=>lc.cal_12v.dvn     // p->lc.cal_12v.adcvn;
 
+/* Absolute:  5v supply. */
+	p->v5.iir.pprm = &p->lc.cal_5v.iir; // Filter param pointer
+	p->v5.dscale = p=>lc.cal_5v.dvn     // p->lc.cal_12v.adcvn;
 
-/* Total battery current sensor. */
-	pacs = pacsx + ADC1IDX_CURRENTTOTAL; // Point to "stuff" for this ADC channel
+/* Reproduced for convenience
+struct ADCRATIOMETRIC
+{
+	struct IIRFILTERL iir;    // Intermediate filter params
+	double drk5ke;    // Ratio k5/ke resistor dividers ratio (~1.0)
+	double drko;      // Offset ratio: double (~0.5)
+	double dscale;    // Scale factor
+	uint32_t adcfil;  // Filtered ADC reading
+	int32_t irk5ke;   // Ratio k5/ke ratio: scale int (~32768)
+	int32_t irko;     // Offset ratio: scale int (~32768)
+	int32_t iI;       // integer result w offset, not scaled 
+}; */
 
-	// Filter type, calibration option, compensation option. */
-	pacs->xprms.filttype  = ADCFILTERTYPE_IIR1;        // Single pole IIR
-	pacs->xprms.calibtype = ADC1PARAM_CALIBTYPE_OFSC;  // Offset & scale (poly ord 0 & 1)
-	pacs->xprms.comptype  = ADC1PARAM_COMPTYPE_RATIO5V; // 5v w Vref abs w temp
+/* Ratiometric: battery string current. */
+	p->cur1.iir.pprm = &p->lc.cal_cur1.iir; // Filter param pointer
+	
+	// Jumpered readings -> resistor divider ratio (~ 1.00)
+	p->cur1.drk5ke = (double)p->lc.cal_cur1.j5adc5 / (double)p->lc.cal_cur1.j5adcke;
+	p->cur1.irk5ke *= (p->cur1.drk5ke * (1 << ADCSCALEbits) );
 
-	// Calibration coefficients.
-	pacs->cal.f[0] = 2047.5; // Offset
-	pacs->cal.f[1] = 0.1086; // Scale (200a @saturation)
+	// Sensor connected, no current -> offset ratio (~ 0.50)
+	p->cur1.drko  = (double)p->lc.cal_cur1.zeroadcve / (double)p->lc.cal_cur1.zeroadc5;
+	p->cur1.irko *= (p->cur1.drko * (1 << ADCSCALEbits) );
 
-	// Filter initialize, coefficients, and pre-computed value. */
-	pacs->fpw.iir_f1.skipctr  = 4; 	 // Initial readings skip count
-	pacs->fpw.iir_f1.coef     = 0.9;   // Filter coefficient (< 1.0)
-	pacs->fpw.iir_f1.onemcoef = (1 - pacs->fpw.iir_f1.coef);
+	// Sensor connected, test current applied -> scale factor
+	// dscale = (calibration ADC - offset) / calibration current; // adcticks/amp
+	p->cur1.dscale = (p->lc.cal_cur1.caladcve - p->lc.cal_cur1.zeroadcve) / p->lc.cal_cur1.dcalcur;
+	
+/* Ratiometric: spare current. */
+	p->cur2.iir.pprm = &p->lc.cal_cur2.iir; // Filter param pointer
 
-/* Current sensor: motor #1 */
-	pacs = pacsx + ADC1IDX_CURRENTMOTOR1; // Point to "stuff" for this ADC channel
+	// Jumpered readings -> resistor divider ratio (~ 1.00)
+	p->cur2.drk5ke = (double)p->lc.cal_cur2.j5adc5 / (double)p->lc.cal_cur2.j5adcke;
+	p->cur2.irk5ke *= (p->cur2.drk5ke * (1 << ADCSCALEbits) );
 
-	// Filter type, calibration option, compensation option. */
-	pacs->xprms.filttype  = ADCFILTERTYPE_IIR1;        // Single pole IIR
-	pacs->xprms.calibtype = ADC1PARAM_CALIBTYPE_OFSC;  // Offset & scale (poly ord 0 & 1)
-	pacs->xprms.comptype  = ADC1PARAM_COMPTYPE_VOLTV5; // 5v w Vref abs w temp
+	// Sensor connected, no current -> offset ratio (~ 0.50)
+	p->cur2.drko  = (double)p->lc.cal_cur2.zeroadcve / (double)p->lc.cal_cur2.zeroadc5;
+	p->cur2.irko *= (p->cur2.drko * (1 << ADCSCALEbits) );
 
-	// Calibration coefficients.
-	pacs->cal.f[0] = 2047.5;  // Offset
-	pacs->cal.f[1] = 0.3257;  // Scale (600a @saturation)
-
-	// Filter initialize, coefficients, and pre-computed value. */
-	pacs->fpw.iir_f1.skipctr  = 4; 	 // Initial readings skip count
-	pacs->fpw.iir_f1.coef     = 0.9;   // Filter coefficient (< 1.0)
-	pacs->fpw.iir_f1.onemcoef = (1 - pacs->fpw.iir_f1.coef);
-
-/* +12v supply voltage */
-	pacs = pacsx + ADC1IDX_12VRAWSUPPLY; // Point to "stuff" for this ADC channel
-
-	// Filter type, calibration option, compensation option. */
-	pacs->xprms.filttype  = ADCFILTERTYPE_IIR1;        // Single pole IIR
-	pacs->xprms.calibtype = ADC1PARAM_CALIBTYPE_OFSC;  // Offset & scale (poly ord 0 & 1)
-	pacs->xprms.comptype  = ADC1PARAM_COMPTYPE_VOLTVDD; // 5v w Vref abs w temp
-
-	// Calibration coefficients.
-	pacs->cal.f[0] = 0.0;     // Offset
-	pacs->cal.f[1] = 0.1525; // Scale (volts) (1.8K-10K)
-
-	// Filter initialize, coefficients, and pre-computed value. */
-	pacs->fpw.iir_f1.skipctr  = 4; 	 // Initial readings skip count
-	pacs->fpw.iir_f1.coef     = 0.9;   // Filter coefficient (< 1.0)
-	pacs->fpw.iir_f1.onemcoef = (1 - pacs->fpw.iir_f1.coef);
-
-/* 5v supply. */
-	pacs = pacsx + ADC1IDX_5VOLTSUPPLY; // Point to "stuff" for this ADC channel
-
-	// Filter type, calibration option, compensation option. */
-	pacs->xprms.filttype  = ADCFILTERTYPE_IIR1;        // Single pole IIR
-	pacs->xprms.calibtype = ADC1PARAM_CALIBTYPE_OFSC;  // Offset & scale (poly ord 0 & 1)
-	pacs->xprms.comptype  = ADC1PARAM_COMPTYPE_VOLTVDD; // 5v sensor; Vref w 5v supply reading compensation
-
-	// Calibration coefficients.
-	pacs->cal.f[0] = -4.3;    // Offset(millivolts)
-	pacs->cal.f[1] = 0.49987; // Scale (millivolts) (divider: 10K-10K)
-
-	// Filter initialize, coefficients, and pre-computed value. */
-	pacs->fpw.iir_f1.skipctr  = 4; 	 // Initial readings skip count
-	pacs->fpw.iir_f1.coef     = 0.99;   // Filter coefficient (< 1.0)
-	pacs->fpw.iir_f1.onemcoef = (1 - pacs->fpw.iir_f1.coef);
-
+	// Sensor connected, test current applied -> scale factor
+	// dscale = (calibration ADC - offset) / calibration current; // adcticks/amp
+	p->cur2.dscale = (p->lc.cal_cur2.caladcve - p->lc.cal_cur2.zeroadcve) / p->lc.cal_cur2.dcalcur;
+	
 	return;
 };

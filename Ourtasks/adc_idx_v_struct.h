@@ -38,7 +38,7 @@ struct ADCCALABS
 {
 	struct IIR_L_PARAM iir; // Filter: Time constant, integer scaling
 	uint32_t adcvn;    // (ADC reading) vn 
-   uint32_t dvn;      // (double) measured vn (volts)
+   double   dvn;      // (double) measured vn (volts)
 };
 
 
@@ -64,7 +64,7 @@ struct ADCCALHE
 	uint32_t zeroadcve; // connected, no current: HE adc reading
 	uint32_t zeroadc5;  // connected, no current: 5v adc reading 
 	uint32_t caladcve;  // connected, cal current: adc reading
-	 int32_t calcur;    // connected, cal current: current
+	double   dcalcur;   // connected, cal current: current
 };
 
 /* Parameters for ADC. */

@@ -141,17 +141,22 @@ NOTES:
 #define	IDXHV3, 2 // High voltage reading: across pre-charge resistor (two contactors)
 
 /* High voltage readings */
-#define HVSCALE 65536  // Scale factor for float->integer
+#define HVSCALEbits 16  // Scale factor HV
 struct CNCNTHV
 {
-   float fhv;     // Calibrated: Float
-	uint16_t hv;   // Raw reading as received from uart
+	struct IIRFILTERL iir; // Intermediate filter params
+   double dhv;            // Calibrated: Float
+	double dscale;         // ADC ticks/volt 
+	uint32_t hvcal;        // Calibrated, scaled volts/adc tick
+	uint32_t hvc;          // HV as scaled volts
+	uint16_t hv;           // Raw ADC reading received from uart
+
 };
 
 /* Fault codes */
-enum contactor_faultcode
+enum CONTACTOR_FAULTCODE
 {
-	NOFAULT = 0,
+	NOFAULT,
 	BATTERYLOW,
 	CONTACTOR1_OFF_AUX1_ON,
 	CONTACTOR2_OFF_AUX2_ON,
@@ -164,7 +169,7 @@ enum contactor_faultcode
 	KEEP_ALIVE_TIMER_TIMEOUT,
 }
 
-enum contactor_state
+enum CONTACTOR_STATE
 {
 	DISCONNECTED,
 	CONNECTING,
@@ -175,7 +180,7 @@ enum contactor_state
 	DISCONNECTING,
 };
 
-enum contactor_substateC
+enum CONTACTOR_SUBSTATEC
 {
 	CONNECTING1,
 	CONNECTING2,
@@ -184,7 +189,7 @@ enum contactor_substateC
 };
 
 /* Function command response payload codes. */
-enum contactor_cmd_codes
+enum CONTACTOR_CMD_CODES
 {
 	ADCRAW5V,         // PA0 IN0  - 5V sensor supply
 	ADCRAWCUR1,       // PA5 IN5  - Current sensor: total battery current
@@ -218,6 +223,8 @@ struct CONTACTORFUNCTION
    // Parameter loaded either by high-flash copy, or hard-coded subroutine
 	struct CONTACTORLC lc; // Parameters for contactors
 
+	struct ADCFUNCTION* padc; // Pointer to ADC working struct
+
 	/* Events status */
 	uint32_t evstat;
 
@@ -226,7 +233,7 @@ struct CONTACTORFUNCTION
 	uint32_t outstat_prev;
 
 	/* Current fault code */
-	enum contactor_faultcode faultcode;
+	enum CONTACTOR_FAULTCODE faultcode;
 
 /* In the disconnect state the battery string voltage must be above the following. */
 	uint32_t ibattlow;   // Minimum battery volts required to connect
@@ -243,6 +250,7 @@ struct CONTACTORFUNCTION
    uint32_t prechgmin_k; // Minimum pre-charge duration
 
 	uint32_t idiffafter; //  Scaled int: lc.diffafter
+
 	uint32_t prechgmax_k;// allowable delay for diffafter to reach closure point (timeout delay ticks)
 	uint32_t close1_k;   // contactor #1 coil energize-closure (timeout delay ticks)
 	uint32_t close2_k;   // contactor #2 coil energize-closure (timeout delay ticks)
@@ -270,17 +278,13 @@ struct CONTACTORFUNCTION
 	/* High voltage readings */
 	struct CNCNTHV hv[NUMHV];
 
+	// HV parameters converted from doubles to scaled integers
+//	struct CNTCTCALSI icalhv[NUMHV];  // 
+
 	/* Pointers to incoming CAN msg mailboxes. */
 	struct MAILBOXCAN* pmbx_cid_cmd_i;      //
 	struct MAILBOXCAN* pmbx_cid_keepalive_i; //
 	struct MAILBOXCAN* pmbx_cid_gps_sync;   //
-
-	// Parameters converted from floats to scaled integers
-	struct CNTCTCALSI icalcur1; // Motor current
-	struct CNTCTCALSI icalcur2; // spare
-	struct CNTCTCALSI icalhv1;  // Battery_minus-to-contactor #1 Battery_plus
-	struct CNTCTCALSI icalhv2;  // Battery_minus-to-contactor #1 DMOC_plus
-	struct CNTCTCALSI icalhv2;  // Battery_minus-to-contactor #2 DMOC_minus
 
 	uint32_t ipwmpct1;     // Period ct PWM after closure delay at 100% coil #1
 	uint32_t ipwmpct2;     // Period ct PWM after closure delay at 100% coil #2

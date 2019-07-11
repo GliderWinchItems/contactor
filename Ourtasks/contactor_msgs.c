@@ -2,7 +2,6 @@
 * File Name          : contactor_msgs.c
 * Date First Issued  : 07/05/2019
 * Description        : Setup and send non-command function CAN msgs
-*  cid_keepalive_i   : incoming CAN
 *******************************************************************************/
 
 #include "contactor_msgs.h"
@@ -10,7 +9,7 @@
 static void load4(uint8_t *po, uint32_t n);
 
 /* *************************************************************************
- * void contactor_msg1(struct CONTACTORFUNCTION* pcf, struct ADCCHANNEL* pchan, uint8_t w)
+ * void contactor_msg1(struct CONTACTORFUNCTION* pcf, struct ADCCHANNEL* pchan, uint8_t w);
  *	@brief	: Setup and send responses: battery string voltage & battery current
  * @param	: pcf = Pointer to working struct for Contactor function
  * @param	: pchan = Pointer to struct array for adc channels
@@ -76,7 +75,6 @@ void contactor_msg2(struct CONTACTORFUNCTION* pcf, uint8_t idx2)
 	// Queue CAN msg
 	xQueueSendToBack(CanTxQHandle,&pcf->canmsg[idx2].ncan,portMAX_DELAY);
 	return;
-
 }
 /* *************************************************************************
  * static void hvpayload(struct CONTACTORFUNCTION* pcf, uint8_t idx1,uint8_t idx2);
@@ -95,7 +93,6 @@ static void hvpayload(struct CONTACTORFUNCTION* pcf, uint8_t idx1,uint8_t idx2,i
 	load4(&pcf->canmsg[idx2].ncan.can.cd.uc[idx3],tmp.ui);
 	return;
 }
-
 /* *************************************************************************
  * void contactor_msg_ka(struct CONTACTORFUNCTION* pcf);
  *	@brief	: Setup and send Keep-alive response
@@ -121,7 +118,7 @@ void contactor_msg_ka(struct CONTACTORFUNCTION* pcf)
 }
 /* *************************************************************************
  * static void load4(uint8_t *po, uint32_t n);
- *	@brief	: Copy uint32 into byte array (not aligned)
+ *	@brief	: Copy uint32_t into byte array (not aligned)
  * *************************************************************************/
 static void load4(uint8_t *po, uint32_t n)
 {

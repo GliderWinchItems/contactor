@@ -124,7 +124,7 @@ static void absolute(struct ADCFUNCTION* p, struct ADCABSOLUTE* pa,uin8_t idx)
 	/* $$$ Skip using filtered value for now. */
 	uint64_t tmp64 = (p->intern.cmpvref * p->chan[idx].sum)
 	tmp64 /= p->intern.adccmpvref;
-	pa->ival = (tm64 >> 16);
+	pa->ival = (tm64 >> ADCSCALEbits);
 
 	return;
 }
@@ -171,16 +171,16 @@ static void ratiometric5v(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pr, uint
 	pa->adcfil = iir_filter_lx_do(&pr->iir, p->chan[idx].sum);
 
 	/* Compute ratio of sensor reading to 5v supply reading. */
-	uint64_t adcke = (p->chan[idx].sum << 16); // Scale before divide
+	uint64_t adcke = (p->chan[idx].sum << ADCSCALEbits); // Scale before divide
 	uint64_t adcratio = adcke / adcp->chan[ADC1IDX_5VOLTSUPPLY].sum;
-	uint32_t adcratio = (adcratio >> 16);
+	uint32_t adcratio = (adcratio >> ADCSCALEbits);
 
 	/* Subtract offset (note result is now signed). */
 	int32_t tmp = (adcratio - pr->iko); 
 
 	/* Apply adjustment for unequal resistor dividers. */
 	int64_t tmp64 = (pr->irk5ke * tmp);
-	pr->iI = (tmp64 >> 16);
+	pr->iI = (tmp64 >> ADCSCALEbits);
 
 	return;
 }
