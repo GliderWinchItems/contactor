@@ -31,8 +31,8 @@ Internal reference: 1.16 1.20 1.24 V
 #ifndef __ADCPARAMS
 #define __ADCPARAMS
 
-#include "iir_f1.h"
-#include "iir_f2.h"
+#include "iir_filter_lx.h"
+#include "adc_idx_v_struct.h"
 
 #define ADC1DMANUMSEQ        16 // Number of DMA scan sequences in 1/2 DMA buffer
 #define ADC1IDX_ADCSCANSIZE   6 // Number ADC channels read
@@ -101,7 +101,8 @@ struct ADCINTERNAL
 	uint32_t adcvref;    // Do I need this?
 	uint32_t adccmpvref; // scaled vref compensated for temperature
 
-	uint32_t vref;       // scaled vref computed from calibration params
+	double dvref;       // (double) vref computed from calibration params
+	uint32_t vref;       // (scaled) vref computed from calibration params
 };
 
 /* Working values for absolute voltages adjusted using Vref. */
@@ -123,12 +124,13 @@ struct ADCRATIOMETRIC
 	uint32_t adcfil;  // Filtered ADC reading
 	int32_t irk5ke;   // Ratio k5/ke ratio: scale int (~32768)
 	int32_t irko;     // Offset ratio: scale int (~32768)
-	int32_t iI;       // integer result w offset, not scaled 
+	int32_t iI;       // integer result w offset, not final scaling
 };
 
 struct ADCCHANNEL	
 {
-	double f;         // Reading: calibrated
+	double dscale;    // Reading: final scaling
+	uint32_t ival;    // Reading: calibrated scaled int32_t
 	uint16_t sum;     // Sum of 1/2 DMA buffer
 };
 
@@ -150,14 +152,8 @@ void adcparams_init(void);
 /*	@brief	: Copy parameters into structs
  * NOTE: => ASSUMES ADC1 ONLY <==
  * *************************************************************************/
-void adcparams_internal(struct ADCCALCOMMON* pacom, struct ADC1DATA* padc1);
-/*	@brief	: Update values used for compensation from Vref and Temperature
- * @param	: pacom = Pointer calibration parameters for Temperature and Vref
- * @param	: padc1 = Pointer to array of ADC reading sums plus other stuff
- * *************************************************************************/
-void adcparams_chan(uint8_t adcidx);
-/*	@brief	: calibration, compensation, filtering for channels
- * @param	: adcidx = index into ADC1 array
+void adcparams_cal(void);
+/*	@brief	: calibrate and filter ADC readings
  * *************************************************************************/
 
 extern struct ADCFUNCTION adc1;

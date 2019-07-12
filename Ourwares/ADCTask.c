@@ -17,8 +17,8 @@
 
 void StartADCTask(void const * argument);
 
-uint32_t adcsumdb[6];
-uint32_t adcdbctr = 0;
+uint32_t adcsumdb[6]; // debug
+uint32_t adcdbctr = 0;// debug
 
 osThreadId ADCTaskHandle;
 
@@ -71,7 +71,7 @@ void StartADCTask(void const * argument)
 
 		if (noteval & TSK02BIT02)
 		{
-			pdma = adc1dmatskblk[0].pdma1;
+			pdma = adc1dmatskblk[0].pdma1; // [0] = adc1
 		}
 		else
 		{
@@ -79,15 +79,15 @@ void StartADCTask(void const * argument)
 		}
 
 		/* Sum the readings 1/2 of DMA buffer to an array. */
-		adcfastsum16(&adc1data.adcs1sum[0], pdma); // Fast in-line addition
+		adcfastsum16(&adc1.chan[0], pdma); // Fast in-line addition
 
 		/* Save sum for defaultTask printout for debugging */
-		adcsumdb[0] = adc1data.adcs1sum[0];
-		adcsumdb[1] = adc1data.adcs1sum[1];
-		adcsumdb[2] = adc1data.adcs1sum[2];
-		adcsumdb[3] = adc1data.adcs1sum[3];
-		adcsumdb[4] = adc1data.adcs1sum[4];
-		adcsumdb[5] = adc1data.adcs1sum[5];
+		adcsumdb[0] = adc1.chan[0].sum;
+		adcsumdb[1] = adc1.chan[1].sum;
+		adcsumdb[2] = adc1.chan[2].sum;
+		adcsumdb[3] = adc1.chan[3].sum;
+		adcsumdb[4] = adc1.chan[4].sum;
+		adcsumdb[5] = adc1.chan[5].sum;
 		adcdbctr += 1;
 
 		/* Calibrate and filter ADC readings. */
@@ -95,28 +95,4 @@ void StartADCTask(void const * argument)
 
   }
 }
-/* *************************************************************************
- * static void init(void);
- *	@brief	: Contactor init 
- * *************************************************************************/
-static void fptoi(struct ADCCALCONTACTORINT* pi, struct ADCCALCONTACTOR* pf)
-{
-	pi->contactorlc.cal_hv.offset * 
-}
-static void init(void)
-{
-
-	struct CONTACTORFUNCTION* pfun = &contactorfunction; // Convenience pointer
-
-	/* Load parameters into struct.*/
-	adc_idx_v_struct_hardcode_params(&contactorfunction.contactorlc);
-
-	/* Convert float parameters to scaled integers. */
-		struct ADCCALCONTACTORINT ical_hv;  // High voltage calibration (offset & scale)
-	struct ADCCALCONTACTORINT ical_cur; // Current calibration (offset & scale)
-	struct ADCCALCONTACTORINT ical_5v;  // 5v regulated voltage 
-	struct ADCCALCONTACTORINT ical_12v; // 12v raw CAN voltage
-
-}
-
 

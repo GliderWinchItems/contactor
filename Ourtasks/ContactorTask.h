@@ -13,6 +13,7 @@
 #include "cmsis_os.h"
 #include "stm32f1xx_hal.h"
 #include "adc_idx_v_struct.h"
+#include "CanTask.h"
 
 /* 
 =========================================      
@@ -134,19 +135,13 @@ NOTES:
 /* Number of different CAN id msgs this function sends. */
 # define NUMCANMSGS 6
 
-/* High Voltage readings arrive in on uart line. */
-#define NUMHV 3       // Number of hv readings
-#define	IDXHV1  0 // High voltage reading: battery string side of contactor
-#define	IDXHV2, 1 // High voltage reading: DMOC+ side of contactor
-#define	IDXHV3, 2 // High voltage reading: across pre-charge resistor (two contactors)
-
 /* High voltage readings */
 #define HVSCALEbits 16  // Scale factor HV
 struct CNCNTHV
 {
 	struct IIRFILTERL iir; // Intermediate filter params
-   double dhv;            // Calibrated: Float
-	double dscale;         // ADC ticks/volt 
+//   double dhv;            // Calibrated
+	double dscale;         // volts/tick
 	uint32_t hvcal;        // Calibrated, scaled volts/adc tick
 	uint32_t hvc;          // HV as scaled volts
 	uint16_t hv;           // Raw ADC reading received from uart
@@ -167,7 +162,7 @@ enum CONTACTOR_FAULTCODE
 	CONTACTOR1_CLOSED_VOLTSTOOBIG,
 	CONTACTOR2_CLOSED_VOLTSTOOBIG,
 	KEEP_ALIVE_TIMER_TIMEOUT,
-}
+};
 
 enum CONTACTOR_STATE
 {
@@ -241,7 +236,6 @@ struct CONTACTORFUNCTION
 /* With two contactor config, (hv1-hv2) max when contactor #1 closes */
 /* In one contactor config, (hv1-hv2) max when contactor #2 closes */
 	uint32_t ihv1mhv2max;
-
 
 	// Parameters converted to scaled integer or timer ticks
 	uint32_t iprechgendv;// Prep-charge end volts threshold

@@ -5,7 +5,6 @@
 *******************************************************************************/
 
 #include "adcfastsum16.h"
-#include "adcparams.h"
 
 /* *************************************************************************
  * void adcfastsum16(struct ADCCHANNEL* pchan, uint16_t* pdma);
@@ -13,12 +12,12 @@
  * @param	: pchan = pointer to stuct array for adc1 channels
  * @param	: pdma  = pointer to dma buffer
  * *************************************************************************/
-void adcfastsum16(uint16_t* psum, uint16_t* pdma)
+void adcfastsum16(struct ADCCHANNEL* pchan, uint16_t* pdma)
 {
 	struct ADCCHANNEL* pend = pchan + ADC1IDX_ADCSCANSIZE;
 	do
 	{
-		*pchan.sum = *pdma
+		pchan->sum = *pdma
 		 + *(pdma + ADC1IDX_ADCSCANSIZE * 1)
 		 + *(pdma + ADC1IDX_ADCSCANSIZE * 2)
 		 + *(pdma + ADC1IDX_ADCSCANSIZE * 3)

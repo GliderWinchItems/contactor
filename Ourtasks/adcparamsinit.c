@@ -4,41 +4,28 @@
 * Board              : DiscoveryF4
 * Description        : Initialization of parameters for ADC app configuration
 *******************************************************************************/
-
 /* 
 This is where hard-coded parameters for the ADC are entered.
 
 Later, this may be replaced with a "copy" of the flat file in high flash, generated
 by the java program from the sql database.
 */
-
 #include "adcparamsinit.h"
 #include "adcparams.h"
 #include "ADCTask.h"
+#include "morse.h"
 
-/*                   Min  Typ  Max 
-Internal reference F103: 1.16 1.20 1.26 V */
-Internal reference F407: 1.18 1.20 1.24 V */
-
-#define VREFMIN ((uint32_t)(1.15 * (1<<ADCSCALEbits))
-#define VREFMAX ((uint32_t)(1.25 * (1<<ADCSCALEbits))
-
-/* *************************************************************************
- * void adcparamsinit_init_common(struct ADCFUNCTION padc);
- *	@brief	: Initialize struct with parameters common to all ADC for this =>board<=
- * @param	: padccommon = pointer to struct holding parameters
- * @param	: pacsx = Pointer to struct "everything" for this ADC module
- * *************************************************************************/
-void adcparamsinit_init_common(struct ADCFUNCTION padc)
-{
-
-	return;
-}
+/*                        Min  Typ  Max 
+Internal reference F103: 1.16 1.20 1.26 V 
+Internal reference F407: 1.18 1.20 1.24 V 
+*/
+#define VREFMIN ((uint32_t)(1.15 * (1<<ADCSCALEbits)))
+#define VREFMAX ((uint32_t)(1.25 * (1<<ADCSCALEbits)))
 
 /* *************************************************************************
- * void adcparamsinit_init(struct ADCCHANNELSTUFF* pacsx);
- *	@brief	: Load structs for compensation, calibration and filtering for ADC channels
- * @param	: pacsx = Pointer to struct "everything" for this ADC module
+void adcparamsinit_init(struct ADCFUNCTION* p);
+ *	@brief	: Load structs for compensation, calibration and filtering all ADC channels
+ * @param	: p = Pointer to struct "everything" for this ADC module
  * *************************************************************************/
 
 /* Reproduced for convenience
@@ -66,7 +53,7 @@ void adcparamsinit_init_common(struct ADCFUNCTION padc)
 #define ADC1PARAM_CALIBTYPE_RAW_UI 4    // No calibration applied: UNSIGNED INT
 */
 
-void adcparamsinit_init(struct ADCFUNCTION* p);
+void adcparamsinit_init(struct ADCFUNCTION* p)
 {
 /* Reproduced for convenience 
 struct ADCFUNCTION
@@ -91,7 +78,7 @@ struct ADCINTERNAL
 	uint32_t adcvref;    // Do I need this?
 	uint32_t adccmpvref; // scaled vref compensated for temperature
 
-	ddouble dvref;       // (double) vref computed from calibration params
+	double dvref;       // (double) vref computed from calibration params
 	uint32_t vref;       // (scaled) vref computed from calibration params
 }; */
 
@@ -103,12 +90,17 @@ struct ADCINTERNAL
 	// Compute a scaled integer vref from measurements
 	double dadc  = p->lc.calintern.adcvdd; // ADC reading (~27360)
 	p->intern.dvref = p->lc.calintern.dvdd * (dadc / 65520.0);
-	p->intern.vref  = (dvref * (1 << ADCSCALEbits) ); // Scaled uint32_t; 
+	p->intern.vref  = (p->intern.dvref * (1 << ADCSCALEbits) ); // Scaled uint32_t; 
 
 	// Check for out-of-datasheet Vref spec 
-	if ( (p->lc.calintern.vref < (VREFMIN)) || 
-        (p->lc.calintern.vref > (VREFMAX)) )
+	if ((p->intern.dvref < (VREFMIN)) || (p->intern.dvref > (VREFMAX))) 
+	{
 		morse_trap(81);
+	}
+	p->chan[ADC1IDX_INTERNALTEMP].dscale = p->lc.calintern.dvdd / 65520.0;
+	p->chan[ADC1IDX_INTERNALVREF].dscale = 1.0;
+
+// TODO temperature computation and Vref adjustment for temperature
 
 /* Reproduced for convenience
 struct ADCABSOLUTE
@@ -121,11 +113,15 @@ struct ADCABSOLUTE
 
 /* Absolute: 12v supply. */
 	p->v12.iir.pprm = &p->lc.cal_12v.iir; // Filter param pointer
-	p->v12.dscale = p=>lc.cal_12v.dvn     // p->lc.cal_12v.adcvn;
+	p->v12.dscale   =  p->lc.cal_12v.dvn; // p->lc.cal_12v.adcvn;
+	p->chan[ADC1IDX_12VRAWSUPPLY].dscale = p->v12.dscale;
 
 /* Absolute:  5v supply. */
 	p->v5.iir.pprm = &p->lc.cal_5v.iir; // Filter param pointer
-	p->v5.dscale = p=>lc.cal_5v.dvn     // p->lc.cal_12v.adcvn;
+	p->v5.dscale   =  p->lc.cal_5v.dvn;  // p->lc.cal_12v.adcvn;
+	p->chan[ADC1IDX_5VOLTSUPPLY].dscale = p->v5.dscale;
+
+
 
 /* Reproduced for convenience
 struct ADCRATIOMETRIC
@@ -144,7 +140,7 @@ struct ADCRATIOMETRIC
 	p->cur1.iir.pprm = &p->lc.cal_cur1.iir; // Filter param pointer
 	
 	// Jumpered readings -> resistor divider ratio (~ 1.00)
-	p->cur1.drk5ke = (double)p->lc.cal_cur1.j5adc5 / (double)p->lc.cal_cur1.j5adcke;
+	p->cur1.drk5ke = (double)p->lc.cal_cur1.j5adcv5 / (double)p->lc.cal_cur1.j5adcve;
 	p->cur1.irk5ke *= (p->cur1.drk5ke * (1 << ADCSCALEbits) );
 
 	// Sensor connected, no current -> offset ratio (~ 0.50)
@@ -154,12 +150,13 @@ struct ADCRATIOMETRIC
 	// Sensor connected, test current applied -> scale factor
 	// dscale = (calibration ADC - offset) / calibration current; // adcticks/amp
 	p->cur1.dscale = (p->lc.cal_cur1.caladcve - p->lc.cal_cur1.zeroadcve) / p->lc.cal_cur1.dcalcur;
-	
+	p->chan[ADC1IDX_CURRENTTOTAL].dscale = p->cur1.dscale; // For convenient access
+
 /* Ratiometric: spare current. */
 	p->cur2.iir.pprm = &p->lc.cal_cur2.iir; // Filter param pointer
 
 	// Jumpered readings -> resistor divider ratio (~ 1.00)
-	p->cur2.drk5ke = (double)p->lc.cal_cur2.j5adc5 / (double)p->lc.cal_cur2.j5adcke;
+	p->cur2.drk5ke = (double)p->lc.cal_cur2.j5adcv5 / (double)p->lc.cal_cur2.j5adcve;
 	p->cur2.irk5ke *= (p->cur2.drk5ke * (1 << ADCSCALEbits) );
 
 	// Sensor connected, no current -> offset ratio (~ 0.50)
@@ -169,6 +166,7 @@ struct ADCRATIOMETRIC
 	// Sensor connected, test current applied -> scale factor
 	// dscale = (calibration ADC - offset) / calibration current; // adcticks/amp
 	p->cur2.dscale = (p->lc.cal_cur2.caladcve - p->lc.cal_cur2.zeroadcve) / p->lc.cal_cur2.dcalcur;
+	p->chan[ADC1IDX_CURRENTMOTOR].dscale = p->cur2.dscale; // For convenient access
 	
 	return;
-};
+}

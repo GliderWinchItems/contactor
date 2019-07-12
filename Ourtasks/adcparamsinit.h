@@ -11,17 +11,10 @@
 #include <stdint.h>
 #include "adcparams.h"
 
-#define SCALE1 (1 << 16)
-
 /* *************************************************************************/
-void adcparamsinit_init_common(struct ADCCALCOMMON* padccommon, struct ADCCHANNELSTUFF* pacsx);
-/*	@brief	: Initialize struct with parameters common to all ADC for this =>board<=
- * @param	: padccommon = pointer to struct holding parameters
- * @param	: pacsx = Pointer to struct "everything" for this ADC module
- * *************************************************************************/
-void adcparamsinit_init(struct ADCCHANNELSTUFF* pacsx);
+void adcparamsinit_init(struct ADCFUNCTION* p);
 /*	@brief	: Load structs for compensation, calibration and filtering all ADC channels
- * @param	: pacsx = Pointer to struct "everything" for this ADC module
+ * @param	: p = Pointer to struct "everything" for this ADC module
  * *************************************************************************/
 
 #endif

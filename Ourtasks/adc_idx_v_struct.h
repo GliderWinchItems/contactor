@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include "common_can.h"
 #include "iir_filter_lx.h"
+#include "contactor_idx_v_struct.h"
 
 #ifndef __ADC_IDX_V_STRUCT
 #define __ADC_IDX_V_STRUCT
@@ -74,6 +75,7 @@ struct ADCCALHE
 	uint32_t size;			// Number of items in struct
  	uint32_t crc;			// crc-32 placed by loader
 	uint32_t version;		// struct version number
+	uint32_t hbct;       // heartbeat count (ms)
 	struct ADC1CALINTERNAL calintern; // Vref and Temp internal sensors
 	struct ADCCALHE cal_cur1; // Hall-effect current calibration, battery string
 	struct ADCCALHE cal_cur2; // Hall-effect current calibration, spare 
@@ -82,8 +84,8 @@ struct ADCCALHE
  };
 
 /* **************************************************************************************/
-int adc_idx_v_struct_hardcode_params(struct CONTACTORLC* p);
-/* @brief	: Init struct from hard-coded parameters (rather than database params in highflash)
+int adc_idx_v_struct_hardcode_params(struct ADCCONTACTORLC* p);
+/* @brief	: Hard-code load local copy with parameters
  * @return	: 0
  * ************************************************************************************** */
  

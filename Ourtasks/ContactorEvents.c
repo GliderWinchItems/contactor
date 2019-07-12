@@ -11,8 +11,8 @@
 #include "ADCTask.h"
 #include "adctask.h"
 
-#include "ContactorTask.h"
 #include "contactor_idx_v_struct.h"
+#include "ContactorTask.h"
 #include "morse.h"
 
 #include "SerialTaskReceive.h"
@@ -20,6 +20,8 @@
 #include "can_iface.h"
 #include "contactor_hv.h"
 #include "contactor_cmd_msg.h"
+#include "contactor_hv.h"
+#include "MailboxTask.h"
 
 
 /* Declarations */
@@ -100,10 +102,10 @@ void ContactorEvents_07(struct CONTACTORFUNCTION* pcf)
 {
 	/* Queue keep-alive response CAN msg */
 	pcf->outstat |=  CNCTOUT05KA;
-	pcf->evstat  &= ~CNCTEVTIMER; // Reset timer1 timeout bit
+	pcf->evstat  &= ~CNCTEVTIMER1; // Reset timer1 timeout bit
 
 	/* Incoming command byte with command bits */
-	uint8_t cmd = pmbx_cid_keepalive_i->ncan.can.cd.uc[0];
+	uint8_t cmd = pcf->pmbx_cid_keepalive_i->ncan.can.cd.uc[0];
 
 	/* Update connect request status */
 	if ( (cmd & CMDCONNECT) != 0) // Command to connect

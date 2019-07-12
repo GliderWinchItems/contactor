@@ -95,18 +95,18 @@ Voltage at 25 °C  1.34 1.43 1.52 V
 
 //adcdbg1 = DTWTIME;
 	/* IIR filter internal adc sensor readings. */
-	p->intern.adcfiltemp = iir_filter_lx_do(&p->intern.iiradctemp, p->chan[ADC1IDX_INTERNALTEMP].sum);
-	p->intern.adcfilvref = iir_filter_lx_do(&p->intern.iiradcvref, p->chan[ADC1IDX_INTERNALVREF].sum);
+	p->intern.adcfiltemp = iir_filter_lx_do(&p->intern.iiradctemp, &p->chan[ADC1IDX_INTERNALTEMP].sum);
+	p->intern.adcfilvref = iir_filter_lx_do(&p->intern.iiradcvref, &p->chan[ADC1IDX_INTERNALVREF].sum);
 
 	/* Skip temperature compensation & filtering for now. */
-	p->intern.cmpvref = p->chan[ADC1IDX_INTERNALVREF];
+	p->intern.adccmpvref = p->chan[ADC1IDX_INTERNALVREF].sum;
 
 //adcdbg2 = DTWTIME - adcdbg1;
 
 	return;
 }
 /* *************************************************************************
- * static void absolute(struct ADCFUNCTION* p, struct ADCABSOLUTE* pa,uin8_t idx);
+ * static void absolute(struct ADCFUNCTION* p, struct ADCABSOLUTE* pa,uint8_t idx);
  *	@brief	: Calibrate and filter absolute voltage readings
  * @param	: p = Pointer to array of ADC reading sums plus other stuff
  * @param	: pa = Pointer to absolute parameters for reading 'n'
@@ -116,15 +116,15 @@ Voltage at 25 °C  1.34 1.43 1.52 V
 Vn = Vref * (ADC[n]/ADC[vref]) * ((R1+R2)/R2);
   Where: ((R1+R2)/R2) is resistor divider scale factor 
 */
-static void absolute(struct ADCFUNCTION* p, struct ADCABSOLUTE* pa,uin8_t idx)
+static void absolute(struct ADCFUNCTION* p, struct ADCABSOLUTE* pa,uint8_t idx)
 {
 	/* IIR filter adc reading. */
-	pa->adcfil = iir_filter_lx_do(&pa->iir, p->chan[idx].sum);
+	pa->adcfil = iir_filter_lx_do(&pa->iir, &p->chan[idx].sum);
 
 	/* $$$ Skip using filtered value for now. */
-	uint64_t tmp64 = (p->intern.cmpvref * p->chan[idx].sum)
+	uint64_t tmp64 = (p->intern.adccmpvref * p->chan[idx].sum);
 	tmp64 /= p->intern.adccmpvref;
-	pa->ival = (tm64 >> ADCSCALEbits);
+	pa->ival = (tmp64 >> ADCSCALEbits);
 
 	return;
 }
@@ -168,15 +168,15 @@ static void ratiometric5v(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pr, uint
    is calibrated.  The ratio is therefore close to 1.0.
 */
 	/* IIR filter adc reading. */
-	pa->adcfil = iir_filter_lx_do(&pr->iir, p->chan[idx].sum);
+	pr->adcfil = iir_filter_lx_do(&pr->iir, &p->chan[idx].sum);
 
 	/* Compute ratio of sensor reading to 5v supply reading. */
 	uint64_t adcke = (p->chan[idx].sum << ADCSCALEbits); // Scale before divide
-	uint64_t adcratio = adcke / adcp->chan[ADC1IDX_5VOLTSUPPLY].sum;
-	uint32_t adcratio = (adcratio >> ADCSCALEbits);
+	uint64_t adcratio64 = adcke / p->chan[ADC1IDX_5VOLTSUPPLY].sum;
+	uint32_t adcratio = (adcratio64 >> ADCSCALEbits);
 
 	/* Subtract offset (note result is now signed). */
-	int32_t tmp = (adcratio - pr->iko); 
+	int32_t tmp = (adcratio - pr->irko); 
 
 	/* Apply adjustment for unequal resistor dividers. */
 	int64_t tmp64 = (pr->irk5ke * tmp);
@@ -204,9 +204,9 @@ void adcparams_cal(void)
    old readings will be used which is not a big deal for a slowly 
    changing 5v supply. */
 
-	ratiometric5v(p, p->cur1, ADC1IDX_CURRENTTOTAL); // Battery string sensor
+	ratiometric5v(p, &p->cur1, ADC1IDX_CURRENTTOTAL); // Battery string sensor
 
-	ratiometric5v(p, p->cur2, ADC1IDX_CURRENTMOTOR); // Spare, or motor sensor
+	ratiometric5v(p, &p->cur2, ADC1IDX_CURRENTMOTOR); // Spare, or motor sensor
 
 	return;
 }

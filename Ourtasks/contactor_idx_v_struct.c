@@ -8,11 +8,11 @@
 #include "contactor_idx_v_struct.h"
 
 /* *************************************************************************
- * static void contactor_idx_v_struct_hardcode_params(struct struct CONTACTORLC* p);
+ * void contactor_idx_v_struct_hardcode_params(struct struct CONTACTORLC* p);
  * @brief	: Init struct from hard-coded parameters (rather than database params in highflash)
  * @return	: 0
  * *************************************************************************/
-static void contactor_idx_v_struct_hardcode_params(struct struct CONTACTORLC* p)
+void contactor_idx_v_struct_hardcode_params(struct struct CONTACTORLC* p)
 { /*
 Copied for convenience--
 

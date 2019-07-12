@@ -77,23 +77,35 @@ C_SOURCES += Ourwares/DTW_counter.c
 C_SOURCES += Ourwares/CanTask.c
 C_SOURCES += Ourwares/can_iface.c
 C_SOURCES += Ourwares/canfilter_setup.c
+C_SOURCES += Ourwares/getserialbuf.c
+C_SOURCES += Ourwares/yprintf.c
 C_SOURCES += Ourwares/SerialTaskReceive.c
 C_SOURCES += Ourwares/morse.c
+C_SOURCES += Ourwares/payload_extract.c
+C_SOURCES += Ourwares/MailboxTask.c
 C_SOURCES += Ourwares/adctask.c
 C_SOURCES += Ourwares/ADCTask.c
 C_SOURCES += Ourwares/adcparams.c
-C_SOURCES += Ourwares/getserialbuf.c
-C_SOURCES += Ourwares/yprintf.c
-C_SOURCES += Ourwares/MailboxTask.c
-C_SOURCES += Ourwares/payload_extract.c
+C_SOURCES += payload_extract.c
 
-C_SOURCES += Ourtasks/adcfastsum16.c
-C_SOURCES += Ourtasks/adcparamsinit.c
 C_SOURCES += Ourtasks/stackwatermark.c
-C_SOURCES += Ourtasks/iir_f1.c
+C_SOURCES += Ourtasks/adcfastsum16.c
+C_SOURCES += adc_idx_v_struct.c
+C_SOURCES += adcparams.c
+C_SOURCES += adcparamsinit.c
+C_SOURCES += contactor_cmd_msg.c
+C_SOURCES += ContactorEvents.c
+C_SOURCES += contactor_func_init.c
+C_SOURCES += contactor_hv.c
+C_SOURCES += contactor_idx_v_struct.c
+C_SOURCES += contactor_msgs.c
+C_SOURCES += ContactorStates.c
+C_SOURCES += ContactorTask.c
+C_SOURCES += ContactorUpdates.c
+C_SOURCES += filters.c
+C_SOURCES += iir_filter_lx.c
 
 # /* USER CODE END */ 
-
 
 # ASM sources
 ASM_SOURCES =  \
@@ -159,6 +171,15 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/FreeRTOS/Source/include \
 -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
 -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3
+
+# /* USER CODE BEGIN */
+
+C_INCLUDES += -IOurwares 
+C_INCLUDES += -IOurtasks
+
+# /* USER CODE END */
+
+
 
 # /* USER CODE BEGIN */
 

@@ -4,6 +4,7 @@
 * Board              :
 * Description        : Load sram local copy of parameters
 *******************************************************************************/
+#include "adc_idx_v_struct.h"
 
 /* **************************************************************************************
  * int adc_idx_v_struct_hardcode_params(struct ADCCONTACTORLC* p);
@@ -28,7 +29,6 @@ int adc_idx_v_struct_hardcode_params(struct ADCCONTACTORLC* p)
 	p->size     = 37; // Number of items in list
 	p->crc      = 0;  // TODO
    p->version  = 1;
-
 	p->hbct     = 1000;  // Time (ms) between HB msg
 
 /* Reproduced for convenience 
@@ -54,9 +54,9 @@ struct ADC1CALINTERNAL
 	p->calintern.adcvdd = (16*1710.0);// ADC reading (DMA sum) for above Vdd
 
 	// Internal temperature: ADC1IDX_INTERNALTEMP  4   // IN17     - Internal temperature sensor
-	p->adcvrmtmp = (16*1488);  // Room temp ADC (DMA sum) reading
-	p->rmtmp     = 27;         // Room temp for ADC reading     
-	p->dslope    = 4.3;        // mv/degC slope of temperature sensor
+	p->calintern.adcrmtmp  = (16*1488);  // Room temp ADC (DMA sum) reading
+	p->calintern.rmtmp     = 27;         // Room temp for ADC reading     
+	p->calintern.dslope    = 4.3;        // mv/degC slope of temperature sensor
 
 /*  Reproduced for convenience 
 struct ADCCALHE
@@ -102,13 +102,13 @@ struct ADCCALABS
 	// 5v supply: ADC1IDX_5VOLTSUPPLY   0   // PA0 IN0  - 5V sensor supply
 	p->cal_5v.iir.k     = 10;    // Filter time constant
 	p->cal_5v.iir.scale = 2;     // Filter integer scaling
-	p->cal_5v.adcvn;    = 59597; // (ADC reading) v5
+	p->cal_5v.adcvn     = 59597; // (ADC reading) v5
 	p->cal_5v.dvn       = 5.00;  // (double) measured v5 (volts)
 
 	// Raw 12v CAN bus supply: ADC1IDX_12VRAWSUPPLY  3   // PA7 IN7  - +12 Raw power to board
 	p->cal_12v.iir.k     = 10;    // Filter time constant
 	p->cal_12v.iir.scale = 2;     // Filter integer scaling
-	p->cal_12v.adcvn;    = 59597; // (ADC reading) v12 
+	p->cal_12v.adcvn     = 59597; // (ADC reading) v12 
 	p->cal_12v.dvn       = 13.8;  // (double) measured v12 (volts)
 
 	return 0;	

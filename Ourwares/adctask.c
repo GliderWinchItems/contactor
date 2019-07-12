@@ -112,9 +112,13 @@ taskEXIT_CRITICAL();
  * void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc);
  *	@brief	: Call back from stm32f4xx_hal_adc: Halfway point of dma buffer
  * *************************************************************************/
+/* *************************************************************************
+ * void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc);
+ *	@brief	: Call back from stm32f4xx_hal_adc: Halfway point of dma buffer
+ * *************************************************************************/
 void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
 {
-	adcommon.dmact += 1; // Running count
+//	adcommon.dmact += 1; // Running count
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	struct ADCDMATSKBLK* ptmp = &adc1dmatskblk[0];
 
@@ -134,7 +138,7 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef* hadc)
  * *************************************************************************/
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-	adcommon.dmact += 1; // Running count
+//	adcommon.dmact += 1; // Running count
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	struct ADCDMATSKBLK* ptmp = &adc1dmatskblk[0];
 

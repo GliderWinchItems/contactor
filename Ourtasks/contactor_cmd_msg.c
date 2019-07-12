@@ -3,11 +3,27 @@
 * Date First Issued  : 07/03/2019
 * Description        : cid_cmd_msg_i: Function command
 *******************************************************************************/
-
+/*
+CAN msg payload format:
+ pay[0] - return request code
+  If request code for ADC
+    pay]1][2]  = ADC adjusted reading (unit16_t)
+    pay[3]-[6] = Calibrated reading (float)
+  If request is for High Voltage
+    pay[1][2]  = Reading received from uart
+    pay[3]-[6] = Calibrated reading (float)   
+  If code is bogus
+    pay[1]-[6] = 0;
+*/
 #include "adcparams.h"
+#include "CanTask.h"
+#include "can_iface.h"
+#include "MailboxTask.h"
+#include "can_iface.h"
+#include "CanTask.h"
 
+static void loadadc(struct CONTACTORFUNCTION* pcf, uint8_t idx);
 static void loadhv(struct CONTACTORFUNCTION* pcf, uint8_t idx);
-static void loadhv(struct CONTACTORFUNCTION* pcf, enum HVIDX idx);
 static void load4(uint8_t *po, uint32_t n);
 
 /* *************************************************************************
@@ -25,8 +41,8 @@ This is highly unlikely, and if the incoming command CAN id is lower priority
 than the response, then it may not be possible for the overwrite situation.
 */
 
-/*
-enum contactor_cmd_codes
+/* Reproduced for convenience--
+enum CONTACTOR_CMD_CODES
 {
 	ADCRAW5V,         // PA0 IN0  - 5V sensor supply
 	ADCRAWCUR1,       // PA5 IN5  - Current sensor: total battery current
@@ -34,18 +50,19 @@ enum contactor_cmd_codes
 	ADCRAW12V,        // PA7 IN7  - +12 Raw power to board
 	ADCINTERNALTEMP,  // IN17     - Internal temperature sensor
 	ADCINTERNALVREF,  // IN18     - Internal voltage reference
-	UARTWHV1,
-	UARTWHV2,
-	UARTWHV3,
-	CAL5V,
-	CAL12V,
+	UARTWHV1,  // Battery voltage
+	UARTWHV2,  // DMOC +
+	UARTWHV3,  // DMOC -
+	CAL5V,     // 5V supply
+	CAL12V,    // CAN raw 12v supply
 };
 
 */
-static void loadadc(struct CONTACTORFUNCTION* pcf, uint8_t idx);
+	int i;
+	uint8_t pay0 = pcf->pmbx_cid_cmd_i->ncan.can.cd.uc[0];
 
-	uint8_t pay0 = pcf->pmbx_cid_cmd_i.ncan.cd.uc[0];
-	uint16_t tmp16;
+	// Return payload request code
+	pcf->canmsg[CID_CMD_R].can.cd.uc[0] = pcf->pmbx_cid_cmd_i->ncan.can.cd.uc[0];	
 
 	/* Switch on first payload byte response code */
 	switch (pay0)
@@ -62,13 +79,18 @@ static void loadadc(struct CONTACTORFUNCTION* pcf, uint8_t idx);
 			break;
 
 	/* External uart high voltage sensor readings. */
-	case UARTWHV1: loadhv(pcf,HV1); break;
-	case UARTWHV2: loadhv(pcf,HV2); break;
-	case UARTWHV3: loadhv(pcf,HV3); break;
+	case UARTWHV1: loadhv(pcf,IDXHV1); break;
+	case UARTWHV2: loadhv(pcf,IDXHV2); break;
+	case UARTWHV3: loadhv(pcf,IDXHV3); break;
 
+	/* Bogus code */
+	default:
+		for (i = 1; i < 7; i++) pcf->canmsg[CID_CMD_R].can.cd.uc[i] = 0;
+		pcf->canmsg[CID_CMD_R].can.dlc = 7; // Number of payload bytes
+		
 	}
 	// Queue CAN msg
-	xQueueSendToBack(CanTxQHandle,&pcf->canmsg[CID_CMD_R].ncan,portMAX_DELAY);
+	xQueueSendToBack(CanTxQHandle,&pcf->canmsg[CID_CMD_R],portMAX_DELAY);
 
 }
 /* *************************************************************************
@@ -89,50 +111,52 @@ static void load4(uint8_t *po, uint32_t n)
  * *************************************************************************/
 static void loadadc(struct CONTACTORFUNCTION* pcf, uint8_t idx)
 {
-	// Calibrated as a float
-	union ADCCALREADING tmp;
-
-	// Return payload request code	
-	pcf->canmsg[CID_CMD_R].ncan.can.cd.uc[0] = pay0;	
+	// For loading float into payload
+	union UIF
+	{
+		uint32_t ui;
+		float    f;
+	}tmp;
 
 	// Raw integer readings (sum of 1/2 DMA buffer)
-	tmp16 = adc1chan[pay0].sum; // Get raw sum reading
-	pcf->canmsg[CID_CMD_R].ncan.can.cd.uc[1] = (tmp16 >> 0);
-	pcf->canmsg[CID_CMD_R].ncan.can.cd.uc[2] = (tmp16 >> 8);
+	uint16_t tmp16 = pcf->padc->chan[idx].sum; // Get raw sum reading
+	pcf->canmsg[CID_CMD_R].can.cd.uc[1] = (tmp16 >> 0);
+	pcf->canmsg[CID_CMD_R].can.cd.uc[2] = (tmp16 >> 8);
 
 	// Calibrated 
 	// Load reading as a float into payload
-	tmp.f = adc1chan[pay0].readcal.ui; // Convert int to float
-	tmp.f += pcf->lc.fcaladc[idx].offset;
-	tmp.f *= pcf->lc.fcaladc[idx].scale;
-	load4(&pcf->canmsg[CID_CMD_R].ncan.can.cd.uc[3],tmp.ui);
+	double dtmp  = pcf->padc->chan[idx].ival;  // Convert int to float
+	       dtmp *= pcf->padc->chan[idx].dscale; // Final scaling
+	tmp.f = dtmp;  // Convert double to float
+	load4(&pcf->canmsg[CID_CMD_R].can.cd.uc[3],tmp.ui); // Load payload
 
-	pcf->canmsg[CID_CMD_R].ncan.can.dlc = 7; // Number of payload bytes
+	pcf->canmsg[CID_CMD_R].can.dlc = 7; // Number of payload bytes
 	return;
 }
 /* *************************************************************************
  * static void loadhv(struct CONTACTORFUNCTION* pcf, uint8_t idx);
  *	@brief	: Load high voltage readings and send CAN msg
  * *************************************************************************/
-static void loadhv(struct CONTACTORFUNCTION* pcf, enum HVIDX idx)
+static void loadhv(struct CONTACTORFUNCTION* pcf, uint8_t idx)
 {
 	// Calibrated as a float
-	union ADCCALREADING tmp;
+	union UIF
+	{
+		uint32_t ui;
+		float    f;
+	}tmp;
 
-	// Return payload request code
-	pcf->canmsg[CID_CMD_R].ncan.can.cd.uc[0] = pcf->pmbx_cid_cmd_i.ncan.cd.uc[0];	
-
-	// Raw integer readings
-	pcf->canmsg[CID_CMD_R].ncan.can.cd.uc[1] = (pcf->hv[idx] >> 0);
-	pcf->canmsg[CID_CMD_R].ncan.can.cd.uc[2] = (pcf->hv[idx] >> 8);
+	// Raw integer reading
+	pcf->canmsg[CID_CMD_R].can.cd.uc[1] = (pcf->hv[idx].hv >> 0);
+	pcf->canmsg[CID_CMD_R].can.cd.uc[2] = (pcf->hv[idx].hv >> 8);
 
 	// Load reading as a float into payload
-	tmp.f = pcf->hv[idx].hv; // Convert uint16_t to float
-	tmp.f += pcf->lc.fcalhv[idx].offset;
-	tmp.f *= pcf->lc.fcalhv[idx].scale;
-	load4(&pcf->canmsg[CID_CMD_R].ncan.can.cd.uc[3],tmp.ui);
+	double dtmp = pcf->hv[idx].hv; // Convert uint16_t to float
+	       dtmp *= pcf->hv[idx].dscale;
+   tmp.f = dtmp;
+	load4(&pcf->canmsg[CID_CMD_R].can.cd.uc[3],tmp.ui);
 
-	pcf->canmsg[CID_CMD_R].ncan.can.dlc = 7; // Number of payload bytes
+	pcf->canmsg[CID_CMD_R].can.dlc = 7; // Number of payload bytes
 	return;
 }
 

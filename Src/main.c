@@ -669,7 +669,7 @@ void StartDefaultTask(void const * argument)
 // Copy of fast sum of ADC readings
 int i;
 extern uint32_t adcsumdb[6];
-extern uint32_t adcdbctr;
+//extern uint32_t adcdbctr;
 
   /* Infinite loop */
   for(;;)

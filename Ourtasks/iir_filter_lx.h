@@ -42,7 +42,7 @@ struct IIRFILTERL
 };
 
 /******************************************************************************/
-int32_t iir_filter_lx_do(struct IIRFILTERL* pfil, int32_t* pval);
+int32_t iir_filter_lx_do(struct IIRFILTERL* pfil, uint16_t* pval);
 /* @brief	: Pass an input value through the filter.
  * @param	: pfil = pointer to struct with filter stuff
  * @param	: pval = pointer to reading

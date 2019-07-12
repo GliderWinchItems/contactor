@@ -23,6 +23,13 @@
 #define PWMCONTACTOR2 (1 << 6)  // 1 = PWM'ing is used on coil #2
 #define PWMNOHVSENSOR (1 << 7)  // 1 = No high voltage sensor, (ignore hv readings)
 
+/* High Voltage readings arrive in on uart line. */
+#define NUMHV 3       // Number of hv readings
+#define	IDXHV1  0 // High voltage reading: battery string side of contactor
+#define	IDXHV2  1 // High voltage reading: DMOC+ side of contactor
+#define	IDXHV3  2 // High voltage reading: across pre-charge resistor (two contactors)
+
+
 /* Calibration parameter, float */
 // Use double for F103 to save float->double conversions
 struct CNTCTCALHV
@@ -54,7 +61,7 @@ struct CONTACTORLC
 
 /* NOTE: 
    - all suffix _t parameters are times in milliseconds
-   - all voltages are in volts; prefix 'f' designates float
+   - all voltages are in volts; prefix 'f' designates float */
 	
 /* Hardware configuration option bits. */
    uint32_t hwconfig;
@@ -80,7 +87,7 @@ struct CONTACTORLC
 /* Contactor #2, or pre-charge relay, open time delay */
 	uint32_t open2_t;   // Delay: #2 coil de-energize->open
 
-/* Mininum pre-charge delay (befor monitoring voltage) */
+/* Mininum pre-charge delay (before monitoring voltage) */
    uint32_t prechgmin_t; // Minimum pre-charge duration
 
 /* Maximum pre-charge wait, after prechgmin_t, for voltage threshold
@@ -120,11 +127,11 @@ struct CONTACTORLC
 	uint32_t cid_cmd_i;       // CANID_CMD: incoming command
 	uint32_t cid_keepalive_i;// CANID-keepalive connect command
 	uint32_t cid_gps_sync;    // CANID-GPS time sync msg (poll msg)
-	uint32_t code_CAN_filt[CANFILTMAX-3];// Spare
+	uint32_t code_CAN_filt[5];// Spare
  };
 
 /* *************************************************************************/
-static void contactor_idx_v_struct_hardcode_params(struct struct CONTACTORLC* p);
+void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p);
 /* @brief	: Init struct from hard-coded parameters (rather than database params in highflash)
  * @return	: 0
  * *************************************************************************/
