@@ -54,8 +54,9 @@ void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* p
 	p->iprechgendv = (p->lc.ddiffb4 * (1 << ADCSCALEbits));
 
 	/* Convert ms to timer ticks. */
+p->ka_k        = pdMS_TO_TICKS(p->lc.ka_t);        // Command/Keep-alive CAN msg timeout duration.
 p->prechgmin_k = pdMS_TO_TICKS(p->lc.prechgmin_t); // Minimum pre-charge duration
-p->prechgmax_k = pdMS_TO_TICKS(p->lc.prechgvwait_t); // Maximum allowed for voltage to reach threshold
+p->prechgmax_k = pdMS_TO_TICKS(p->lc.prechgmax_t); // Maximum allowed for voltage to reach threshold
 p->close1_k    = pdMS_TO_TICKS(p->lc.close1_t);    // contactor #1 coil energize-closure (timeout delay ticks)
 p->close2_k    = pdMS_TO_TICKS(p->lc.close2_t);    // contactor #2 coil energize-closure (timeout delay ticks)
 p->open1_k     = pdMS_TO_TICKS(p->lc.open1_t);     // contactor #1 coil de-energize-open (timeout delay ticks)
@@ -70,10 +71,10 @@ p->hbct2_k     = pdMS_TO_TICKS(p->lc.hbct2_t);     // Heartbeat ct: ticks betwee
 	p->pmbx_cid_gps_sync    =  MailboxTask_add(pctl0,p->lc.cid_gps_sync,   NULL,CNCTBIT08,0,23);
 
 	/* PWM working struct for switching PWM values */
-	sConfigOCn.OCMode = TIM_OCMODE_PWM1;
-	sConfigOCn.Pulse = 0;	// New PWM value inserted here during execution
-	sConfigOCn.OCPolarity = TIM_OCPOLARITY_HIGH;
-	sConfigOCn.OCFastMode = TIM_OCFAST_DISABLE;
+	p->sConfigOCn.OCMode = TIM_OCMODE_PWM1;
+	p->sConfigOCn.Pulse = 0;	// New PWM value inserted here during execution
+	p->sConfigOCn.OCPolarity = TIM_OCPOLARITY_HIGH;
+	p->sConfigOCn.OCFastMode = TIM_OCFAST_DISABLE;
 
 	// Convert PWM as percent to timer count
    p->ipwmpct1 = p->lc.fpwmpct1 * 0.01 * (htim4.Init.Period + 1) - 1;

@@ -102,7 +102,7 @@ C_SOURCES += contactor_msgs.c
 C_SOURCES += ContactorStates.c
 C_SOURCES += ContactorTask.c
 C_SOURCES += ContactorUpdates.c
-C_SOURCES += filters.c
+#C_SOURCES += filters.c
 C_SOURCES += iir_filter_lx.c
 
 # /* USER CODE END */ 

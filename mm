@@ -4,5 +4,5 @@
 export FLOAT_TYPE=hard
 make
 
-./script-all bpgsm
+./script-all contactor
 

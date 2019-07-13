@@ -16,19 +16,16 @@
 #include "CanTask.h"
 
 /* *************************************************************************/
-void contactor_msg1(struct CONTACTORFUNCTION* pcf, struct ADCCHANNEL* pchan, uint8_t w);
+void contactor_msg1(struct CONTACTORFUNCTION* pcf, uint8_t w);
 /*	@brief	: Setup and send responses: battery string voltage & battery current
  * @param	: pcf = Pointer to working struct for Contactor function
- * @param	: pchan = Pointer to struct array for adc channels
  * @param	: w = switch for CID_HB1 (0) or CID_MSG1 CAN ids (1)
  * *************************************************************************/
-void contactor_msg2(struct CONTACTORFUNCTION* pcf, struct ADCCHANNEL* pchan, uint8_t w));
+void contactor_msg2(struct CONTACTORFUNCTION* pcf, uint8_t w);
 /*	@brief	: Setup and send responses: voltages: DMOC+, DMOC-
  * @param	: pcf = Pointer to working struct for Contactor function
- * @param	: pchan = Pointer to struct array for adc channels
  * @param	: w = switch for CID_HB1 (0) or CID_MSG1 CAN ids (1)
  * *************************************************************************/
-
 #endif
 
 

@@ -245,6 +245,7 @@ struct CONTACTORFUNCTION
 
 	uint32_t idiffafter; //  Scaled int: lc.diffafter
 
+	uint32_t ka_k;       // Command/Keep-alive CAN msg timeout duration.
 	uint32_t prechgmax_k;// allowable delay for diffafter to reach closure point (timeout delay ticks)
 	uint32_t close1_k;   // contactor #1 coil energize-closure (timeout delay ticks)
 	uint32_t close2_k;   // contactor #2 coil energize-closure (timeout delay ticks)
@@ -272,9 +273,6 @@ struct CONTACTORFUNCTION
 	/* High voltage readings */
 	struct CNCNTHV hv[NUMHV];
 
-	// HV parameters converted from doubles to scaled integers
-//	struct CNTCTCALSI icalhv[NUMHV];  // 
-
 	/* Pointers to incoming CAN msg mailboxes. */
 	struct MAILBOXCAN* pmbx_cid_cmd_i;      //
 	struct MAILBOXCAN* pmbx_cid_keepalive_i; //
@@ -292,7 +290,6 @@ struct CONTACTORFUNCTION
 
 	/* CAN msgs */
 	struct CANTXQMSG canmsg[NUMCANMSGS];
-
 };
 
 /* *************************************************************************/

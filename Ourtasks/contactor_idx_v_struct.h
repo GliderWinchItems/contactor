@@ -92,10 +92,16 @@ struct CONTACTORLC
 
 /* Maximum pre-charge wait, after prechgmin_t, for voltage threshold
    to be reached. */
-   uint32_t prechgvwait_t; // Maximum allowed for voltage to reach threshold
+   uint32_t prechgmax_t; // Maximum allowed for voltage to reach threshold
 
 /* With two contactor config, (hv1-hv2) max when contactor #1 closes */
 	float fhv1mhv2max;
+
+/* Allowable hv1-hv2 voltage difference after closure (volts) */
+	float fdiffafter;
+
+/* HV2 reading stable after clossure (duration ms) */
+	uint32_t hv2stable_t;
 
 /* PWM durations (0.0- 100.0) */
    float  fpwmpct1;     // Percent PWM after closure delay at 100% coil #1
@@ -106,9 +112,6 @@ struct CONTACTORLC
 	uint32_t hbct1_t;		// Heartbeat ct: ticks between sending msgs hv1:cur1
 	uint32_t hbct2_t;		// Heartbeat ct: ticks between sending msgs hv2:cur2
 	uint32_t hbct3_t;		// Heartbeat ct: ticks between sending msgs hv3 (if two contactors)
-
-	float   fkr;         // Constant: heat loss of pre-charge R
-	int32_t toohot;      // Threshold of summation for pre-charge R too hot
 
 /* Calibrations (offset, scale) */
 

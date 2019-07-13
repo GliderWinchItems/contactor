@@ -6,13 +6,15 @@
 *******************************************************************************/
 
 #include "contactor_idx_v_struct.h"
+#include "SerialTaskReceive.h"
+
 
 /* *************************************************************************
  * void contactor_idx_v_struct_hardcode_params(struct struct CONTACTORLC* p);
  * @brief	: Init struct from hard-coded parameters (rather than database params in highflash)
  * @return	: 0
  * *************************************************************************/
-void contactor_idx_v_struct_hardcode_params(struct struct CONTACTORLC* p)
+void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
 { /*
 Copied for convenience--
 
@@ -62,6 +64,9 @@ struct CONTACTORLC
 	/* Bits that define the hw features. */
 	p->hwconfig   = 0;  // None of the additional hw features!
 
+
+
+	p->ka_t       = 1500; // Command/Keep-alive CAN msg timeout duration.
 	p->ddiffb4    = 15.0; // hv1-hv2 voltage difference before closing (volts)
 	p->fdiffafter = 2.0;  // allowable hv1-hv2 voltage difference after closure (volts)
 	p->prechgmax_t= 6500; // allowable delay for diffafter to reach closure point (timeout delay ms)
@@ -69,23 +74,37 @@ struct CONTACTORLC
 	p->close2_t   = 25;   // contactor #2 coil energize-closure (timeout delay ms)
 	p->open1_t    = 15;   // contactor #1 coil de-energize-open (timeout delay ms)
 	p->open2_t    = 15;   // contactor #2 coil de-energize-open (timeout delay ms)
-	p->auxoc1_t   = 10;   // aux open/close diff from contactor coil #1 (duration ms)
-	p->auxoc2_t   = 10;   // aux open/close diff from contactor coil #2 (duration ms)
-	p->hv2stable_t=  5;   // hv 2 reading stable after closer (duration ms)
+	p->hv2stable_t=  5;   // hv 2 reading stable after clossure (duration ms)
 	p->keepalive_t= 750;  // keep-alive timeout (timeout delay ms)
 	p->hbct1_t    = 1000; // Heartbeat ct: ticks between sending msgs hv1:cur1
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2
 
-	// Calibrations ((filter tc/scale), offset, scale)
-	p->fcalhv1 = {{2,10}, 0.0, 6.77201E-3}; // volts/ADC_count:Battery_minus-to-contactor #1 Battery_plus
-	p->fcalhv2 = {{2,10}, 0.0, 6.77201E-3}; // volts/ADC_count:Battery_minus-to-contactor #1 DMOC_plus
-	p->fcalhv3 = {{2,10}, 0.0, 6.77201E-3}; // volts/ADC_count:Battery_minus-to-contactor #2 DMOC_minus
+	// Battery_minus-to-contactor #1
+	p->calhv[IDXHV1].iir.k     = 3;
+	p->calhv[IDXHV1].iir.scale = 2;
+ 	p->calhv[IDXHV1].adchv  = 420.0; // Applied voltage
+	p->calhv[IDXHV1].offset = 53761; // ADC reading (received from uart)
+	p->calhv[IDXHV1].dvcal  = p->calhv[IDXHV1].adchv / p->calhv[IDXHV1].offset; // volts/per ADCtick
+
+	// Battery_minus-to-contactor #1 DMOC_plus
+	p->calhv[IDXHV2].iir.k     = 3;
+	p->calhv[IDXHV2].iir.scale = 2;
+ 	p->calhv[IDXHV2].adchv  = 420.0; // Applied voltage
+	p->calhv[IDXHV2].offset = 53761; // ADC reading (received from uart)
+	p->calhv[IDXHV2].dvcal  = p->calhv[IDXHV2].adchv / p->calhv[IDXHV2].offset; // volts/per ADCtick
+
+	// Battery_minus-to-contactor #1 DMOC_minus
+	p->calhv[IDXHV3].iir.k     = 3;
+	p->calhv[IDXHV3].iir.scale = 2;
+ 	p->calhv[IDXHV3].adchv  = 420.0; // Applied voltage
+	p->calhv[IDXHV3].offset = 53761; // ADC reading (received from uart)
+	p->calhv[IDXHV3].dvcal  = p->calhv[IDXHV3].adchv / p->calhv[IDXHV3].offset; // volts/per ADCtick
 
    //                 CANID_HEX      CANID_NAME       CAN_MSG_FMT     DESCRIPTION
-	p->cid_hb1;       = 0xFF800000; // CANID_HB_CNTCTR1V  : FF_FF : Contactor1: Heartbeat: High voltage1:Current sensor1
-	p->cid_hb2;       = 0xFF000000; // CANID_HB_CNTCTR1A  : FF_FF : Contactor1: Heartbeat: High voltage2:Current sensor2
-   p->cid_msg1;      = 0x50400000; // CANID_MSG_CNTCTR1V : FF_FF : Contactor1: poll response: High voltage1:Current sensor1
-   p->cid_msg1;      = 0x50600000; // CANID_MSG_CNTCTR1A : FF_FF : Contactor1: poll response: High voltage2:Current sensor2
+	p->cid_hb1        = 0xFF800000; // CANID_HB_CNTCTR1V  : FF_FF : Contactor1: Heartbeat: High voltage1:Current sensor1
+	p->cid_hb2        = 0xFF000000; // CANID_HB_CNTCTR1A  : FF_FF : Contactor1: Heartbeat: High voltage2:Current sensor2
+   p->cid_msg1       = 0x50400000; // CANID_MSG_CNTCTR1V : FF_FF : Contactor1: poll response: High voltage1:Current sensor1
+   p->cid_msg1       = 0x50600000; // CANID_MSG_CNTCTR1A : FF_FF : Contactor1: poll response: High voltage2:Current sensor2
 	p->cid_cmd_r      = 0xE3600000; // CANID_CMD_CNTCTR1R : U8_VAR: Contactor1: R: Command response
 	p->cid_keepalive_r= 0xE3640000; // CANID_CMD_CNTCTRKAR: U8_U8 : Contactor1: R KeepAlive response
 

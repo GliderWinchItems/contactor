@@ -38,7 +38,7 @@ static void iir_filter_lx_init(struct IIRFILTERL* pfil, int32_t* pval)
 /*
 NOTE: It is expected that pfil-z has been initialized.
 */
-void iir_filter_lx_do(struct IIRFILTERL* pfil, int32_t* pval)
+int32_t iir_filter_lx_do(struct IIRFILTERL* pfil, uint16_t* pval)
 {
 	/* First time with reading. */
 	if (pfil->sw == 0)

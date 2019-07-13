@@ -9,13 +9,14 @@
 #include "queue.h"
 #include "cmsis_os.h"
 #include "malloc.h"
-
 #include "SerialTaskReceive.h"
-
 #include "stm32f1xx_hal_usart.h"
 #include "stm32f1xx_hal_uart.h"
 
-#include "gateway_PCtoCAN.h"
+/* May not want all the gateway routines pulled in. */
+#ifdef USECANMODEWITHGATEWAYROUTINES
+ #include "gateway_PCtoCAN.h"
+#endif
 
 /*
 BaseType_t Rret; // Return value
@@ -120,7 +121,9 @@ struct SERIALRCVBCB* xSerialTaskRxAdduart(\
 
 HAL_StatusTypeDef halret;
 
+#ifdef USECANMODEWITHGATEWAYROUTINES
 	struct GATEWAYPCTOCAN* pgptc; // Pointer to Gateway Pc To Can
+#endif
 
 	/* There can be a problem with Tasks not started if the calling task gets here first */
 	osDelay(10);
@@ -181,6 +184,7 @@ taskENTER_CRITICAL();
 		ptmp1->ptakedma  = pbuf;   // "Take" Pointer into DMA buffer
 		ptmp1->dmasize   = dmasize; // Total number of chars in DMA buffer
 
+#ifdef USECANMODEWITHGATEWAYROUTINES
 		/* When CANmode is requested, the conversion control block is used */
 		if (CANmode == 1)
 		{ // Initialize CAN conversion control block
@@ -188,6 +192,7 @@ taskENTER_CRITICAL();
 			if (pgptc == NULL)  {taskEXIT_CRITICAL();return NULL;}
 			ptmp1->pgptc = pgptc; // Save pointer to CAN conversion control block
 		}
+#endif
 
 		/* Start uart-dma circular mode.  Start once; run forever. */
 		halret = HAL_UART_Receive_DMA(ptmp1->phuart, (uint8_t*)ptmp1->pbegindma, ptmp1->dmasize);
@@ -243,7 +248,9 @@ void StartSerialTaskReceive(void* argument)
 			{ // Here, dma mode
 				if (prtmp->CANmode == 1)
 				{ // Here, convert to CAN msg buffers
+#ifdef USECANMODEWITHGATEWAYROUTINES
 					gateway_PCtoCAN_unloaddma(prtmp);
+#endif
 				}
 				else
 				{ // Here, straight ascii line buffers
@@ -330,7 +337,7 @@ static void advancebuf(struct SERIALRCVBCB* prtmp)
 static void advanceptr(struct SERIALRCVBCB* prtmp, char c)
 {
 	*prtmp->pwork++ = c;
-	if ((c == LINETERMINATOR) || (c == 0XD))
+	if (c == LINETERMINATOR) // || (c == 0XD))
 	{ // Here End of Line
 		advancebuf(prtmp); // Advance to new line buffer and notify originator
 		return;

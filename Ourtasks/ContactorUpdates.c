@@ -17,6 +17,9 @@
 
 #include "morse.h"
 
+/* From 'main.c' */
+extern UART_HandleTypeDef huart3;
+extern TIM_HandleTypeDef htim4;
 
 /* *************************************************************************
  * void ContactorUpdates(struct CONTACTORFUNCTION* pcf);
@@ -38,9 +41,9 @@ void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 	/* Contactor #1 on/off energization */
 	if (((pcf->outstat & CNCTOUT00K1) ^ (pcf->outstat_prev & CNCTOUT00K1)) != 0)
 	{ // Change was signalled
-		if (((pcf->outstat & CNCTOUT00K1) != 0)
+		if ((pcf->outstat & CNCTOUT00K1) != 0)
 		{ // Off->On (100%)
-			pcf->sConfigOCn.Pulse = pcf->htim4.Init.Period+2; // Max+1 PWM period
+			pcf->sConfigOCn.Pulse = htim4.Init.Period+2; // Max+1 PWM period
 			HAL_TIM_PWM_ConfigChannel(&htim4, &pcf->sConfigOCn, TIM_CHANNEL_3);
 			pcf->outstat_prev |= (pcf->outstat & CNCTOUT00K1);
 		}
@@ -54,7 +57,7 @@ void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 	/* Contactor #1 pwm energization */
 	if (((pcf->outstat & CNCTOUT06KAw) ^ (pcf->outstat_prev & CNCTOUT06KAw)) != 0)
 	{ // Change was signalled
-		if (((pcf->outstat & CNCTOUT06KAw) != 0)
+		if ((pcf->outstat & CNCTOUT06KAw) != 0)
 		{ // No pwm->Yes pwm @ x%
 			pcf->sConfigOCn.Pulse = pcf->ipwmpct1;
 			HAL_TIM_PWM_ConfigChannel(&htim4, &pcf->sConfigOCn, TIM_CHANNEL_3);
@@ -64,16 +67,16 @@ void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 		{ // On->Off
 			pcf->sConfigOCn.Pulse = 0;
 			HAL_TIM_PWM_ConfigChannel(&htim4, &pcf->sConfigOCn, TIM_CHANNEL_3);
-			pcf->outstat_prev &= ~(pcf->outstat & CNCTOUT06KAw1);		
+			pcf->outstat_prev &= ~(pcf->outstat & CNCTOUT06KAw);		
 		}
 	}
 
 	/* Contactor #2 on/off energization */
 	if (((pcf->outstat & CNCTOUT01K2) ^ (pcf->outstat_prev & CNCTOUT01K2)) != 0)
 	{ // Change was signalled
-		if (((pcf->outstat & CNCTOUT01K2) != 0)
+		if ((pcf->outstat & CNCTOUT01K2) != 0)
 		{ // Off->On (100%)
-			pcf->sConfigOCn.Pulse = pcf->htim4.Init.Period+2; // Max+1 PWM period
+			pcf->sConfigOCn.Pulse = htim4.Init.Period+2; // Max+1 PWM period
 			HAL_TIM_PWM_ConfigChannel(&htim4, &pcf->sConfigOCn, TIM_CHANNEL_3);
 			pcf->outstat_prev |= (pcf->outstat & CNCTOUT01K2);
 		}
@@ -87,11 +90,11 @@ void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 	/* Contactor #2 pwm energization */
 	if (((pcf->outstat & CNCTOUT07KAw) ^ (pcf->outstat_prev & CNCTOUT07KAw)) != 0)
 	{ // Change was signalled
-		if (((pcf->outstat & CNCTOUT07KAw) != 0)
+		if ((pcf->outstat & CNCTOUT07KAw) != 0)
 		{ // No pwm->Yes pwm @ x%
 			pcf->sConfigOCn.Pulse = pcf->ipwmpct1;
 			HAL_TIM_PWM_ConfigChannel(&htim4, &pcf->sConfigOCn, TIM_CHANNEL_4);
-			pcf->outstat_prev |= (pcf->outstat & CNCTOUT07Aw);
+			pcf->outstat_prev |= (pcf->outstat & CNCTOUT07KAw);
 		}
 		else
 		{ // On->Off

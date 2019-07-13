@@ -11,9 +11,16 @@
 #include "ADCTask.h"
 #include "adctask.h"
 
+#include "ContactorStates.h"
 #include "ContactorTask.h"
 #include "contactor_idx_v_struct.h"
 #include "morse.h"
+
+void static transition_disconnected(struct CONTACTORFUNCTION* pcf);
+static void transition_connecting(struct CONTACTORFUNCTION* pcf);
+static void transition_disconnecting(struct CONTACTORFUNCTION* pcf);
+static void new_state(struct CONTACTORFUNCTION* pcf, uint32_t newstate);
+static void open_contactors(struct CONTACTORFUNCTION* pcf);
 
 /* TIM4 CH3, CH4 drive Conatactor #1, #2 coils. */
 extern TIM_HandleTypeDef htim4; // Needs this for autoreload period
@@ -57,7 +64,7 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 	uint32_t tmp;
 
 	/* Check for battery string below threshold. */
-	if (pcf->hv1 < pcf->ibattlow)
+	if (pcf->hv[IDXHV1].hvc < pcf->ibattlow)
 	{ // Here, battery voltage is too low (or missing!)
 		transition_faulting(pcf,BATTERYLOW);
 		return;
@@ -66,11 +73,11 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 	if ((pcf->lc.hwconfig & AUX1PRESENT) != 0)
 	{ // Aux contacts are present
 		tmp = HAL_GPIO_ReadPin(AUX1_GPIO_REG,AUX1_GPIO_IN);// read i/o pin
-		if (pcf->AUX1SENSE)
+		if ((pcf->lc.hwconfig & AUX1SENSE) != 0)
 		{ // Reverse sense of bit
 			tmp ^= 0x1;
 		}
-		if (tmp & bit defined) != GPIO_PIN_RESET)
+		if (tmp != GPIO_PIN_RESET)
 		{ // Transition to fault state; set fault code
 			transition_faulting(pcf,CONTACTOR1_OFF_AUX1_ON);
 			return;			
@@ -80,11 +87,11 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 	if ((pcf->lc.hwconfig & AUX2PRESENT) != 0)
 	{ // Aux contacts are present
 		tmp = HAL_GPIO_ReadPin(AUX2_GPIO_REG,AUX2_GPIO_IN);// read i/o pin
-		if (pcf->AUX2SENSE)
+		if ((pcf->lc.hwconfig & AUX2SENSE) != 0)
 		{ // Reverse sense of bit
 			tmp ^= 0x1;
 		}
-		if (tmp & bit defined) != GPIO_PIN_RESET)
+		if (tmp != GPIO_PIN_RESET)
 		{ // Transition to fault state; set fault code
 			transition_faulting(pcf,CONTACTOR2_OFF_AUX2_ON); 
 			return;			
@@ -93,18 +100,18 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 	/* Command/Keep-alive CAN msg received. */
 	if ((pcf->evstat & CMDCONNECT) != 0)
 	{ // Here, request to connect
-		transition_connecting();
+		transition_connecting(pcf);
 		return;
 	}
 
 	/* JIC.  Be sure Updates have both coils de-energized. */
-	pcf->outstat &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT00K1w | CNCTOUT00K2w);
+	pcf->outstat &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw);
 }
 /* *************************************************************************
  * void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf);
  * @brief	: CONNECTING state
  * *************************************************************************/
-}/* ===== xCONNECTING ==================================================== */
+/* ===== xCONNECTING ==================================================== */
 static void transition_connecting(struct CONTACTORFUNCTION* pcf)
 { // Intialize disconnected state
 
@@ -124,6 +131,8 @@ static void transition_connecting(struct CONTACTORFUNCTION* pcf)
 /* ====== CONNECTING ==================================================== */
 void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 {
+	uint32_t tmp;
+
 	switch(pcf->substateC)
 	{
 	case CONNECT_C1:  // Contactor #1 closure delay
@@ -134,11 +143,11 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 		if ((pcf->lc.hwconfig & AUX1PRESENT) != 0)
 		{ // Aux contacts are present
 			tmp = HAL_GPIO_ReadPin(AUX1_GPIO_REG,AUX1_GPIO_IN);// read i/o pin
-			if (!pcf->AUX1SENSE)
+			if ((pcf->lc.hwconfig & AUX1SENSE) == 1)
 			{ // Reverse sense of bit
 				tmp ^= 0x1;
 			}
-			if (tmp & bit defined) != GPIO_PIN_RESET)
+			if (tmp != GPIO_PIN_SET)
 			{ // Transition to fault state; set fault code
 				/* Aux contact says it did not close. */
 				transition_faulting(pcf,CONTACTOR1_ON_AUX1_OFF);
@@ -149,7 +158,7 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 		/* For two contactor config, we can check if it looks closed. */
 		if ((pcf->lc.hwconfig & ONECONTACTOR) != 0)
 		{ // Here, two contactor config, so voltage should jump up
-			if ((pcf->hv[HV1] - pcf->hv[HV2]) < pcf->ihv1mhv2max) // 
+			if ((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) < pcf->ihv1mhv2max) // 
 			{
 				transition_faulting(pcf,CONTACTOR1_DOES_NOT_APPEAR_CLOSED); 
 				return;
@@ -159,13 +168,13 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 		/* Here, looks good, so start a minimum pre-charge delay. */
 
 		/* If this contactor is to be PWM'ed drop down from 100%. */
-		if ((pcf->hwconfig & PWMCONTACTOR1) != 0)
+		if ((pcf->lc.hwconfig & PWMCONTACTOR1) != 0)
 		{ // TIM4 CH3 Lower PWM from 100%
-			pcf->outstat |= CNCTOUT00K1w; // Switch pwm during update section
+			pcf->outstat |= CNCTOUT06KAw; // Switch pwm during update section
 		}
 
 		/* Set one-shot timer for a minimum pre-charge duration. */
-		xTimerChangePeriod(pcf->swtimer2,pcf->prechgmin_k, 2); 
+		xTimerChangePeriod(pcf->swtimer2, pcf->prechgmin_k, 2); 
 
 		pcf->substateC = CONNECT_C2;
 		break;
@@ -184,9 +193,9 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 
 			if ((pcf->lc.hwconfig & ONECONTACTOR) == 0)
 			{ // Here, one contactor
-				if ((pcf->hv[HV1] - pcf->hv[HV2]) < pcf->iprechgendv)
+				if ((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) < pcf->iprechgendv)
 				{ // Here, end of pre-charge.  Energize contactor 2
-					pcf->outstat |= CNCTOUT00K2; // Energize #2 during update section
+					pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
 
 					/* Set one-shot timer for contactor (relay) 2 closure duration. */
 					xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
@@ -197,9 +206,9 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 			}
 			else
 			{ // Here, two contactors
-				if (pcf->hv[HV3] < pcf->iprechgendv)
+				if (pcf->hv[IDXHV3].hvc < pcf->iprechgendv)
 				{ // Here, end of pre-charge. Energize contactor 2
-					pcf->outstat |= CNCTOUT00K2; // Energize #2 during update section
+					pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
 
 					/* Set one-shot timer for contactor 2 closure duration. */
 					xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
@@ -216,20 +225,22 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 
 		if ((pcf->evstat & CNCTEVTIMER2) != 0)
 		{ // Timer2 timed out: Contactor #2 should be closed
-			if (((pcf->hv[HV1]-pcf->hv[HV2]) > pcf->ihv1mhv2max))
+			if (((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) > pcf->ihv1mhv2max))
 			{ // Here, something not right with contactor closing
 				transition_faulting(pcf,CONTACTOR2_CLOSED_VOLTSTOOBIG);
 			}
 					
 			/* If this contactor is to be PWM'ed drop down from 100%. */
-			if ((pcf->hwconfig & PWMCONTACTOR1) != 0)
+			if ((pcf->lc.hwconfig & PWMCONTACTOR1) != 0)
 			{ // TIM4 CH3 Lower PWM from 100%
-				pcf->outstat |= CNCTOUT00K2w; // Switch to lower pwm in update section
+				pcf->outstat |= CNCTOUT07KAw; // Switch to lower pwm in update section
 			}
 			new_state(pcf,CONNECTED);
 		}
 		/* event not relevant. Continue waiting for timer2 */
 		break;
+	}
+}
 		
 /* ======= CONNECTED ==================================================== */
 void ContactorStates_connected(struct CONTACTORFUNCTION* pcf)
@@ -250,7 +261,7 @@ static void transition_disconnecting(struct CONTACTORFUNCTION* pcf)
 		return;	
 }
 /* ===== DISCONNECTING ================================================== */
-void Contactor_Sates_disconnecting(struct CONTACTORFUNCTION* pcf)
+void ContactorStates_disconnecting(struct CONTACTORFUNCTION* pcf)
 {
 	if ((pcf->evstat & CNCTEVTIMER2) != 0)
 	{
@@ -268,7 +279,7 @@ void transition_faulting(struct CONTACTORFUNCTION* pcf, uint8_t fc)
 		return;	
 }
 /* ===== FAULTING ======================================================= */
-void Contactor_Sates_faulting(struct CONTACTORFUNCTION* pcf)
+void ContactorStates_faulting(struct CONTACTORFUNCTION* pcf)
 {
 	if ((pcf->evstat & CNCTEVTIMER2) != 0)
 	{
@@ -278,7 +289,7 @@ void Contactor_Sates_faulting(struct CONTACTORFUNCTION* pcf)
 	return;
 }
 /* ===== FAULTED ======================================================= */
-void Contactor_Sates_faulted(struct CONTACTORFUNCTION* pcf)
+void ContactorStates_faulted(struct CONTACTORFUNCTION* pcf)
 {
 	if ((pcf->evstat & CMDRESET) != 0)
 	{ // Command to RESET
@@ -289,7 +300,7 @@ void Contactor_Sates_faulted(struct CONTACTORFUNCTION* pcf)
 	return;
 }
 /* ===== RESET ========================================================= */
-void Contactor_Sates_reset(struct CONTACTORFUNCTION* pcf)
+void ContactorStates_reset(struct CONTACTORFUNCTION* pcf)
 {
 	if ((pcf->evstat & CMDRESET) != 0)
 	{ // Command to RESET
@@ -300,6 +311,7 @@ void Contactor_Sates_reset(struct CONTACTORFUNCTION* pcf)
 /* *************************************************************************
  * static void open_contactors(struct CONTACTORFUNCTION* pcf);
  * @brief	: De-energize contactors and set time delay for opening
+ * @param	: pcf = pointer to struct with "everything" for this function
  * *************************************************************************/
 static void open_contactors(struct CONTACTORFUNCTION* pcf)
 {
@@ -313,13 +325,15 @@ static void open_contactors(struct CONTACTORFUNCTION* pcf)
 		xTimerChangePeriod(pcf->swtimer2,pcf->open1_k, 2); 
 	}
 	/* De-engerize both contactors and pwm'ing if on */
-	pcf->outstat      &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw  CNCTOUT07KAw);
-	pcf->outstat_prev |=  (CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw  CNCTOUT07KAw);
+	pcf->outstat      &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw);
+	pcf->outstat_prev |=  (CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw);
 	return;
 }
 /* *************************************************************************
- * static void new_state(struct CONTACTORFUNCTION* pcf);
+ * static void new_state(struct CONTACTORFUNCTION* pcf, uint32_t newstate);
  * @brief	: When there is a state change, do common things
+ * @param	: pcf = pointer to struct with "everything" for this function
+ * @param	: newstate = code number for the new state
  * *************************************************************************/
 static void new_state(struct CONTACTORFUNCTION* pcf, uint32_t newstate)
 {

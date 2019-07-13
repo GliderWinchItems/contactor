@@ -15,5 +15,10 @@
 #include "adc_idx_v_struct.h"
 #include "ContactorTask.h"
 
+
+/* *************************************************************************/
+void ContactorUpdates(struct CONTACTORFUNCTION* pcf);
+/* @brief	: Update outputs based on bits set
+ * *************************************************************************/
 #endif
 
