@@ -156,7 +156,8 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	BaseType_t ret;	   // Used for returns from function calls
-	osMessageQId Qidret; // Functin call return
+	osMessageQId Qidret; // Function call return
+	osThreadId Thrdret;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -201,15 +202,17 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 384);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 240);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
 /* =================================================== */
+
 	/* Create serial task (priority) */
 	// Task handle "osThreadId SerialTaskHandle" is global
-	xSerialTaskSendCreate(0);	// Create task and set Task priority
+	Thrdret = xSerialTaskSendCreate(0);	// Create task and set Task priority
+	if (Thrdret == NULL) morse_trap(17);
 
 	/* Add bcb circular buffer to SerialTaskSend for usart1 */
 	#define NUMCIRBCB1  16 // Size of circular buffer of BCB for usart6
@@ -247,10 +250,12 @@ int main(void)
 	// See canfilter_setup.h
 
 	/* Contactor control. */
-	xContactorTaskCreate(0);
+	Thrdret = xContactorTaskCreate(0);
+	if (Thrdret == NULL) morse_trap(18);
 
 	/* Create MailboxTask */
-	xMailboxTaskCreate(2);
+	Thrdret = xMailboxTaskCreate(2);
+	if (Thrdret == NULL) morse_trap(19);
 
 	/* Create Mailbox control block w 'take' pointer for each CAN module. */
 	struct MAILBOXCANNUM* pmbxret;
@@ -268,7 +273,8 @@ int main(void)
 	HAL_CAN_Start(&hcan); // CAN1
 
 	/* ADC summing, calibration, etc. */
-	xADCTaskCreate(1);
+	Thrdret = 	xADCTaskCreate(1);
+	if (Thrdret == NULL) morse_trap(20);
 	
 /* =================================================== */
 
@@ -628,14 +634,14 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(DMOC_FET_gate_driver_GPIO_Port, DMOC_FET_gate_driver_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13|DMOC_FET_gate_driver_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : DMOC_FET_gate_driver_Pin */
-  GPIO_InitStruct.Pin = DMOC_FET_gate_driver_Pin;
+  /*Configure GPIO pins : PC13 DMOC_FET_gate_driver_Pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_13|DMOC_FET_gate_driver_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(DMOC_FET_gate_driver_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PA1 PA2 */
   GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_2;
@@ -690,7 +696,7 @@ extern uint32_t adcsumdb[6];
 
 			/* Heap usage (and test fp woking. */
 			heapsize = xPortGetFreeHeapSize();
-			yprintf(&pbuf1,"\n\rGetFreeHeapSize: total: %i used %i %3.1f%% free: %i\n\n\r",configTOTAL_HEAP_SIZE, heapsize,\
+			yprintf(&pbuf1,"\n\rGetFreeHeapSize: total: %i free %i %3.1f%% used: %i\n\n\r",configTOTAL_HEAP_SIZE, heapsize,\
 				100.0*(float)heapsize/configTOTAL_HEAP_SIZE,(configTOTAL_HEAP_SIZE-heapsize));
 
 		for (i = 0; i < 6; i++)

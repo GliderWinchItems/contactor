@@ -35,9 +35,9 @@ struct MAILBOXCANNUM* MailboxTask_add_CANlist(struct CAN_CTLBLOCK* pctl, uint16_
 {
 	struct MAILBOXCAN** ppmbxarray; // Pointer to array of pointers to mailboxes
 
-	if (pctl == NULL) return NULL; // Oops
+	if (pctl == NULL) morse_trap(21); // Oops
 
-	if (arraysize == 0)return NULL; // Oops
+	if (arraysize == 0) morse_trap(22); // Oops
 
 taskENTER_CRITICAL();
 
@@ -49,10 +49,10 @@ taskENTER_CRITICAL();
 
 	/* Get memory for the array of mailbox pointers */
 	ppmbxarray = (struct MAILBOXCAN**)calloc(arraysize, sizeof(struct MAILBOXCAN*));
-	if (ppmbxarray == NULL) {taskEXIT_CRITICAL();return NULL;}
+	if (ppmbxarray == NULL) {taskEXIT_CRITICAL(); morse_trap(23);}
 
 	/* xMailboxTaskCreate needs to be called before this 'add to list' */
-	if (MailboxTaskHandle == NULL) {taskEXIT_CRITICAL();return NULL;}
+	if (MailboxTaskHandle == NULL) {taskEXIT_CRITICAL();morse_trap(24);}
 
 	/* Get a circular buffer 'take' pointer for this CAN module. */
 	// The first three notification bits are reserved for CAN modules 

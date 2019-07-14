@@ -19,8 +19,9 @@ by the java program from the sql database.
 Internal reference F103: 1.16 1.20 1.26 V 
 Internal reference F407: 1.18 1.20 1.24 V 
 */
-#define VREFMIN ((uint32_t)(1.15 * (1<<ADCSCALEbits)))
-#define VREFMAX ((uint32_t)(1.25 * (1<<ADCSCALEbits)))
+// Define limits for initialization check
+#define VREFMIN (1.15)
+#define VREFMAX (1.27)
 
 /* *************************************************************************
 void adcparamsinit_init(struct ADCFUNCTION* p);

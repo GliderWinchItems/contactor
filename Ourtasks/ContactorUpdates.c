@@ -14,6 +14,7 @@
 #include "ContactorTask.h"
 #include "contactor_idx_v_struct.h"
 #include "CanTask.h"
+#include "contactor_msgs.h"
 
 #include "morse.h"
 

@@ -12,6 +12,7 @@
 #include "SerialTaskReceive.h"
 #include "stm32f1xx_hal_usart.h"
 #include "stm32f1xx_hal_uart.h"
+#include "morse.h"
 
 /* May not want all the gateway routines pulled in. */
 #ifdef USECANMODEWITHGATEWAYROUTINES
@@ -107,13 +108,13 @@ static struct SERIALRCVBCB* prbhd = NULL;
  * *************************************************************************/
 struct SERIALRCVBCB* xSerialTaskRxAdduart(\
 		UART_HandleTypeDef* phuart,\
-		int8_t    dmaflag,\
-		uint32_t  notebit,\
+		int8_t    dmaflag, \
+		uint32_t  notebit, \
 		uint32_t* pnoteval,\
-		uint8_t   numline,\
+		uint8_t   numline, \
 		uint8_t   linesize,\
-		char  dmasize,\
-		uint8_t   CANmode)
+		char      dmasize, \
+		uint8_t   CANmode  )
 {
 	struct SERIALRCVBCB* ptmp1;
 	struct SERIALRCVBCB* ptmp2;
@@ -131,7 +132,7 @@ HAL_StatusTypeDef halret;
 taskENTER_CRITICAL();
 	/* Add block with circular buffer pointers for this uart/usart to list */
 	ptmp1 = (struct SERIALRCVBCB*)calloc(1, sizeof(struct SERIALRCVBCB));
-	if (ptmp1  == NULL) {taskEXIT_CRITICAL();return NULL;}
+	if (ptmp1  == NULL) {taskEXIT_CRITICAL();morse_trap(60);}
 	if (prbhd  == NULL) // Is this the first?
 	{ // Yes.  
 		prbhd = ptmp1;	// Point head to first on list
@@ -152,7 +153,7 @@ taskENTER_CRITICAL();
 
 	/* Get memory for an array of line buffers for this uart */	
 	pbuf = (char*)calloc(numline*linesize, sizeof(char));
-	if ( pbuf == NULL) {taskEXIT_CRITICAL();return NULL;}
+	if ( pbuf == NULL) {taskEXIT_CRITICAL();morse_trap(61);}
 
 	/* Save parameters */
 	// ptmp1 points to last item on list
@@ -178,7 +179,7 @@ taskENTER_CRITICAL();
 	if (dmaflag != 0)
 	{ // Circular DMA buffer 
 		pbuf = (char*)calloc((int)dmasize, sizeof(char));
-		if ( pbuf == NULL) return NULL;
+		if ( pbuf == NULL) morse_trap(62);
 		ptmp1->pbegindma = pbuf;   // Pointer to beginning of DMA circular buffer
 		ptmp1->penddma   = pbuf + dmasize; // Pointer to end + 1
 		ptmp1->ptakedma  = pbuf;   // "Take" Pointer into DMA buffer
@@ -189,7 +190,7 @@ taskENTER_CRITICAL();
 		if (CANmode == 1)
 		{ // Initialize CAN conversion control block
 			pgptc = gateway_PCtoCAN_init(ptmp1);
-			if (pgptc == NULL)  {taskEXIT_CRITICAL();return NULL;}
+			if (pgptc == NULL)  {taskEXIT_CRITICAL();morse_trap(63);}
 			ptmp1->pgptc = pgptc; // Save pointer to CAN conversion control block
 		}
 #endif
@@ -199,7 +200,8 @@ taskENTER_CRITICAL();
 		if (halret == HAL_ERROR)
 		{
 			taskEXIT_CRITICAL();
-			return NULL;
+			morse_trap(64);
+//			return NULL;
 		}
 	}
 	else
@@ -208,7 +210,8 @@ taskENTER_CRITICAL();
 		if (halret == HAL_ERROR)
 		{
 			taskEXIT_CRITICAL();
-			return NULL;
+			morse_trap(65);
+//			return NULL;
 		}
 	}
 taskEXIT_CRITICAL();

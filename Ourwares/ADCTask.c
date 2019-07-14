@@ -32,7 +32,7 @@ extern ADC_HandleTypeDef hadc1;
  * *************************************************************************/
 osThreadId xADCTaskCreate(uint32_t taskpriority)
 {
- 	osThreadDef(ADCTask, StartADCTask, osPriorityNormal, 0, 384);
+ 	osThreadDef(ADCTask, StartADCTask, osPriorityNormal, 0, 128);
 	ADCTaskHandle = osThreadCreate(osThread(ADCTask), NULL);
 	vTaskPrioritySet( ADCTaskHandle, taskpriority );
 	return ADCTaskHandle;

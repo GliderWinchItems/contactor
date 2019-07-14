@@ -26,6 +26,11 @@ void contactor_msg2(struct CONTACTORFUNCTION* pcf, uint8_t w);
  * @param	: pcf = Pointer to working struct for Contactor function
  * @param	: w = switch for CID_HB1 (0) or CID_MSG1 CAN ids (1)
  * *************************************************************************/
+void contactor_msg_ka(struct CONTACTORFUNCTION* pcf);
+/*	@brief	: Setup and send Keep-alive response
+ * @param	: pcf = Pointer to working struct for Contactor function
+ * *************************************************************************/
+
 #endif
 
 

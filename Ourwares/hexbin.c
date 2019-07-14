@@ -3,10 +3,10 @@
 * Date First Issued  : 07/12/2019
 * Description        : Table lookup ascii-hex to binary
 *******************************************************************************/
-
+#include <stdint.h>
 
 /* Lookup table to convert one hex char to binary (4 bits), no checking for illegal incoming hex */
-const u8 hxbn[256] = {
+const uint8_t hxbn[256] = {
 /*          0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15   */
 /*  0  */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
 /*  1  */   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,

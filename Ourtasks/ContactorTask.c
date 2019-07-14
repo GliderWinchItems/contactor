@@ -17,15 +17,12 @@
 #include "ContactorEvents.h"
 #include "ContactorStates.h"
 #include "ContactorUpdates.h"
+#include "contactor_func_init.h"
 
 /* From 'main.c' */
 extern UART_HandleTypeDef huart3;
 
 #define SWTIM1 500
-
-// Debug 
-uint32_t adcsumdb[6]; 
-uint32_t adcdbctr = 0;
 
 osThreadId ContactorTaskHandle;
 
@@ -77,7 +74,7 @@ static void swtim3_callback(TimerHandle_t tm)
  * *************************************************************************/
 osThreadId xContactorTaskCreate(uint32_t taskpriority)
 {
- 	osThreadDef(ContactorTask, StartContactorTask, osPriorityNormal, 0, 384);
+ 	osThreadDef(ContactorTask, StartContactorTask, osPriorityNormal, 0, 192);
 	ContactorTaskHandle = osThreadCreate(osThread(ContactorTask), NULL);
 	vTaskPrioritySet( ContactorTaskHandle, taskpriority );
 	return ContactorTaskHandle;
@@ -98,39 +95,37 @@ void StartContactorTask(void const * argument)
 	uint32_t noteused = 0;
 
 	/* Setup serial receive for uart (HV sensing) */
-	/* Incoming ascii lines. */
-	pcf->prbcb3  = xSerialTaskRxAdduart(&huart3,1,CNCTBIT01,\
+	/* Get buffer control block for incoming uart lines. */
+	pcf->prbcb3  = xSerialTaskRxAdduart(&huart3,0,CNCTBIT01,\
 	 &noteval,8,16,0,0);// 8 line buffers of 16 chars, no dma buff, char-by-char line mode
-	if (pcf->prbcb3 == NULL) morse_trap(40);
+	if (pcf->prbcb3 == NULL) morse_trap(47);
 
 	/* Init struct with working params */
 	contactor_idx_v_struct_hardcode_params(&contactorfunction.lc);
-/*
-TimerHandle_t xTimerCreate( const char *pcTimerName,
-const TickType_t xTimerPeriod,
-const UBaseType_t uxAutoReload,
-void * const pvTimerID,
-TimerCallbackFunction_t pxCallbackFunction );
-*/
-             
+
+	/* Initialize working struc for ContactorTask. */
+	extern struct ADCFUNCTION adc1;
+	contactor_func_init_init(pcf, &adc1);
+      
 	/* Create timer for keep-alive.  Auto-reload/periodic */
-	pcf->swtimer1 = xTimerCreate("swtim1",pdMS_TO_TICKS(pcf->ka_k),pdTRUE,\
+	pcf->swtimer1 = xTimerCreate("swtim1",pcf->ka_k,pdTRUE,\
 		(void *) 0, swtim1_callback);
 	if (pcf->swtimer1 == NULL) {morse_trap(41);}
-
 	/* Create timer for other delays. One-shot */
-	pcf->swtimer2 = xTimerCreate("swtim2",1,pdFALSE,\
+	pcf->swtimer2 = xTimerCreate("swtim2",10,pdFALSE,\
 		(void *) 0, &swtim2_callback);
 	if (pcf->swtimer2 == NULL) {morse_trap(42);}
 
 	/* Create timer uart RX keep-alive. One-shot */
-	pcf->swtimer3 = xTimerCreate("swtim3",1,pdFALSE,\
+	pcf->swtimer3 = xTimerCreate("swtim3",10,pdFALSE,\
 		(void *) 0, &swtim3_callback);
 	if (pcf->swtimer3 == NULL) {morse_trap(43);}
 
 	/* Start command/keep-alive timer */
 	BaseType_t bret = xTimerReset(pcf->swtimer1, 10);
 	if (bret != pdPASS) {morse_trap(44);}
+
+//while(1==1) osDelay(10); // Some debugging & testing
 
   /* Infinite loop */
   for(;;)
@@ -211,7 +206,7 @@ TimerCallbackFunction_t pxCallbackFunction );
 			ContactorStates_faulted(pcf);
 			break;
 		case RESETTING:
-			ContactorStates_resetting(pcf);
+			ContactorStates_reset(pcf);
 			break;
 		case DISCONNECTING:
 			ContactorStates_disconnecting(pcf);
