@@ -104,7 +104,7 @@ struct CONTACTORLC
 	p->cid_hb1        = 0xFF800000; // CANID_HB_CNTCTR1V  : FF_FF : Contactor1: Heartbeat: High voltage1:Current sensor1
 	p->cid_hb2        = 0xFF000000; // CANID_HB_CNTCTR1A  : FF_FF : Contactor1: Heartbeat: High voltage2:Current sensor2
    p->cid_msg1       = 0x50400000; // CANID_MSG_CNTCTR1V : FF_FF : Contactor1: poll response: High voltage1:Current sensor1
-   p->cid_msg1       = 0x50600000; // CANID_MSG_CNTCTR1A : FF_FF : Contactor1: poll response: High voltage2:Current sensor2
+   p->cid_msg2       = 0x50600000; // CANID_MSG_CNTCTR1A : FF_FF : Contactor1: poll response: High voltage2:Current sensor2
 	p->cid_cmd_r      = 0xE3600000; // CANID_CMD_CNTCTR1R : U8_VAR: Contactor1: R: Command response
 	p->cid_keepalive_r= 0xE3640000; // CANID_CMD_CNTCTRKAR: U8_U8 : Contactor1: R KeepAlive response
 

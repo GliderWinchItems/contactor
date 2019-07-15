@@ -96,8 +96,8 @@ void StartContactorTask(void const * argument)
 
 	/* Setup serial receive for uart (HV sensing) */
 	/* Get buffer control block for incoming uart lines. */
-	pcf->prbcb3  = xSerialTaskRxAdduart(&huart3,0,CNCTBIT01,\
-	 &noteval,8,16,0,0);// 8 line buffers of 16 chars, no dma buff, char-by-char line mode
+	// 8 line buffers of 16 chars, no dma buff, char-by-char line mode
+	pcf->prbcb3  = xSerialTaskRxAdduart(&huart3,0,CNCTBIT01,&noteval,8,16,0,0);
 	if (pcf->prbcb3 == NULL) morse_trap(47);
 
 	/* Init struct with working params */

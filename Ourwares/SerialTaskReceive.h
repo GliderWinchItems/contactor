@@ -102,7 +102,7 @@ char* xSerialTaskReceiveGetline(struct SERIALRCVBCB* pbcb);
  * @param	: pbcb = Pointer to Buffer Control Block
  * @return	: Pointer to line buffer; NULL = no new lines
  * *************************************************************************/
-BaseType_t xSerialTaskReceiveCreate(uint32_t taskpriority);
+osThreadId xSerialTaskReceiveCreate(uint32_t taskpriority);
 /* @brief	: Create task; task handle created is global for all to enjoy!
  * @param	: taskpriority = Task priority (just as it says!)
  * @return	: SerialTaskReceiveHandle

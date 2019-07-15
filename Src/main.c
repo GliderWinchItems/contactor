@@ -58,6 +58,7 @@
 #include "stm32f1xx_hal.h"
 #include <string.h>
 #include "SerialTaskSend.h"
+#include "SerialTaskReceive.h"
 #include "CanTask.h"
 #include "can_iface.h"
 #include "canfilter_setup.h"
@@ -90,6 +91,7 @@ uint32_t debug03;
 uint32_t debug03_prev;
 
 extern osThreadId SerialTaskHandle;
+extern osThreadId SerialTaskReceiveHandle;
 extern osThreadId CanTxTaskHandle;
 extern osThreadId CanRxTaskHandle;
 extern osThreadId GatewayTaskHandle;
@@ -227,12 +229,16 @@ int main(void)
 	/* Setup semaphore for yprint and sprintf et al. */
 	yprintf_init();
 
+	/* Create serial receiving task. */
+	Thrdret = xSerialTaskReceiveCreate(0);
+	if (Thrdret == NULL) morse_trap(21);
+
   /* definition and creation of CanTxTask - CAN driver TX interface. */
   Qidret = xCanTxTaskCreate(0, 32); // CanTask priority, Number of msgs in queue
 	if (Qidret < 0) morse_trap(5); // Panic LED flashing
 
   /* definition and creation of CanRxTask - CAN driver RX interface. */
-//  Qidret = xCanRxTaskCreate(1, 32); // CanTask priority, Number of msgs in queue
+//  Qidret = xCanRxTaskCreate(1, 32); // CanTask priority, Number of msgs in extern osThreadId SerialTaskReceiveHandle;queue
 //	if (Qidret < 0) morse_trap(6); // Panic LED flashing
 
 	/* Setup TX linked list for CAN  */
@@ -685,23 +691,24 @@ extern uint32_t adcsumdb[6];
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13); // LED Green
 
 			/* Display the amount of unused stack space for tasks. */
-			yprintf(&pbuf1,"\n\n\r%4i Unused Task stack space--", ctr++);
-			stackwatermark_show(defaultTaskHandle,&pbuf1,"defaultTask--");
-			stackwatermark_show(SerialTaskHandle ,&pbuf1,"SerialTask---");
-			stackwatermark_show(CanTxTaskHandle  ,&pbuf1,"CanTxTask----");
-	//		stackwatermark_show(CanRxTaskHandle  ,&pbuf1,"CanRxTask----");
-	//		stackwatermark_show(MailboxTaskHandle,&pbuf1,"MailboxTask--");
-			stackwatermark_show(ADCTaskHandle    ,&pbuf1,"ADCTask------");
-	//		stackwatermark_show(SerialTaskReceiveHandle,&pbuf1,"SerialRcvTask");
+			yprintf(&pbuf1,"\n\n\r#%4i Unused Task stack space--", ctr++);
+			stackwatermark_show(defaultTaskHandle,&pbuf1,"defaultTask---");
+			stackwatermark_show(SerialTaskHandle ,&pbuf1,"SerialTaskSend");
+			stackwatermark_show(CanTxTaskHandle  ,&pbuf1,"CanTxTask-----");
+	//		stackwatermark_show(CanRxTaskHandle  ,&pbuf1,"CanRxTask-----");
+			stackwatermark_show(MailboxTaskHandle,&pbuf1,"MailboxTask---");
+			stackwatermark_show(ADCTaskHandle    ,&pbuf1,"ADCTask-------");
+	stackwatermark_show(SerialTaskReceiveHandle,&pbuf1,"SerialReceiveTask");
 
 			/* Heap usage (and test fp woking. */
 			heapsize = xPortGetFreeHeapSize();
-			yprintf(&pbuf1,"\n\rGetFreeHeapSize: total: %i free %i %3.1f%% used: %i\n\n\r",configTOTAL_HEAP_SIZE, heapsize,\
+			yprintf(&pbuf1,"\n\r#GetFreeHeapSize: total: %i free %i %3.1f%% used: %i\n\n\r",configTOTAL_HEAP_SIZE, heapsize,\
 				100.0*(float)heapsize/configTOTAL_HEAP_SIZE,(configTOTAL_HEAP_SIZE-heapsize));
 
 		for (i = 0; i < 6; i++)
 		{	
-			yprintf(&pbuf1,"%7i",adcsumdb[i] >> 4);
+//			yprintf(&pbuf1,"%7i",adcsumdb[i] >> 4); // 1/2 DMA sum is 16 readings
+			yprintf(&pbuf1,"%7i",adcsumdb[i]); // This is what routines work with
 		}
 
   }

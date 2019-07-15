@@ -271,7 +271,7 @@ void StartSerialTaskReceive(void* argument)
  * @param	: taskpriority = Task priority (just as it says!)
  * @return	: SerialTaskReceiveHandle
  * *************************************************************************/
- BaseType_t xSerialTaskReceiveCreate(uint32_t taskpriority)
+ osThreadId xSerialTaskReceiveCreate(uint32_t taskpriority)
 {
 /*
 BaseType_t xTaskCreate( TaskFunction_t pvTaskCode,
@@ -281,9 +281,10 @@ void *pvParameters,
 UBaseType_t uxPriority,
 TaskHandle_t *pxCreatedTask );
 */
-	return xTaskCreate(StartSerialTaskReceive, "StartSerialTaskReceive",\
-     128, NULL, taskpriority,\
-     &SerialTaskReceiveHandle);
+	BaseType_t ret = xTaskCreate(StartSerialTaskReceive, "StartSerialTaskReceive",\
+        128, NULL, taskpriority, &SerialTaskReceiveHandle);
+	if (ret != pdPASS) return NULL;
+	return SerialTaskReceiveHandle;
 }
 /* *************************************************************************
  * char* xSerialTaskReceiveGetline(struct SERIALRCVBCB* pbcb);

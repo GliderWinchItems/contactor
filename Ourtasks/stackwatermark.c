@@ -28,7 +28,7 @@ void stackwatermark_show(osThreadId TaskHandle, struct SERIALSENDTASKBCB** ppbcb
 		/* Get stack high water mark for tasks of interest. */
 		stackwatermark = uxTaskGetStackHighWaterMark( TaskHandle );
 
-		yprintf(ppbcb, "\n\rStack: %s %3d",pchar, (int)stackwatermark);
+		yprintf(ppbcb, "\n\r#Stack: %s %3d",pchar, (int)stackwatermark);
 		
 	return;
 }
