@@ -43,10 +43,10 @@ struct ADC1CALINTERNAL
 	double dslope;     // (double) mv/degC temperature sensor slope
 };
 */
-	p->calintern.iiradcvref.k     = 10;    // Filter time constant
+	p->calintern.iiradcvref.k     = 20;    // Filter time constant
 	p->calintern.iiradcvref.scale = 2;
 
-	p->calintern.iiradctemp.k     = 10;    // Filter time constant
+	p->calintern.iiradctemp.k     = 20;    // Filter time constant
 	p->calintern.iiradctemp.scale = 2;
 
 	// Internal voltage ref: ADC1IDX_INTERNALVREF  5   // IN18     - Internal voltage reference
@@ -55,8 +55,9 @@ struct ADC1CALINTERNAL
 
 	// Internal temperature: ADC1IDX_INTERNALTEMP  4   // IN17     - Internal temperature sensor
 	p->calintern.adcrmtmp  = (16*1690);  // Room temp ADC (DMA sum) reading
-	p->calintern.rmtmp     = 26.7;       // Room temp for ADC reading     
+	p->calintern.drmtmp     = 26.7;      // Room temp for ADC reading     
 	p->calintern.dslope    = 4.3;        // mv/degC slope of temperature sensor
+	p->calintern.dvreftmpco= 15;         // Vref temp coefficient (15 based on similar parts)
 
 /*  Reproduced for convenience 
 struct ADCCALHE

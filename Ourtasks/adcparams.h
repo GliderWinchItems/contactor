@@ -26,6 +26,11 @@ Compute
 
                     Min  Typ  Max 
 Internal reference: 1.16 1.20 1.24 V
+
+Temperature sensor specs
+                 Min  Typ  Max
+Average slope    4.0  4.3  4.6 mV/°C
+Voltage at 25 °C 1.34 1.43 1.52 V
 */
 
 #ifndef __ADCPARAMS
@@ -101,8 +106,15 @@ struct ADCINTERNAL
 	uint32_t adcvref;    // Do I need this?
 	uint32_t adccmpvref; // scaled vref compensated for temperature
 
-	double dvref;       // (double) vref computed from calibration params
+	double dvref;        // (double) vref computed from calibration params
 	uint32_t vref;       // (scaled) vref computed from calibration params
+
+	uint32_t iRslope;    // (scaled) Reciprocal of temperature sensor slope
+	uint32_t iv25s;      // (scaled) (V25 * iRslope)
+	double   drmtemp;    // (double) Temperature for V25 calibration
+	double   V25;        // (double) Computed V25
+	uint32_t irmtemp;    // (scaled) calibration temperature
+	uint32_t itemp;      // (scaled) temperature (degC)
 };
 
 /* Working values for absolute voltages adjusted using Vref. */

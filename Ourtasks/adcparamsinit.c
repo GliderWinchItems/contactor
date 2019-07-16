@@ -79,9 +79,17 @@ struct ADCINTERNAL
 	uint32_t adcvref;    // Do I need this?
 	uint32_t adccmpvref; // scaled vref compensated for temperature
 
-	double dvref;       // (double) vref computed from calibration params
+	double dvref;        // (double) vref computed from calibration params
 	uint32_t vref;       // (scaled) vref computed from calibration params
-}; */
+
+	uint32_t iRslope;    // (scaled) Recipri\ocal of temperature sensor slope
+	uint32_t iv25s;      // (scaled) (V25 * iRslope)
+	double   drmtemp;    // (double) Temperature for V25 calibration
+	double   V25;        // (double) Computed V25
+	uint32_t irmtemp;    // (scaled) calibration temperature
+	uint32_t itemp;      // (scaled) temperature (degC)
+};
+*/
 
 /* Internal sensors. */
 	// Pointers to filter constants 
@@ -92,6 +100,7 @@ struct ADCINTERNAL
 	double dadc  = p->lc.calintern.adcvdd; // ADC reading (~27360)
 	p->intern.dvref = p->lc.calintern.dvdd * (dadc / 65520.0);
 	p->intern.vref  = (p->intern.dvref * (1 << ADCSCALEbits) ); // Scaled uint32_t; 
+	p->intern.adcvref = (65520.0 * p->intern.dvref) / p->lc.calintern.dvdd;
 
 	// Check for out-of-datasheet Vref spec 
 	if ((p->intern.dvref < (VREFMIN)) || (p->intern.dvref > (VREFMAX))) 
@@ -101,7 +110,18 @@ struct ADCINTERNAL
 	p->chan[ADC1IDX_INTERNALTEMP].dscale = p->lc.calintern.dvdd / 65520.0;
 	p->chan[ADC1IDX_INTERNALVREF].dscale = 1.0;
 
-// TODO temperature computation and Vref adjustment for temperature
+	// Reciprocal of temperature sensor slope ( ~65536/4.3E-3 = (232.55 << 16) )
+	p->intern.iRslope  = (double)(1 << ADCSCALEbits) / p->lc.calintern.dslope;
+
+	// V25 = computed temperature sensor voltage at 25 degC, given ADC readings
+	double V25 = (p->intern.dvref * p->lc.calintern.adcrmtmp) / p->intern.adcvref;
+
+	// Pre-compute the (V25 /slope)
+	p->intern.irmtemp   = (double)(1 << ADCSCALEbits) * 
+       (p->intern.drmtemp / p->lc.calintern.adcrmtmp);
+
+	
+	
 
 /* Reproduced for convenience
 struct ADCABSOLUTE

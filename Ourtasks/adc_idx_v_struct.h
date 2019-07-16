@@ -4,7 +4,17 @@
 * Board              :
 * Description        : Translate parameter index into pointer into struct
 *******************************************************************************/
+/*
+                     Min  Typ  Max 
+Internal reference: 1.16 1.20 1.24 V
+Vref temperautre co.  --   --  100 ppm/DegC
 
+Temperature sensor specs
+                 Min  Typ  Max
+Average slope    4.0  4.3  4.6 mV/°C
+Voltage at 25 °C 1.34 1.43 1.52 
+
+*/
 #include <stdint.h>
 #include "common_can.h"
 #include "iir_filter_lx.h"
@@ -23,10 +33,11 @@ struct ADC1CALINTERNAL
 	struct IIR_L_PARAM iiradcvref; // Filter: adc readings: Vref 
 	struct IIR_L_PARAM iiradctemp; // Filter: adc readings: temperature
 	uint32_t adcvdd;   // (ADC reading) for calibrating Vdd (3.3v)
-	uint32_t adcrmtmp; // (ADC reading) room temperature reading
-	uint32_t rmtmp;    // Room temp for reading (deg C)
+	uint32_t adcrmtmp; // (ADC reading) room temperature temp sensor reading
+	double drmtmp;     // (double) Room temp for reading (deg C)
 	double dvdd;       // (double) measured Vdd (volts)
 	double dslope;     // (double) mv/degC temperature sensor slope
+	double dvreftmpco; // (double) Vref temperature coefficient (ppm/degC)
 };
 
 /* Absolute (non-ratiometric) sensor calibration. */

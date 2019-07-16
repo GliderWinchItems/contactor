@@ -89,6 +89,7 @@ NOTES:
    case the negative values would be small.
 */
 
+
 /* Task notification bit assignments. */
 #define CNCTBIT00	(1 << 0)  // ADCTask has new readings
 #define CNCTBIT01	(1 << 1)  // HV sensors usart RX line ready

@@ -24,6 +24,8 @@ osThreadId ADCTaskHandle;
 
 extern ADC_HandleTypeDef hadc1;
 
+extern osThreadId ContactorTaskHandle;
+
 /* *************************************************************************
  * osThreadId xADCTaskCreate(uint32_t taskpriority);
  * @brief	: Create task; task handle created is global for all to enjoy!
@@ -93,6 +95,10 @@ void StartADCTask(void const * argument)
 		/* Calibrate and filter ADC readings. */
 		adcparams_cal();
 
+		/* Notify ContactorTask that new readings are ready. */
+		if( ContactorTaskHandle == NULL) morse_trap(51); // JIC task has not been created
+		
+		xTaskNotify(ContactorTaskHandle, CNCTBIT00, eSetBits);
   }
 }
 

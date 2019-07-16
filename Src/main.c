@@ -77,6 +77,7 @@
 #include "morse.h"
 #include "MailboxTask.h"
 #include "GatewayTask.h"
+#include "ContactorTask.h"
 
 /* USER CODE END Includes */
 
@@ -683,6 +684,10 @@ int i;
 extern uint32_t adcsumdb[6];
 //extern uint32_t adcdbctr;
 
+	// Convenience pointer
+extern struct CONTACTORFUNCTION contactorfunction;
+struct CONTACTORFUNCTION* pcf = &contactorfunction;
+
   /* Infinite loop */
   for(;;)
   {
@@ -710,6 +715,7 @@ extern uint32_t adcsumdb[6];
 //			yprintf(&pbuf1,"%7i",adcsumdb[i] >> 4); // 1/2 DMA sum is 16 readings
 			yprintf(&pbuf1,"%7i",adcsumdb[i]); // This is what routines work with
 		}
+		yprintf(&pbuf1, " :%7i %7i", pcf->padc->intern.adcfiltemp, pcf->padc->intern.adcfilvref);
 
   }
   /* USER CODE END 5 */ 

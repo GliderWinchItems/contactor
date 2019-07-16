@@ -20,6 +20,7 @@
 #include "can_iface.h"
 #include "contactor_hv.h"
 #include "contactor_cmd_msg.h"
+#include "contactor_msgs.h"
 #include "contactor_hv.h"
 #include "MailboxTask.h"
 
@@ -125,15 +126,16 @@ void ContactorEvents_07(struct CONTACTORFUNCTION* pcf)
 	{
 		pcf->evstat &= !CMDRESET;		
 	}
-
-
 	return;
 }	
-
 /* *************************************************************************
  * void ContactorEvents_08(struct CONTACTORFUNCTION* pcf);
- * @brief	: CAN: cid_gps_sync 
+ * @brief	: CAN: cid_gps_sync: send response CAN msgs
  * *************************************************************************/
 void ContactorEvents_08(struct CONTACTORFUNCTION* pcf)
 {
+	contactor_msg1(pcf, 1); // Send battery string voltage and current
+	contactor_msg2(pcf, 1); // Send DMOC+ and DMOC- voltages
+	return;
 }
+	

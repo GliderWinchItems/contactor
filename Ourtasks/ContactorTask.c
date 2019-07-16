@@ -28,17 +28,6 @@ osThreadId ContactorTaskHandle;
 
 struct CONTACTORFUNCTION contactorfunction;
 
-/* Task notification bit assignments. */
-#define CNCTBIT00	(1 << 0)  // ADCTask has new readings
-#define CNCTBIT01	(1 << 1)  // HV sensors usart RX line ready
-#define CNCTBIT02	(1 << 2)  // spare
-#define CNCTBIT03	(1 << 3)  // TIMER 3: uart RX keep-alive
-#define CNCTBIT04	(1 << 4)  // TIMER 1: Command Keep Alive
-#define CNCTBIT05	(1 << 5)  // TIMER 2: Multiple use delays
-/* MailboxTask notification bits for CAN msg mailboxes */
-#define CNCTBIT06	(1 << 6)  // CANID_CMD: incoming command:        cid_cmd_i 
-#define CNCTBIT07	(1 << 7)  // CANID-keepalive connect command:    cid_keepalive_i
-#define CNCTBIT08	(1 << 8)  // CANID-GPS time sync msg (poll msg): cid_gps_sync
 /* *************************************************************************
  * void swtim1_callback(TimerHandle_t tm);
  * @brief	: Software timer 1 timeout callback
