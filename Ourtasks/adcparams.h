@@ -31,6 +31,11 @@ Temperature sensor specs
                  Min  Typ  Max
 Average slope    4.0  4.3  4.6 mV/°C
 Voltage at 25 °C 1.34 1.43 1.52 V
+
+NOTE: 5v supply w LM2596 dc-dc switcher
+60 mv peak=peak triangle wave w two 100u caps
+20 mv peak-peal by adding 1000u cap
+
 */
 
 #ifndef __ADCPARAMS
@@ -42,6 +47,7 @@ Voltage at 25 °C 1.34 1.43 1.52 V
 #define ADC1DMANUMSEQ        16 // Number of DMA scan sequences in 1/2 DMA buffer
 #define ADC1IDX_ADCSCANSIZE   6 // Number ADC channels read
 #define ADCSCALEbits         16 // 2^16 scale
+#define ADCEXTENDSUMCT     1024 // Sum of 1/2 DMA sums for addition averaging
 
 /* ADC reading sequence/array indices                         */
 /* These indices -=>MUST<= match the hardware ADC scan sequence    */
@@ -144,6 +150,7 @@ struct ADCCHANNEL
 	double dscale;    // Reading: final scaling
 	uint32_t ival;    // Reading: calibrated scaled int32_t
 	uint16_t sum;     // Sum of 1/2 DMA buffer
+	uint32_t xsum[2];    // Extended sum
 };
 
 /* struct allows pointer to access raw and calibrated ADC1 data. */
@@ -157,6 +164,7 @@ struct ADCFUNCTION
    struct ADCRATIOMETRIC cur2;  // Current sensor #2
 	struct ADCCHANNEL	 chan[ADC1IDX_ADCSCANSIZE]; // ADC sums, calibrated endpt
 	uint32_t ctr; // Running count of updates.
+	uint32_t idx_xsum;
 };
 
 /* *************************************************************************/

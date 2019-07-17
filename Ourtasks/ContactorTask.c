@@ -1,5 +1,5 @@
 /******************************************************************************
-* File Name          : ContactorTask.C
+* File Name          : ContactorTask.c
 * Date First Issued  : 06/18/2019
 * Description        : Contactor function w STM32CubeMX w FreeRTOS
 *******************************************************************************/

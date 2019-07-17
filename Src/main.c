@@ -205,7 +205,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 240);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 240);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -681,12 +681,15 @@ void StartDefaultTask(void const * argument)
 
 // Copy of fast sum of ADC readings
 int i;
-extern uint32_t adcsumdb[6];
-//extern uint32_t adcdbctr;
 
-	// Convenience pointer
+// Number ADC readings per sec: 1153-1154.
+extern uint32_t adcsumdb[6];// DMA sums
+//extern uint32_t adcdbctr; // ADC DMA sum counter
+
 extern struct CONTACTORFUNCTION contactorfunction;
 struct CONTACTORFUNCTION* pcf = &contactorfunction;
+
+uint32_t idx_xsum_prev = 0;
 
   /* Infinite loop */
   for(;;)
@@ -713,10 +716,14 @@ struct CONTACTORFUNCTION* pcf = &contactorfunction;
 		for (i = 0; i < 6; i++)
 		{	
 //			yprintf(&pbuf1,"%7i",adcsumdb[i] >> 4); // 1/2 DMA sum is 16 readings
-			yprintf(&pbuf1,"%7i",adcsumdb[i]); // This is what routines work with
+			yprintf(&pbuf1,"%7i ",adcsumdb[i]); // This is what routines work with
 		}
-		yprintf(&pbuf1, " :%7i %7i", pcf->padc->intern.adcfiltemp, pcf->padc->intern.adcfilvref);
+		yprintf(&pbuf1, " :%7i %7i\n\r ", pcf->padc->intern.adcfiltemp, pcf->padc->intern.adcfilvref);
 
+		for (i = 0; i < 6; i++)
+		{	
+			yprintf(&pbuf1,"%8.1f",(double)(pcf->padc->chan[i].xsum[1])*(1.0/ADCEXTENDSUMCT));
+		}
   }
   /* USER CODE END 5 */ 
 }

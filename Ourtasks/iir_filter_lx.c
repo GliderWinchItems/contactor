@@ -13,12 +13,12 @@ For pass-thru, where the output = input, i.e no filtering, set k=1.
 
 #include "iir_filter_lx.h"
 /******************************************************************************
- * static void iir_filter_lx_init(struct IIRFILTERL* pfil, int32_t* pval, int32_t scale);
+ * static void iir_filter_lx_init(struct IIRFILTERL* pfil, uint32_t* pval);
  * @brief	: Set initial value
  * @param	: pfil = pointer to struct with filter stuff
  * @param	: pval = pointer to reading
 *******************************************************************************/
-static void iir_filter_lx_init(struct IIRFILTERL* pfil, int32_t* pval)
+static void iir_filter_lx_init(struct IIRFILTERL* pfil, uint16_t* pval)
 {
 	/* Crazy results if scale or k is bogus. */
 	if (pfil->pprm->scale <= 0) pfil->pprm->scale = 1;

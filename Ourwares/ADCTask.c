@@ -14,6 +14,8 @@
 #include "morse.h"
 #include "adcfastsum16.h"
 #include "adcparams.h"
+#include "ContactorTask.h"
+#include "adcextendsum.h"
 
 void StartADCTask(void const * argument);
 
@@ -82,7 +84,10 @@ void StartADCTask(void const * argument)
 
 		/* Sum the readings 1/2 of DMA buffer to an array. */
 		adcfastsum16(&adc1.chan[0], pdma); // Fast in-line addition
+		adc1.ctr += 1; // Update count
 
+#define DEBUGGINGADCREADINGS
+#ifdef DEBUGGINGADCREADINGS
 		/* Save sum for defaultTask printout for debugging */
 		adcsumdb[0] = adc1.chan[0].sum;
 		adcsumdb[1] = adc1.chan[1].sum;
@@ -91,6 +96,10 @@ void StartADCTask(void const * argument)
 		adcsumdb[4] = adc1.chan[4].sum;
 		adcsumdb[5] = adc1.chan[5].sum;
 		adcdbctr += 1;
+#endif
+
+		/* Extended sum for smoothing and display. */
+		adcextendsum(&adc1);
 
 		/* Calibrate and filter ADC readings. */
 		adcparams_cal();

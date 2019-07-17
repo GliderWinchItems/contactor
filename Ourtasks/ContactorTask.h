@@ -303,7 +303,7 @@ void StartContactorTask(void const * argument);
 /*	@brief	: Task startup
  * *************************************************************************/
 
-
+extern struct CONTACTORFUNCTION contactorfunction;
 extern osThreadId ContactorTaskHandle;
 
 #endif

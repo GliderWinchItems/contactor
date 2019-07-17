@@ -43,10 +43,10 @@ struct ADC1CALINTERNAL
 	double dslope;     // (double) mv/degC temperature sensor slope
 };
 */
-	p->calintern.iiradcvref.k     = 20;    // Filter time constant
+	p->calintern.iiradcvref.k     = 50;    // Filter time constant
 	p->calintern.iiradcvref.scale = 2;
 
-	p->calintern.iiradctemp.k     = 20;    // Filter time constant
+	p->calintern.iiradctemp.k     = 100;    // Filter time constant
 	p->calintern.iiradctemp.scale = 2;
 
 	// Internal voltage ref: ADC1IDX_INTERNALVREF  5   // IN18     - Internal voltage reference
