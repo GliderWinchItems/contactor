@@ -118,8 +118,8 @@ struct ADCINTERNAL
 
 	uint32_t iRslope;    // (scaled) Reciprocal of temperature sensor slope
 	uint32_t iv25s;      // (scaled) (V25 * iRslope)
-	double   drmtemp;    // (double) Temperature for V25 calibration
-	double   V25;        // (double) Computed V25
+	double   V25;        // (double) Computed V25 (no)
+	uint32_t vrefRs;     // (scaled) Vref / slope
 	uint32_t irmtemp;    // (scaled) calibration temperature
 	uint32_t itemp;      // (scaled) temperature (degC)
 };

@@ -32,12 +32,13 @@ struct ADC1CALINTERNAL
 {
 	struct IIR_L_PARAM iiradcvref; // Filter: adc readings: Vref 
 	struct IIR_L_PARAM iiradctemp; // Filter: adc readings: temperature
-	uint32_t adcvdd;   // (ADC reading) for calibrating Vdd (3.3v)
-	uint32_t adcrmtmp; // (ADC reading) room temperature temp sensor reading
-	double drmtmp;     // (double) Room temp for reading (deg C)
+	double drmtemp;     // (double) Room temp for reading (deg C)
 	double dvdd;       // (double) measured Vdd (volts)
 	double dslope;     // (double) mv/degC temperature sensor slope
 	double dvreftmpco; // (double) Vref temperature coefficient (ppm/degC)
+	double dvtemp;     // (double) Vtemp at rm temperature
+	uint32_t adcvdd;   // (ADC reading) for calibrating Vdd (3.3v)
+	uint32_t adcrmtmp; // (ADC reading) room temperature temp sensor reading
 };
 
 /* Absolute (non-ratiometric) sensor calibration. */

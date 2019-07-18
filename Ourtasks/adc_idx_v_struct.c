@@ -55,9 +55,10 @@ struct ADC1CALINTERNAL
 
 	// Internal temperature: ADC1IDX_INTERNALTEMP  4   // IN17     - Internal temperature sensor
 	p->calintern.adcrmtmp  = (16*1690);  // Room temp ADC (DMA sum) reading
-	p->calintern.drmtmp     = 26.7;      // Room temp for ADC reading     
+	p->calintern.drmtemp   = 25.0;       // Room temp for ADC reading     
 	p->calintern.dslope    = 4.3;        // mv/degC slope of temperature sensor
 	p->calintern.dvreftmpco= 15;         // Vref temp coefficient (15 based on similar parts)
+	p->calintern.dvtemp    = 1.43;       // Vtemp voltage at 25 degC
 
 /*  Reproduced for convenience 
 struct ADCCALHE

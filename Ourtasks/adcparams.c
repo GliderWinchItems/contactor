@@ -76,6 +76,8 @@ void adcparams_init(void)
  * *************************************************************************/
 uint32_t adcdbg1;
 uint32_t adcdbg2;
+int32_t adctmp;
+
 static void internal(struct ADCFUNCTION* p)
 {
 /* 
@@ -98,6 +100,12 @@ Voltage at 25 °C  1.34 1.43 1.52 V
 
 	/* Skip temperature compensation for now. */
 	p->intern.adccmpvref = p->intern.adcfilvref;
+
+	/* Compute temperature */
+	uint64_t ultmp = p->intern.vrefRs * p->intern.adcfiltemp;
+	 int32_t uitmp = ultmp /p->intern.adcfilvref;
+adctmp = uitmp;
+	p->intern.itemp = ((int32_t)p->intern.iv25s - uitmp) + p->intern.irmtemp;
 
 	return;
 }

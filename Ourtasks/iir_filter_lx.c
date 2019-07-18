@@ -49,7 +49,7 @@ int32_t iir_filter_lx_do(struct IIRFILTERL* pfil, uint16_t* pval)
 
 	/* Filter computation */
    pfil->z = pfil->z + ( (*pval) * (pfil->pprm->scale) - pfil->z) / (pfil->pprm->k); 
-	return (pfil->z);// / (pfil->pprm->scale));
+	return (pfil->z / pfil->pprm->scale);
 }
 /******************************************************************************
  * void iir_filter_lx_double(struct IIRFILTERL* pfil);

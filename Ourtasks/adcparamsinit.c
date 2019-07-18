@@ -53,6 +53,7 @@ void adcparamsinit_init(struct ADCFUNCTION* p);
 #define ADC1PARAM_CALIBTYPE_POLY3  3    // Polynomial 3nd ord: FLOAT
 #define ADC1PARAM_CALIBTYPE_RAW_UI 4    // No calibration applied: UNSIGNED INT
 */
+double adcdtmp;
 
 void adcparamsinit_init(struct ADCFUNCTION* p)
 {
@@ -82,10 +83,10 @@ struct ADCINTERNAL
 	double dvref;        // (double) vref computed from calibration params
 	uint32_t vref;       // (scaled) vref computed from calibration params
 
-	uint32_t iRslope;    // (scaled) Recipri\ocal of temperature sensor slope
+	uint32_t iRslope;    // (scaled) Reciprocal of temperature sensor slope
 	uint32_t iv25s;      // (scaled) (V25 * iRslope)
-	double   drmtemp;    // (double) Temperature for V25 calibration
-	double   V25;        // (double) Computed V25
+	double   V25;        // (double) Computed V25 (no)
+	uint32_t vrefRs;     // (scaled) Vref / slope
 	uint32_t irmtemp;    // (scaled) calibration temperature
 	uint32_t itemp;      // (scaled) temperature (degC)
 };
@@ -111,16 +112,20 @@ struct ADCINTERNAL
 	p->chan[ADC1IDX_INTERNALVREF].dscale = 1.0;
 
 	// Reciprocal of temperature sensor slope ( ~65536/4.3E-3 = (232.55 << 16) )
-	p->intern.iRslope  = (double)(1 << ADCSCALEbits) / p->lc.calintern.dslope;
+	p->intern.iRslope  = (double)((1 << ADCSCALEbits) * (1000)) / p->lc.calintern.dslope;
 
-	// V25 = computed temperature sensor voltage at 25 degC, given ADC readings
-	double V25 = (p->intern.dvref * p->lc.calintern.adcrmtmp) / p->intern.adcvref;
+	// Pre-compute the (V25 / slope) into a scaled integer.
+	double dtmp = ((1 << ADCSCALEbits) * (1000)) * p->lc.calintern.dvtemp / p->lc.calintern.dslope;
+	p->intern.iv25s = dtmp;
+adcdtmp = dtmp;
 
-	// Pre-compute the (V25 /slope)
-	p->intern.irmtemp   = (double)(1 << ADCSCALEbits) * 
-       (p->intern.drmtemp / p->lc.calintern.adcrmtmp);
+	// Pre-compute (Vref / slope) to scaled int (~65536*1.20/4.3E-3 = (279.07 << 16) = 18289116)
+	dtmp = ((1 << ADCSCALEbits) * (1000)) * p->intern.dvref / p->lc.calintern.dslope;
+	p->intern.vrefRs = dtmp;
+//adcdtmp = dtmp;
 
-	
+	// Room temp calibration offset (7/17/19) Is this needed?)
+	p->intern.irmtemp = ((double)(1 << ADCSCALEbits) * (double)(p->lc.calintern.drmtemp));// / p->lc.calintern.adcrmtmp);
 	
 
 /* Reproduced for convenience
