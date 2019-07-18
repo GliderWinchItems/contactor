@@ -92,16 +92,12 @@ Average slope     4.0  4.3  4.6  mV/°C
 Voltage at 25 °C  1.34 1.43 1.52 V
 
 */
-
-//adcdbg1 = DTWTIME;
 	/* IIR filter internal adc sensor readings. */
 	p->intern.adcfiltemp = iir_filter_lx_do(&p->intern.iiradctemp, &p->chan[ADC1IDX_INTERNALTEMP].sum);
 	p->intern.adcfilvref = iir_filter_lx_do(&p->intern.iiradcvref, &p->chan[ADC1IDX_INTERNALVREF].sum);
 
-	/* Skip temperature compensation & filtering for now. */
-	p->intern.adccmpvref = p->chan[ADC1IDX_INTERNALVREF].sum;
-
-//adcdbg2 = DTWTIME - adcdbg1;
+	/* Skip temperature compensation for now. */
+	p->intern.adccmpvref = p->intern.adcfilvref;
 
 	return;
 }
@@ -121,8 +117,7 @@ static void absolute(struct ADCFUNCTION* p, struct ADCABSOLUTE* pa,uint8_t idx)
 	/* IIR filter adc reading. */
 	pa->adcfil = iir_filter_lx_do(&pa->iir, &p->chan[idx].sum);
 
-	/* $$$ Skip using filtered value for now. */
-	uint64_t tmp64 = (p->intern.adccmpvref * p->chan[idx].sum);
+	uint64_t tmp64 = (p->intern.adccmpvref * pa->adcfil);
 	tmp64 /= p->intern.adccmpvref;
 	pa->ival = (tmp64 >> ADCSCALEbits);
 
@@ -171,7 +166,7 @@ static void ratiometric5v(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pr, uint
 	pr->adcfil = iir_filter_lx_do(&pr->iir, &p->chan[idx].sum);
 
 	/* Compute ratio of sensor reading to 5v supply reading. */
-	uint64_t adcke = (p->chan[idx].sum << ADCSCALEbits); // Scale before divide
+	uint64_t adcke = (pr->adcfil << ADCSCALEbits); // Scale before divide
 	uint64_t adcratio64 = adcke / p->chan[ADC1IDX_5VOLTSUPPLY].sum;
 	uint32_t adcratio = (adcratio64 >> ADCSCALEbits);
 

@@ -43,6 +43,7 @@ NOTE: 5v supply w LM2596 dc-dc switcher
 
 #include "iir_filter_lx.h"
 #include "adc_idx_v_struct.h"
+#include "cic_filter_l_N2_M3.h"
 
 #define ADC1DMANUMSEQ        16 // Number of DMA scan sequences in 1/2 DMA buffer
 #define ADC1IDX_ADCSCANSIZE   6 // Number ADC channels read
@@ -151,6 +152,7 @@ struct ADCCHANNEL
 	uint32_t ival;    // Reading: calibrated scaled int32_t
 	uint16_t sum;     // Sum of 1/2 DMA buffer
 	uint32_t xsum[2];    // Extended sum
+	struct CICLN2M3 cic;
 };
 
 /* struct allows pointer to access raw and calibrated ADC1 data. */

@@ -104,6 +104,8 @@ C_SOURCES += Ourtasks/ContactorUpdates.c
 #C_SOURCES += Ourtasks/filters.c
 C_SOURCES += Ourtasks/iir_filter_lx.c
 C_SOURCES += Ourtasks/adcextendsum.c
+C_SOURCES += Ourtasks/cic_filter_l_N2_M3.c
+C_SOURCES += Ourtasks/cic_computation.c
 
 # /* USER CODE END */ 
 

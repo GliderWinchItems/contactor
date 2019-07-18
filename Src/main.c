@@ -718,12 +718,13 @@ uint32_t idx_xsum_prev = 0;
 //			yprintf(&pbuf1,"%7i",adcsumdb[i] >> 4); // 1/2 DMA sum is 16 readings
 			yprintf(&pbuf1,"%7i ",adcsumdb[i]); // This is what routines work with
 		}
-		yprintf(&pbuf1, " :%7i %7i\n\r ", pcf->padc->intern.adcfiltemp, pcf->padc->intern.adcfilvref);
+		yprintf(&pbuf1, " :%7i %8.1f\n\r ", pcf->padc->intern.adcfiltemp, (double)(pcf->padc->intern.adcfilvref)/pcf->padc->intern.iiradcvref.pprm->scale);
 
 		for (i = 0; i < 6; i++)
 		{	
 			yprintf(&pbuf1,"%8.1f",(double)(pcf->padc->chan[i].xsum[1])*(1.0/ADCEXTENDSUMCT));
 		}
+
   }
   /* USER CODE END 5 */ 
 }
