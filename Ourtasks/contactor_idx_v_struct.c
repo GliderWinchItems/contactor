@@ -74,7 +74,7 @@ struct CONTACTORLC
 	p->close2_t   = 25;   // contactor #2 coil energize-closure (timeout delay ms)
 	p->open1_t    = 15;   // contactor #1 coil de-energize-open (timeout delay ms)
 	p->open2_t    = 15;   // contactor #2 coil de-energize-open (timeout delay ms)
-	p->hv2stable_t=  5;   // hv 2 reading stable after clossure (duration ms)
+	p->hv2stable_t=  5;   // hv 2 reading stable after closure (duration ms)
 	p->keepalive_t= 750;  // keep-alive timeout (timeout delay ms)
 	p->hbct1_t    = 1000; // Heartbeat ct: ticks between sending msgs hv1:cur1
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2

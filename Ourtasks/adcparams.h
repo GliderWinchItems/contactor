@@ -47,7 +47,9 @@ NOTE: 5v supply w LM2596 dc-dc switcher
 
 #define ADC1DMANUMSEQ        16 // Number of DMA scan sequences in 1/2 DMA buffer
 #define ADC1IDX_ADCSCANSIZE   6 // Number ADC channels read
-#define ADCSCALEbits         16 // 2^16 scale
+#define ADCSCALEbits         14 // 2^x scale large
+#define ADCSCALEbitsy         7 // 2^x scale small
+#define ADCSCALEbitsitmp      3 // 2^x scale just enough
 #define ADCEXTENDSUMCT     1024 // Sum of 1/2 DMA sums for addition averaging
 
 /* ADC reading sequence/array indices                         */
@@ -117,11 +119,13 @@ struct ADCINTERNAL
 	uint32_t vref;       // (scaled) vref computed from calibration params
 
 	uint32_t iRslope;    // (scaled) Reciprocal of temperature sensor slope
-	uint32_t iv25s;      // (scaled) (V25 * iRslope)
+//	uint32_t iv25s;      // (scaled) (V25 * iRslope)
 	double   V25;        // (double) Computed V25 (no)
-	uint32_t vrefRs;     // (scaled) Vref / slope
+//	uint32_t vrefRs;     // (scaled) Vref / slope
 	uint32_t irmtemp;    // (scaled) calibration temperature
 	uint32_t itemp;      // (scaled) temperature (degC)
+	uint32_t yRs;        // (smaller scaled) reciprocal of slope
+	uint32_t iv25;       // (scaled) dvtemp (e.g. (1.43 << ADCSCALEbits))
 };
 
 /* Working values for absolute voltages adjusted using Vref. */

@@ -238,13 +238,12 @@ struct CONTACTORFUNCTION
 /* In one contactor config, (hv1-hv2) max when contactor #2 closes */
 	uint32_t ihv1mhv2max;
 
-	// Parameters converted to scaled integer or timer ticks
 	uint32_t iprechgendv;// Prep-charge end volts threshold
 
-/* Mininum pre-charge delay (befor monitoring voltage) */
+/* Mininum pre-charge delay (before monitoring voltage) */
    uint32_t prechgmin_k; // Minimum pre-charge duration
 
-	uint32_t idiffafter; //  Scaled int: lc.diffafter
+	uint32_t idiffafter; //  Scaled int of lc.diffafter
 
 	uint32_t ka_k;       // Command/Keep-alive CAN msg timeout duration.
 	uint32_t prechgmax_k;// allowable delay for diffafter to reach closure point (timeout delay ticks)

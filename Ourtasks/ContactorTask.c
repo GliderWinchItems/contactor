@@ -119,7 +119,7 @@ void StartContactorTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-		/* Wait for DMA interrupt notification from adctask.c */
+		/* Wait for notifications */
 		xTaskNotifyWait(noteused, 0, &noteval, portMAX_DELAY);
 		noteused = 0;	// Accumulate bits in 'noteval' processed.
   /* ========= Events =============================== */

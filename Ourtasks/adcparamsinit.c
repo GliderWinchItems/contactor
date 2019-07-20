@@ -115,18 +115,21 @@ struct ADCINTERNAL
 	p->intern.iRslope  = (double)((1 << ADCSCALEbits) * (1000)) / p->lc.calintern.dslope;
 
 	// Pre-compute the (V25 / slope) into a scaled integer.
-	double dtmp = ((1 << ADCSCALEbits) * (1000)) * p->lc.calintern.dvtemp / p->lc.calintern.dslope;
-	p->intern.iv25s = dtmp;
-adcdtmp = dtmp;
+//	double dtmp = ((1 << ADCSCALEbits) * (1000)) * p->lc.calintern.dvtemp / p->lc.calintern.dslope;
+//	p->intern.iv25s = dtmp;
+//adcdtmp = dtmp;
 
 	// Pre-compute (Vref / slope) to scaled int (~65536*1.20/4.3E-3 = (279.07 << 16) = 18289116)
-	dtmp = ((1 << ADCSCALEbits) * (1000)) * p->intern.dvref / p->lc.calintern.dslope;
-	p->intern.vrefRs = dtmp;
+//	dtmp = ((1 << ADCSCALEbits) * (1000)) * p->intern.dvref / p->lc.calintern.dslope;
+//	p->intern.vrefRs = dtmp;
 //adcdtmp = dtmp;
 
 	// Room temp calibration offset (7/17/19) Is this needed?)
 	p->intern.irmtemp = ((double)(1 << ADCSCALEbits) * (double)(p->lc.calintern.drmtemp));// / p->lc.calintern.adcrmtmp);
 	
+	p->intern.yRs = ((double)((1 << ADCSCALEbitsy) * 1000) / p->lc.calintern.dslope);
+
+	p->intern.iv25 = (uint32_t)((double)(1 << ADCSCALEbitsy) * p->lc.calintern.dvtemp);
 
 /* Reproduced for convenience
 struct ADCABSOLUTE

@@ -205,7 +205,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 240);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 272);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -685,14 +685,22 @@ int i;
 // Number ADC readings per sec: 1153-1154.
 extern uint32_t adcsumdb[6];// DMA sums
 //extern uint32_t adcdbctr; // ADC DMA sum counter
-extern int32_t adctmp;
 double dt1;
-extern double adcdtmp;
 
 extern struct CONTACTORFUNCTION contactorfunction;
 struct CONTACTORFUNCTION* pcf = &contactorfunction;
 
-uint32_t idx_xsum_prev = 0;
+osDelay(50); // Allow ADC task to get these initialized
+
+double dx25    = pcf->padc->lc.calintern.dvtemp * (1.0/4.3E-3);
+if (dx25 < 0.1) morse_trap(48);
+
+double dxdvref = pcf->padc->intern.dvref * (1.0/4.3E-3);
+if (dxdvref < 0.1) morse_trap(49);
+
+// DTW time duration checks
+uint32_t dbg1,dbg2;
+extern uint32_t adcdbg2;
 
   /* Infinite loop */
   for(;;)
@@ -700,7 +708,10 @@ uint32_t idx_xsum_prev = 0;
     osDelay(1000);
 
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13); // LED Green
+#define SHOWSTACKWATERMARK
 #ifdef SHOWSTACKWATERMARK
+dbg1 = DTWTIME;
+			// Following takes 1370791 sysclock ticks 19.0 ms (includes serial port wait)
 			/* Display the amount of unused stack space for tasks. */
 			yprintf(&pbuf1,"\n\n\r#%4i Unused Task stack space--", ctr++);
 			stackwatermark_show(defaultTaskHandle,&pbuf1,"defaultTask---");
@@ -715,6 +726,8 @@ uint32_t idx_xsum_prev = 0;
 			heapsize = xPortGetFreeHeapSize();
 			yprintf(&pbuf1,"\n\r#GetFreeHeapSize: total: %i free %i %3.1f%% used: %i\n\n\r",configTOTAL_HEAP_SIZE, heapsize,\
 				100.0*(float)heapsize/configTOTAL_HEAP_SIZE,(configTOTAL_HEAP_SIZE-heapsize));
+dbg2 = DTWTIME - dbg1;
+
 #endif
 
 		for (i = 0; i < 6; i++)
@@ -723,27 +736,16 @@ uint32_t idx_xsum_prev = 0;
 			yprintf(&pbuf1,"%7i ",adcsumdb[i]); // This is what routines work with
 		}
 		yprintf(&pbuf1, " :%7i %8.1f\n\r ", pcf->padc->intern.adcfiltemp, (double)(pcf->padc->intern.adcfilvref)/pcf->padc->intern.iiradcvref.pprm->scale);
-
+		// Following loop takes about 450000 sysclock ticks 6.2 ms (includes waits for serial port)
 		for (i = 0; i < 6; i++)
 		{	
 			yprintf(&pbuf1,"%8.1f",(double)(pcf->padc->chan[i].xsum[1])*(1.0/ADCEXTENDSUMCT));
 		}
-		yprintf(&pbuf1,"\n\r T:%i %i %i %0.3f %i %i %i,%0.3f,%0.3f,%i,%0.3f\n\r", 
-pcf->padc->intern.itemp,
-pcf->padc->intern.vrefRs, 
-pcf->padc->intern.adcfiltemp,
-pcf->padc->intern.dvref,
-pcf->padc->intern.adcfilvref,
-adctmp,
-pcf->padc->intern.iv25s,
-pcf->padc->lc.calintern.drmtemp,
-pcf->padc->intern.V25,
-pcf->padc->intern.irmtemp,
-(double)pcf->padc->intern.itemp/(1<<ADCSCALEbits)
- );
-	
-	dt1 = ((pcf->padc->lc.calintern.dvtemp * (1.0/4.3E-3)) - (pcf->padc->intern.dvref * ((double)pcf->padc->intern.adcfiltemp / (double)pcf->padc->intern.adcfilvref )) * (1.0/4.3E-3)) + pcf->padc->lc.calintern.drmtemp;
-	yprintf(&pbuf1,"DT: %8.1f %8.1f\n\r", dt1, adcdtmp);
+
+	// The following takes 1418 sysclock ticks
+	dt1 = (dx25 - (dxdvref * ((double)pcf->padc->intern.adcfiltemp / (double)pcf->padc->intern.adcfilvref )))  + pcf->padc->lc.calintern.drmtemp;
+
+	yprintf(&pbuf1,"\n\rDT: %9.2f %9.2f %i %i\n\r", dt1,(double)pcf->padc->intern.itemp/(1<<ADCSCALEbits), dbg2,adcdbg2);
   }
   /* USER CODE END 5 */ 
 }

@@ -282,7 +282,7 @@ UBaseType_t uxPriority,
 TaskHandle_t *pxCreatedTask );
 */
 	BaseType_t ret = xTaskCreate(StartSerialTaskReceive, "StartSerialTaskReceive",\
-        128, NULL, taskpriority, &SerialTaskReceiveHandle);
+        96, NULL, taskpriority, &SerialTaskReceiveHandle);
 	if (ret != pdPASS) return NULL;
 	return SerialTaskReceiveHandle;
 }
