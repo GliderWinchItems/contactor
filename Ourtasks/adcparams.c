@@ -128,13 +128,9 @@ static void absolute(struct ADCFUNCTION* p, struct ADCABSOLUTE* pa,uint8_t idx)
 	/* IIR filter adc reading. */
 	pa->adcfil = iir_filter_lx_do(&pa->iir, &p->chan[idx].sum);
 
-	uint64_t tmp64 = (p->intern.adccmpvref * pa->adcfil);
-	tmp64 /= p->intern.adccmpvref;
-	pa->ival = (tmp64 >> ADCSCALEbits);
-
+	pa->ival = (p->intern.vref * pa->adcfil) / p->intern.adccmpvref;
 	return;
 }
-
 /* *************************************************************************
  * static void ratiometric5v(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pr,uint8_t idx);
  *	@brief	: Calibrate and filter 5v ratiometric (e.g. Hall-effect sensor) reading

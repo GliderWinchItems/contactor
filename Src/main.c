@@ -699,7 +699,6 @@ double dxdvref = pcf->padc->intern.dvref * (1.0/4.3E-3);
 if (dxdvref < 0.1) morse_trap(49);
 
 // DTW time duration checks
-uint32_t dbg1,dbg2;
 extern uint32_t adcdbg2;
 
   /* Infinite loop */
@@ -710,7 +709,6 @@ extern uint32_t adcdbg2;
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13); // LED Green
 #define SHOWSTACKWATERMARK
 #ifdef SHOWSTACKWATERMARK
-dbg1 = DTWTIME;
 			// Following takes 1370791 sysclock ticks 19.0 ms (includes serial port wait)
 			/* Display the amount of unused stack space for tasks. */
 			yprintf(&pbuf1,"\n\n\r#%4i Unused Task stack space--", ctr++);
@@ -726,26 +724,59 @@ dbg1 = DTWTIME;
 			heapsize = xPortGetFreeHeapSize();
 			yprintf(&pbuf1,"\n\r#GetFreeHeapSize: total: %i free %i %3.1f%% used: %i\n\n\r",configTOTAL_HEAP_SIZE, heapsize,\
 				100.0*(float)heapsize/configTOTAL_HEAP_SIZE,(configTOTAL_HEAP_SIZE-heapsize));
-dbg2 = DTWTIME - dbg1;
-
 #endif
 
+#ifdef SHOWSUMMEDADCCHANNELS
 		for (i = 0; i < 6; i++)
 		{	
-//			yprintf(&pbuf1,"%7i",adcsumdb[i] >> 4); // 1/2 DMA sum is 16 readings
 			yprintf(&pbuf1,"%7i ",adcsumdb[i]); // This is what routines work with
 		}
 		yprintf(&pbuf1, " :%7i %8.1f\n\r ", pcf->padc->intern.adcfiltemp, (double)(pcf->padc->intern.adcfilvref)/pcf->padc->intern.iiradcvref.pprm->scale);
+#endif
+
+#define SHOWEXTENDEDSUMMEDADCCHANNELS
+#ifdef  SHOWEXTENDEDSUMMEDADCCHANNELS
+		yprintf(&pbuf1, "\n\r     5v    cur1    cur2     12v    temp    vref\n\r");
 		// Following loop takes about 450000 sysclock ticks 6.2 ms (includes waits for serial port)
 		for (i = 0; i < 6; i++)
 		{	
 			yprintf(&pbuf1,"%8.1f",(double)(pcf->padc->chan[i].xsum[1])*(1.0/ADCEXTENDSUMCT));
 		}
+		yprintf(&pbuf1,"\n\r");
+#endif
 
+#define SHOWINTERNALTEMPERATURECALCULATIONS 
+#ifdef SHOWINTERNALTEMPERATURECALCULATIONS
+	/* Internal temperature computation check. */
 	// The following takes 1418 sysclock ticks
 	dt1 = (dx25 - (dxdvref * ((double)pcf->padc->intern.adcfiltemp / (double)pcf->padc->intern.adcfilvref )))  + pcf->padc->lc.calintern.drmtemp;
 
-	yprintf(&pbuf1,"\n\rDT: %9.2f %9.2f %i %i\n\r", dt1,(double)pcf->padc->intern.itemp/(1<<ADCSCALEbits), dbg2,adcdbg2);
+	yprintf(&pbuf1,"\n\rT degC: (doubles)%6.2f (scaled int)%6.2f\n\r", dt1,(double)pcf->padc->intern.itemp/(1<<ADCSCALEbits), adcdbg2,pcf->padc->intern.adccmpvref);
+#endif
+
+//      pcf->padc->chan[ADC1IDX_5VOLTSUPPLY].ival,  pcf->padc->v5.adcfil, 
+//      pcf->padc->chan[ADC1IDX_12VRAWSUPPLY].ival, pcf->padc->v12.adcfil,
+
+	yprintf(&pbuf1,"\n\r%i %i %i %i %i %0.6f %0.4f : %0.4f\n\r",
+      pcf->padc->v12.ival,
+      pcf->padc->intern.adcfilvref,
+      pcf->padc->intern.vref,
+	   pcf->padc->v12.adcfil,
+	   pcf->padc->lc.calintern.adcvdd,
+      pcf->padc->v12.k,  
+      (pcf->padc->v12.k * (double)pcf->padc->v12.ival * (1.0/(1<<ADCSCALEbits))), 
+      pcf->padc->intern.dvref );
+
+	yprintf(&pbuf1,"\n\rV v5: %0.3f  v12: %0.2f\n\r",
+	  (pcf->padc->v5.k  * (double)pcf->padc->v5.ival  * (1.0/(1<<ADCSCALEbits))),
+	  (pcf->padc->v12.k * (double)pcf->padc->v12.ival * (1.0/(1<<ADCSCALEbits))) );
+
+	
+//	yprintf(&pbuf1,"%i %i %0.2f %0.2f : %i\n\r",
+//      pcf->padc->v12.ival, pcf->padc->v12.adcfil,pcf->padc->v12.dscale, pcf->padc->v12.dscale * pcf->padc->v12.ival, 
+//pcf->padc->intern.vref
+// );
+
   }
   /* USER CODE END 5 */ 
 }

@@ -119,9 +119,7 @@ struct ADCINTERNAL
 	uint32_t vref;       // (scaled) vref computed from calibration params
 
 	uint32_t iRslope;    // (scaled) Reciprocal of temperature sensor slope
-//	uint32_t iv25s;      // (scaled) (V25 * iRslope)
 	double   V25;        // (double) Computed V25 (no)
-//	uint32_t vrefRs;     // (scaled) Vref / slope
 	uint32_t irmtemp;    // (scaled) calibration temperature
 	uint32_t itemp;      // (scaled) temperature (degC)
 	uint32_t yRs;        // (smaller scaled) reciprocal of slope
@@ -133,6 +131,7 @@ struct ADCABSOLUTE
 {
 	struct IIRFILTERL iir;// Intermediate filter params
 	double dscale;        // Computed from measurements
+	double k;             // divider ratio: (Vref/adcvref)*(adcvx/Vx)
 	uint32_t adcfil;      // Filtered ADC reading
 	uint32_t ival;        // scaled int computed value (not divider scaled)
 };

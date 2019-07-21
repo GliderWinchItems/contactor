@@ -50,15 +50,15 @@ struct ADC1CALINTERNAL
 	p->calintern.iiradctemp.scale = 4;
 
 	// Internal voltage ref: ADC1IDX_INTERNALVREF  5   // IN18     - Internal voltage reference
-	p->calintern.dvdd   = 3.29;	    // Vdd for following vrefave
-	p->calintern.adcvdd = (16*1496.0);// ADC reading (DMA sum) for above Vdd
+	p->calintern.dvdd   = 3.29;	// Vdd for following Vref ADC reading
+	p->calintern.adcvdd = 23928;  //(16*1495.5) ADC reading (DMA sum) for above Vdd
 
 	// Internal temperature: ADC1IDX_INTERNALTEMP  4   // IN17     - Internal temperature sensor
-	p->calintern.adcrmtmp  = (16*1690);  // Room temp ADC (DMA sum) reading
-	p->calintern.drmtemp   = 25.0;       // Room temp for ADC reading     
-	p->calintern.dslope    = 4.3;        // mv/degC slope of temperature sensor
-	p->calintern.dvreftmpco= 15;         // Vref temp coefficient (15 based on similar parts)
-	p->calintern.dvtemp    = 1.43;       // Vtemp voltage at 25 degC
+	p->calintern.adcrmtmp  = 26990; // Room temp ADC (DMA sum) reading
+	p->calintern.drmtemp   = 25.0;  // Room temp for ADC reading     
+	p->calintern.dslope    = 4.3;   // mv/degC slope of temperature sensor
+	p->calintern.dvreftmpco= 15;    // Vref temp coefficient (15 is based on similar parts)
+	p->calintern.dvtemp    = 1.40;  // Vtemp voltage at 25 degC
 
 /*  Reproduced for convenience 
 struct ADCCALHE
@@ -104,13 +104,13 @@ struct ADCCALABS
 	// 5v supply: ADC1IDX_5VOLTSUPPLY   0   // PA0 IN0  - 5V sensor supply
 	p->cal_5v.iir.k     = 10;    // Filter time constant
 	p->cal_5v.iir.scale = 2;     // Filter integer scaling
-	p->cal_5v.adcvn     = (4095*1431); // (ADC reading) v5
+	p->cal_5v.adcvn     = 64480; // (ADC reading) v5
 	p->cal_5v.dvn       = 5.03;  // (double) measured v5 (volts)
 
 	// Raw 12v CAN bus supply: ADC1IDX_12VRAWSUPPLY  3   // PA7 IN7  - +12 Raw power to board
 	p->cal_12v.iir.k     = 10;    // Filter time constant
 	p->cal_12v.iir.scale = 2;     // Filter integer scaling
-	p->cal_12v.adcvn     = (4095*1502); // (ADC reading) v12 
+	p->cal_12v.adcvn     = 24023; // (4095*1502); // (ADC reading) v12 
 	p->cal_12v.dvn       = 13.68;  // (double) measured v12 (volts)
 
 	return 0;	
