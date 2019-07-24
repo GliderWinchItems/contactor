@@ -24,9 +24,6 @@
 #include "contactor_hv.h"
 #include "MailboxTask.h"
 
-
-/* Declarations */
-
 /* *************************************************************************
  * void ContactorEvents_00(struct CONTACTORFUNCTION* pcf);
  * @brief	: ADC readings available

@@ -133,40 +133,40 @@ void StartContactorTask(void const * argument)
 			noteused |= CNCTBIT00; // We handled the bit
 			ContactorEvents_00(pcf);
 		}
-		else if ((noteval & CNCTBIT01) != 0)
+		if ((noteval & CNCTBIT01) != 0)
 		{ // uart RX line ready
 			noteused |= CNCTBIT01; // We handled the bit
 			ContactorEvents_01(pcf);
 		}
-		else if ((noteval & CNCTBIT02) != 0)
+		if ((noteval & CNCTBIT02) != 0)
 		{ // (spare)
 			noteused |= CNCTBIT02; // We handled the bit
 		}
-		else if ((noteval & CNCTBIT03) != 0)
+		if ((noteval & CNCTBIT03) != 0)
 		{ // TIMER3: uart RX keep alive timed out
 			noteused |= CNCTBIT03; // We handled the bit
 			ContactorEvents_03(pcf);			
 		}
-		else if ((noteval & CNCTBIT04) != 0)
+		if ((noteval & CNCTBIT04) != 0)
 		{ // TIMER1: Command Keep Alive duration tick
 			noteused |= CNCTBIT04; // We handled the bit
 			ContactorEvents_04(pcf);
 		}
-		else if ((noteval & CNCTBIT05) != 0)
+		if ((noteval & CNCTBIT05) != 0)
 		{ // TIMER2: Multiple use Delay timed out
 			noteused |= CNCTBIT05; // We handled the bit
 		}
-		else if ((noteval & CNCTBIT06) != 0) 
+		if ((noteval & CNCTBIT06) != 0) 
 		{ // CAN: cid_cmd_i 
 			noteused |= CNCTBIT06; // We handled the bit
 			ContactorEvents_06(pcf);
 		}
-		else if ((noteval & CNCTBIT07) != 0) 
+		if ((noteval & CNCTBIT07) != 0) 
 		{ // CAN: cid_keepalive_i 
 			noteused |= CNCTBIT07; // We handled the bit
 			ContactorEvents_07(pcf);
 		}
-		else if ((noteval & CNCTBIT08) != 0) 
+		if ((noteval & CNCTBIT08) != 0) 
 		{ // CAN: cid_gps_sync 
 			noteused |= CNCTBIT08; // We handled the bit
 			ContactorEvents_08(pcf);

@@ -195,7 +195,7 @@ void adcparams_cal(void)
 {
 	struct ADCFUNCTION* p = &adc1; // Convenience pointer
 
-	/* First: Update Vref used in susequent computations. */
+	/* First: Update Vref used in subsequent computations. */
 	internal(p); // Update Vref for temperature
 
 	absolute(p, &p->v5 ,ADC1IDX_5VOLTSUPPLY); // 5v supplying Blue Pill, and sensors.

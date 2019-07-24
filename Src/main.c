@@ -707,7 +707,7 @@ extern uint32_t adcdbg2;
     osDelay(1000);
 
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13); // LED Green
-#define SHOWSTACKWATERMARK
+//#define SHOWSTACKWATERMARK
 #ifdef SHOWSTACKWATERMARK
 			// Following takes 1370791 sysclock ticks 19.0 ms (includes serial port wait)
 			/* Display the amount of unused stack space for tasks. */
@@ -736,7 +736,7 @@ extern uint32_t adcdbg2;
 
 #define SHOWEXTENDEDSUMMEDADCCHANNELS
 #ifdef  SHOWEXTENDEDSUMMEDADCCHANNELS
-		yprintf(&pbuf1, "\n\r     5v    cur1    cur2     12v    temp    vref\n\r");
+		yprintf(&pbuf1, "\n\r     5v    cur1    cur2     12v    temp    vref\n\rA ");
 		// Following loop takes about 450000 sysclock ticks 6.2 ms (includes waits for serial port)
 		for (i = 0; i < 6; i++)
 		{	
