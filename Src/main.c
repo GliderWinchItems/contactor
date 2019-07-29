@@ -205,7 +205,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 272);
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 304);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -656,6 +656,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PB5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -701,13 +707,16 @@ if (dxdvref < 0.1) morse_trap(49);
 // DTW time duration checks
 extern uint32_t adcdbg2;
 
+extern uint32_t dbgCE1;
+uint32_t dbgCE1_prev = dbgCE1;
+
   /* Infinite loop */
   for(;;)
   {
     osDelay(1000);
 
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13); // LED Green
-//#define SHOWSTACKWATERMARK
+#define SHOWSTACKWATERMARK
 #ifdef SHOWSTACKWATERMARK
 			// Following takes 1370791 sysclock ticks 19.0 ms (includes serial port wait)
 			/* Display the amount of unused stack space for tasks. */
@@ -734,7 +743,7 @@ extern uint32_t adcdbg2;
 		yprintf(&pbuf1, " :%7i %8.1f\n\r ", pcf->padc->intern.adcfiltemp, (double)(pcf->padc->intern.adcfilvref)/pcf->padc->intern.iiradcvref.pprm->scale);
 #endif
 
-#define SHOWEXTENDEDSUMMEDADCCHANNELS
+//#define SHOWEXTENDEDSUMMEDADCCHANNELS
 #ifdef  SHOWEXTENDEDSUMMEDADCCHANNELS
 		yprintf(&pbuf1, "\n\r     5v    cur1    cur2     12v    temp    vref\n\rA ");
 		// Following loop takes about 450000 sysclock ticks 6.2 ms (includes waits for serial port)
@@ -745,7 +754,7 @@ extern uint32_t adcdbg2;
 		yprintf(&pbuf1,"\n\r");
 #endif
 
-#define SHOWINTERNALTEMPERATURECALCULATIONS 
+//#define SHOWINTERNALTEMPERATURECALCULATIONS 
 #ifdef SHOWINTERNALTEMPERATURECALCULATIONS
 	/* Internal temperature computation check. */
 	// The following takes 1418 sysclock ticks
@@ -770,6 +779,9 @@ extern uint32_t adcdbg2;
 	yprintf(&pbuf1,"\n\rV v5: %0.3f  v12: %0.2f\n\r",
 	  (pcf->padc->v5.k  * (double)pcf->padc->v5.ival  * (1.0/(1<<ADCSCALEbits))),
 	  (pcf->padc->v12.k * (double)pcf->padc->v12.ival * (1.0/(1<<ADCSCALEbits))) );
+
+yprintf(&pbuf1,"UART ctr: %i\n\r",dbgCE1-dbgCE1_prev);
+dbgCE1_prev = dbgCE1;
 
 	
 //	yprintf(&pbuf1,"%i %i %0.2f %0.2f : %i\n\r",

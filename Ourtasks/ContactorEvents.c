@@ -36,8 +36,10 @@ void ContactorEvents_00(struct CONTACTORFUNCTION* pcf)
  * void ContactorEvents_01(struct CONTACTORFUNCTION* pcf);
  * @brief	: HV sensors usart RX line ready
  * *************************************************************************/
+uint32_t dbgCE1;
 void ContactorEvents_01(struct CONTACTORFUNCTION* pcf)
 {
+dbgCE1 += 1;
 	contactor_hv_uartline(pcf);  // Extract readings from received line
 	contactor_hv_calibrate(pcf); // Calibrate raw ADC ticks to scale int volts
 	

@@ -55,3 +55,23 @@ C13 LED
 b = midpoint bias or gnd zero ohm options
 p = pullup to 3.3v resistor option 
 
+RJ jack locations
+-----------------------------------------------------
+                                     $U23       $U24 |      
+                                                     |
+    TOP VIEW                                         |
+                                                     |
+                                     $U26       $U25 |      
+-----------------------------------------------------
+
+Jumper from $U2 pin 15 (center of three) to B11 
+  which connects pin 4 of $U25 to B11
+  which connects BP sensor usart3 TX to this usart3 RX
+
+
+
+
+
+
+
+
