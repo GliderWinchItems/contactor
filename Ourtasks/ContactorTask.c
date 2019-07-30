@@ -63,7 +63,7 @@ static void swtim3_callback(TimerHandle_t tm)
  * *************************************************************************/
 osThreadId xContactorTaskCreate(uint32_t taskpriority)
 {
- 	osThreadDef(ContactorTask, StartContactorTask, osPriorityNormal, 0, 192);
+ 	osThreadDef(ContactorTask, StartContactorTask, osPriorityNormal, 0, 128);
 	ContactorTaskHandle = osThreadCreate(osThread(ContactorTask), NULL);
 	vTaskPrioritySet( ContactorTaskHandle, taskpriority );
 	return ContactorTaskHandle;

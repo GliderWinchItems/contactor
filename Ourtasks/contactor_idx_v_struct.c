@@ -82,23 +82,23 @@ struct CONTACTORLC
 	// Battery_minus-to-contactor #1
 	p->calhv[IDXHV1].iir.k     = 3;
 	p->calhv[IDXHV1].iir.scale = 2;
- 	p->calhv[IDXHV1].adchv  = 420.0; // Applied voltage
-	p->calhv[IDXHV1].offset = 53761; // ADC reading (received from uart)
-	p->calhv[IDXHV1].dvcal  = p->calhv[IDXHV1].adchv / p->calhv[IDXHV1].offset; // volts/per ADCtick
+ 	p->calhv[IDXHV1].dvcal  = 12.45; // Applied voltage
+	p->calhv[IDXHV1].adchv  = 1336; // ADC reading (received from uart)
+	p->calhv[IDXHV1].offset =  3;   // ADC reading zero volts
 
 	// Battery_minus-to-contactor #1 DMOC_plus
 	p->calhv[IDXHV2].iir.k     = 3;
 	p->calhv[IDXHV2].iir.scale = 2;
- 	p->calhv[IDXHV2].adchv  = 420.0; // Applied voltage
-	p->calhv[IDXHV2].offset = 53761; // ADC reading (received from uart)
-	p->calhv[IDXHV2].dvcal  = p->calhv[IDXHV2].adchv / p->calhv[IDXHV2].offset; // volts/per ADCtick
+ 	p->calhv[IDXHV2].dvcal  = 12.45; // Applied voltage
+	p->calhv[IDXHV2].adchv  = 1379; // ADC reading (received from uart)
+	p->calhv[IDXHV2].offset =  4;   // ADC reading zero volts
 
 	// Battery_minus-to-contactor #1 DMOC_minus
 	p->calhv[IDXHV3].iir.k     = 3;
 	p->calhv[IDXHV3].iir.scale = 2;
- 	p->calhv[IDXHV3].adchv  = 420.0; // Applied voltage
-	p->calhv[IDXHV3].offset = 53761; // ADC reading (received from uart)
-	p->calhv[IDXHV3].dvcal  = p->calhv[IDXHV3].adchv / p->calhv[IDXHV3].offset; // volts/per ADCtick
+ 	p->calhv[IDXHV3].dvcal  = 12.45; // Applied voltage
+	p->calhv[IDXHV3].adchv  = 1371; // ADC reading (received from uart)
+	p->calhv[IDXHV3].offset =  5;   // ADC reading zero volts
 
    //                 CANID_HEX      CANID_NAME       CAN_MSG_FMT     DESCRIPTION
 	p->cid_hb1        = 0xFF800000; // CANID_HB_CNTCTR1V  : FF_FF : Contactor1: Heartbeat: High voltage1:Current sensor1

@@ -8,6 +8,9 @@
 #include "SerialTaskReceive.h"
 #include "hexbin.h"
 
+#include <string.h>
+#include "morse.h"
+
 
 /* *************************************************************************
  * void contactor_hv_uartline(struct CONTACTORFUNCTION* pcf);
@@ -27,9 +30,11 @@ struct CNCNTHV
 	uint16_t hv;   // Raw reading as received from uart
 };
 */
+char dbgline[32];
+
 void contactor_hv_uartline(struct CONTACTORFUNCTION* pcf)
 {
-	int i,j;
+	int i;
 	uint8_t* pline;	// Pointer to line buffer
 	do
 	{
@@ -37,18 +42,18 @@ void contactor_hv_uartline(struct CONTACTORFUNCTION* pcf)
 		pline = (uint8_t*)xSerialTaskReceiveGetline(pcf->prbcb3);
 		if (pline != NULL)
 		{ // Here, a line is ready.
-			if (*(pline+12) != 0x0D) return; // Not correct line
+strncpy(dbgline,(char*)pline,31);
+			if (*(pline+12) != '\n') return; // Not correct line
 
-			j = 0;
 			for (i = 0; i < NUMHV; i++)
 			{ 
 				/* Table lookup ASCII to binary: 4 asci -> uint16_t */
 				pcf->hv[i].hv  = \
-                (hxbn[*(pline+0)] <<  0) | \
-                (hxbn[*(pline+1)] <<  4) | \
-				    (hxbn[*(pline+2)] <<  8) | \
-                (hxbn[*(pline+3)] << 12);
-				j += 4;
+                (hxbn[*(pline+0)] <<  4) | \
+                (hxbn[*(pline+1)] <<  0) | \
+				    (hxbn[*(pline+2)] << 12) | \
+                (hxbn[*(pline+3)] <<  8);
+				pline += 4;
 			}
 		}
 	} while (pline != NULL); // Catchup jic we got behind
@@ -61,13 +66,11 @@ void contactor_hv_uartline(struct CONTACTORFUNCTION* pcf)
  * *************************************************************************/
 void contactor_hv_calibrate(struct CONTACTORFUNCTION* pcf)
 {
-	uint64_t u64;
 	int i;
 	for (i = 0; i < NUMHV; i++)
 	{
-		/* Volts = Volts per ADC tick * Raw ADC ticks (16b) from uart */
-		u64 = pcf->hv[i].hvcal * pcf->hv[i].hv;
-		pcf->hv[i].hvc = (u64 >> 32);
+		/* Volts = Volts per ADC ct * Raw ADC ticks (16b) from uart */
+		pcf->hv[i].hvc = pcf->hv[i].hvcal * pcf->hv[i].hv;
 	}
 	return;
 }

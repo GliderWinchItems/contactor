@@ -42,8 +42,11 @@ void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* p
 		// Pointer to filter parameters
 		p->hv[i].iir.pprm = &p->lc.calhv[i].iir;
 
-		// Calibration volts per adc tick
-		p->hv[i].dscale = (p->lc.calhv[i].dvcal / p->lc.calhv[i].adchv);
+		// Calibration volts per adc ct
+		p->hv[i].dscale = p->lc.calhv[i].dvcal / (p->lc.calhv[i].adchv-p->lc.calhv[i].offset);
+
+		// Calibration volts per adc ct scaled up for integers
+		p->hv[i].hvcal = ((double)HVSCALE * p->hv[i].dscale);
 	}
 
 	/* Battery low voltage as scaled uint32_t. */
@@ -86,7 +89,7 @@ p->hbct2_k     = pdMS_TO_TICKS(p->lc.hbct2_t);     // Heartbeat ct: ticks betwee
 		p->canmsg[i].pctl = pctl0;   // Control block for CAN module (CAN 1)
 		p->canmsg[i].maxretryct = 8; //
 		p->canmsg[i].bits = 0;       //
-		p->canmsg[i].can.dlc = 8;    // Default payload size (modified when loaded and sent)
+		p->canmsg[i].can.dlc = 8;    // Default payload size (might be modified when loaded and sent)
 	}
 
 	// Pre-load CAN ids
@@ -97,8 +100,6 @@ p->hbct2_k     = pdMS_TO_TICKS(p->lc.hbct2_t);     // Heartbeat ct: ticks betwee
 	p->canmsg[CID_HB1  ].can.id  = p->lc.cid_hb1;
 	p->canmsg[CID_HB2  ].can.id  = p->lc.cid_hb2;
 
-	p->canmsg[0].can.dlc = 4; // Default payload length
-	
 	return;
 }
 

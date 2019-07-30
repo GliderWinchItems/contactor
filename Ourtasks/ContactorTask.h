@@ -18,9 +18,9 @@
 /* 
 =========================================      
 CAN msgs: 
-suffix: "_i" = incoming msg; "_r" response msg
+ID suffix: "_i" = incoming msg; "_r" response msg
 
-Received CAN msgs directed into contactor function:
+RECEIVED msgs directed into contactor function:
  (1) contactor command (also keep-alive) "cid_keepalive_i"
      payload[0]
        bit 7 - connect request
@@ -28,7 +28,7 @@ Received CAN msgs directed into contactor function:
  (2) poll (time sync) "cid_gps_sync"
  (3) function command (diagnostic poll) "cid_cmd_i"
     
-Sent by contactor function:
+SENT by contactor function:
  (1) contactor command "cid_keepalive_r" (response to "cid_keepalive_i")
      payload[0]
        bit 7 - faulted (code in payload[2])
@@ -36,7 +36,7 @@ Sent by contactor function:
               (warning bit only resets with power cycle)
 		 bit[0]-[3]: Current main state code
 
-     payload[2] = critical error state error code
+     payload[1] = critical error state error code
          0 = No fault
          1 = battery string voltage (hv1) too low
          2 = contactor 1 de-energized, aux1 closed
@@ -48,7 +48,7 @@ Sent by contactor function:
          8 = Contactor #1 closed but voltage across it too big
          9 = Contactor #2 closed but voltage across it too big
 
-		payload[3]
+		payload[2]
          bit[0]-[3] - current substate CONNECTING code
          bit[4]-[7] - current substate (spare) code
 
@@ -143,6 +143,7 @@ struct CNCNTHV
 	struct IIRFILTERL iir; // Intermediate filter params
 //   double dhv;            // Calibrated
 	double dscale;         // volts/tick
+	double dhvc;           // HV calibrated
 	uint32_t hvcal;        // Calibrated, scaled volts/adc tick
 	uint32_t hvc;          // HV as scaled volts
 	uint16_t hv;           // Raw ADC reading received from uart

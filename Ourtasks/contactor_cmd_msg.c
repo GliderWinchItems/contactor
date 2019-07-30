@@ -4,16 +4,37 @@
 * Description        : cid_cmd_msg_i: Function command
 *******************************************************************************/
 /*
-CAN msg payload format:
- pay[0] - return request code
-  If request code for ADC
-    pay]1][2]  = ADC adjusted reading (unit16_t)
-    pay[3]-[6] = Calibrated reading (float)
-  If request is for High Voltage
-    pay[1][2]  = Reading received from uart
-    pay[3]-[6] = Calibrated reading (float)   
-  If code is bogus
-    pay[1]-[6] = 0;
+SENT by contactor function:
+ function command "cid_cmd_r"(response to "cid_cmd_i")
+ (4)  conditional on payload[0], for example(!)--
+      - ADC ct for calibration purposes hv1
+      - ADC ct for calibration purposes hv2
+      - ADC ct for calibration purposes hv3
+      - ADC ct for calibration purposes current1
+      - ADC ct for calibration purposes current2
+      - Duration: (Energize coil 1 - aux 1)
+      - Duration: (Energize coil 2 - aux 2)
+      - Duration: (Drop coil 1 - aux 1)
+      - Duration: (Drop coil 2 - aux 2)
+      - volts: 12v CAN supply
+      - volts: 5v regulated supply
+      ... (many and sundry)
+==================================
+enum CONTACTOR_CMD_CODES
+{
+	ADCRAW5V,         // PA0 IN0  - 5V sensor supply
+	ADCRAWCUR1,       // PA5 IN5  - Current sensor: total battery current
+	ADCRAWCUR2,       // PA6 IN6  - Current sensor: motor
+	ADCRAW12V,        // PA7 IN7  - +12 Raw power to board
+	ADCINTERNALTEMP,  // IN17     - Internal temperature sensor
+	ADCINTERNALVREF,  // IN18     - Internal voltage reference
+	UARTWHV1,
+	UARTWHV2,
+	UARTWHV3,
+	CAL5V,
+	CAL12V,
+};
+
 */
 #include "adcparams.h"
 #include "CanTask.h"

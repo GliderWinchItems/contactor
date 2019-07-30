@@ -231,7 +231,7 @@ int main(void)
 	yprintf_init();
 
 	/* Create serial receiving task. */
-	Thrdret = xSerialTaskReceiveCreate(0);
+	Thrdret = xSerialTaskReceiveCreate(1);
 	if (Thrdret == NULL) morse_trap(21);
 
   /* definition and creation of CanTxTask - CAN driver TX interface. */
@@ -257,11 +257,11 @@ int main(void)
 	// See canfilter_setup.h
 
 	/* Contactor control. */
-	Thrdret = xContactorTaskCreate(0);
+	Thrdret = xContactorTaskCreate(1);
 	if (Thrdret == NULL) morse_trap(18);
 
 	/* Create MailboxTask */
-	Thrdret = xMailboxTaskCreate(2);
+	Thrdret = xMailboxTaskCreate(1);
 	if (Thrdret == NULL) morse_trap(19);
 
 	/* Create Mailbox control block w 'take' pointer for each CAN module. */
@@ -280,7 +280,7 @@ int main(void)
 	HAL_CAN_Start(&hcan); // CAN1
 
 	/* ADC summing, calibration, etc. */
-	Thrdret = 	xADCTaskCreate(1);
+	Thrdret = 	xADCTaskCreate(2);
 	if (Thrdret == NULL) morse_trap(20);
 	
 /* =================================================== */
@@ -587,7 +587,7 @@ static void MX_USART3_UART_Init(void)
 
   /* USER CODE END USART3_Init 1 */
   huart3.Instance = USART3;
-  huart3.Init.BaudRate = 9600;
+  huart3.Init.BaudRate = 115200;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;
@@ -656,12 +656,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
 }
 
 /* USER CODE BEGIN 4 */
@@ -710,6 +704,8 @@ extern uint32_t adcdbg2;
 extern uint32_t dbgCE1;
 uint32_t dbgCE1_prev = dbgCE1;
 
+extern char dbgline[32];
+
   /* Infinite loop */
   for(;;)
   {
@@ -727,15 +723,21 @@ uint32_t dbgCE1_prev = dbgCE1;
 	//		stackwatermark_show(CanRxTaskHandle  ,&pbuf1,"CanRxTask-----");
 			stackwatermark_show(MailboxTaskHandle,&pbuf1,"MailboxTask---");
 			stackwatermark_show(ADCTaskHandle    ,&pbuf1,"ADCTask-------");
+ 		 stackwatermark_show(ContactorTaskHandle,&pbuf1,"ContactorTask-");
 	stackwatermark_show(SerialTaskReceiveHandle,&pbuf1,"SerialReceiveTask");
 
 			/* Heap usage (and test fp woking. */
+  #define HEAPSIZELIST 
+  #ifdef  HEAPSIZELIST
 			heapsize = xPortGetFreeHeapSize();
 			yprintf(&pbuf1,"\n\r#GetFreeHeapSize: total: %i free %i %3.1f%% used: %i\n\n\r",configTOTAL_HEAP_SIZE, heapsize,\
 				100.0*(float)heapsize/configTOTAL_HEAP_SIZE,(configTOTAL_HEAP_SIZE-heapsize));
+  #endif
+
 #endif
 
-#ifdef SHOWSUMMEDADCCHANNELS
+//#define SHOWSUMMEDADCCHANNELS
+#ifdef  SHOWSUMMEDADCCHANNELS
 		for (i = 0; i < 6; i++)
 		{	
 			yprintf(&pbuf1,"%7i ",adcsumdb[i]); // This is what routines work with
@@ -765,7 +767,8 @@ uint32_t dbgCE1_prev = dbgCE1;
 
 //      pcf->padc->chan[ADC1IDX_5VOLTSUPPLY].ival,  pcf->padc->v5.adcfil, 
 //      pcf->padc->chan[ADC1IDX_12VRAWSUPPLY].ival, pcf->padc->v12.adcfil,
-
+//#define SHOWADCDETAILS
+#ifdef  SHOWADCDETAILS
 	yprintf(&pbuf1,"\n\r%i %i %i %i %i %0.6f %0.4f : %0.4f\n\r",
       pcf->padc->v12.ival,
       pcf->padc->intern.adcfilvref,
@@ -779,17 +782,36 @@ uint32_t dbgCE1_prev = dbgCE1;
 	yprintf(&pbuf1,"\n\rV v5: %0.3f  v12: %0.2f\n\r",
 	  (pcf->padc->v5.k  * (double)pcf->padc->v5.ival  * (1.0/(1<<ADCSCALEbits))),
 	  (pcf->padc->v12.k * (double)pcf->padc->v12.ival * (1.0/(1<<ADCSCALEbits))) );
+#endif
 
-yprintf(&pbuf1,"UART ctr: %i\n\r",dbgCE1-dbgCE1_prev);
+#define SHOWHVUARTDATA
+#ifdef  SHOWHVUARTDATA
+
+yprintf(&pbuf1,"UART ctr: %i X:%s\n\rhv %8i %9i %9i\n\r",dbgCE1-dbgCE1_prev,dbgline,
+  pcf->hv[0].hv,pcf->hv[1].hv,pcf->hv[2].hv);
 dbgCE1_prev = dbgCE1;
 
-	
-//	yprintf(&pbuf1,"%i %i %0.2f %0.2f : %i\n\r",
-//      pcf->padc->v12.ival, pcf->padc->v12.adcfil,pcf->padc->v12.dscale, pcf->padc->v12.dscale * pcf->padc->v12.ival, 
-//pcf->padc->intern.vref
-// );
+/*
+	double dscale;         // volts/tick
+	double dhvc;           // HV calibrated
+	uint32_t hvcal;        // Calibrated, scaled volts/adc tick
+	uint32_t hvc;          // HV as scaled volts
+	uint16_t hv;           // Raw ADC reading received from uart
+*/
+for (i = 0; i < 3; i++)
+{
+	pcf->hv[i].dhvc = (double)pcf->hv[i].dscale * (double)pcf->hv[i].hv;
+}
+yprintf(&pbuf1,"D %0.7f %0.7f %0.7f\n\r",pcf->hv[0].dscale,pcf->hv[1].dscale,pcf->hv[2].dscale);
 
-  }
+yprintf(&pbuf1,"hvc %7i %9i %9i\n\r",pcf->hv[0].hvcal,pcf->hv[1].hvcal,pcf->hv[2].hvcal);
+
+yprintf(&pbuf1,"dhvc%8.2f%9.2f %9.2f\n\r",pcf->hv[0].dhvc,pcf->hv[1].dhvc,pcf->hv[2].dhvc);
+
+#endif
+	
+  } // END OF FOR LOOP
+
   /* USER CODE END 5 */ 
 }
 

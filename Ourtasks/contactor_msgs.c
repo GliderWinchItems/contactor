@@ -3,6 +3,54 @@
 * Date First Issued  : 07/05/2019
 * Description        : Setup and send non-command function CAN msgs
 *******************************************************************************/
+/*
+SENT by contactor function:
+ (1) contactor command "cid_keepalive_r" (response to "cid_keepalive_i")
+     payload[0]
+       bit 7 - faulted (code in payload[2])
+       bit 6 - warning: minimum pre-chg immediate connect.
+              (warning bit only resets with power cycle)
+		 bit[0]-[3]: Current main state code
+
+     payload[1] = critical error state error code
+         0 = No fault
+         1 = battery string voltage (hv1) too low
+         2 = contactor 1 de-energized, aux1 closed
+         3 = contactor 2 de-energized, aux2 closed
+         4 = contactor #1 energized, after closure delay aux1 open
+         5 = contactor #2 energized, after closure delay aux2 open
+         6 = contactor #1 does not appear closed
+         7 = Timeout before pre-charge voltage reached cutoff
+         8 = Contactor #1 closed but voltage across it too big
+         9 = Contactor #2 closed but voltage across it too big
+
+		payload[2]
+         bit[0]-[3] - current substate CONNECTING code
+         bit[4]-[7] - current substate (spare) code
+
+ poll  (response to "cid_gps_sync") & heartbeat
+ (2)  "cid_msg1" hv #1 : current #1  battery string voltage:current
+ (3)	"cid_msg2" hv #2 : hv #3       DMOC+:DMOC- voltages
+
+ function command "cid_cmd_r"(response to "cid_cmd_i")
+ (4)  conditional on payload[0], for example(!)--
+      - ADC ct for calibration purposes hv1
+      - ADC ct for calibration purposes hv2
+      - ADC ct for calibration purposes hv3
+      - ADC ct for calibration purposes current1
+      - ADC ct for calibration purposes current2
+      - Duration: (Energize coil 1 - aux 1)
+      - Duration: (Energize coil 2 - aux 2)
+      - Duration: (Drop coil 1 - aux 1)
+      - Duration: (Drop coil 2 - aux 2)
+      - volts: 12v CAN supply
+      - volts: 5v regulated supply
+      ... (many and sundry)
+
+ heartbeat (sent in absence of keep-alive msgs)
+ (5)  "cid_hb1" Same as (2) above
+ (6)  "cid_hb2" Same as (3) above
+*/
 
 #include "contactor_msgs.h"
 #include "MailboxTask.h"
@@ -25,7 +73,6 @@ void contactor_msg1(struct CONTACTORFUNCTION* pcf, uint8_t w)
 		float    f;
 	}tmp;
 
-	double dtmp;
 	uint8_t idx2;
 
 	/* Use heartbeat or polled msg CAN id */
@@ -35,13 +82,12 @@ void contactor_msg1(struct CONTACTORFUNCTION* pcf, uint8_t w)
 		idx2 = CID_HB1;
 
 	// Load Battery string voltage (IDXHV1) as float into payload
-	hvpayload(pcf, IDXHV1, idx2, 0);
+	pcf->hv[IDXHV1].dhvc = (double)pcf->hv[IDXHV1].dscale * (double)pcf->hv[IDXHV1].hv;
+	tmp.f = pcf->hv[IDXHV1].dhvc; // Convert to float
+	load4(&pcf->canmsg[idx2].can.cd.uc[0],tmp.ui); // Load float
 
-	// Load Battery current reading as a float into payload
-	dtmp  = pcf->padc->chan[ADC1IDX_CURRENTTOTAL].ival; // Convert int to double
-	dtmp *= pcf->padc->chan[ADC1IDX_CURRENTTOTAL].dscale;
-	tmp.f = dtmp; // Convert to float
-	load4(&pcf->canmsg[idx2].can.cd.uc[4],tmp.ui); // Load float
+	// Load high voltage 1 as a float into payload
+	hvpayload(pcf, IDXHV1, idx2, 0);
 
 	pcf->canmsg[idx2].can.dlc = 8;
 
@@ -71,8 +117,6 @@ void contactor_msg2(struct CONTACTORFUNCTION* pcf, uint8_t w)
 	// Load high voltage 3 as a float into payload
 	hvpayload(pcf, IDXHV3, idx2, 4);
 
-	pcf->canmsg[idx2].can.dlc = 8;
-
 	// Queue CAN msg
 	xQueueSendToBack(CanTxQHandle,&pcf->canmsg[idx2],portMAX_DELAY);
 	return;
@@ -92,13 +136,11 @@ static void hvpayload(struct CONTACTORFUNCTION* pcf, uint8_t idx1,uint8_t idx2,u
 		uint32_t ui;
 		float    f;
 	}tmp;
-	double dtmp;
 
-	// Load high voltage 3 as a float into payload
-	dtmp  = pcf->hv[idx1].hv;  // Convert uint16_t to float
-	dtmp *= pcf->hv[idx2].dscale;
-	tmp.f = dtmp; // Convert double to float
-	load4(&pcf->canmsg[idx2].can.cd.uc[idx3],tmp.ui);
+	// Load high voltage [idx1] as a float into payload msg [idx2] payload byte [idx3]
+	pcf->hv[idx1].dhvc = (double)pcf->hv[idx1].dscale * (double)pcf->hv[idx1].hv;
+	tmp.f = pcf->hv[idx1].dhvc;                       // Convert to float
+	load4(&pcf->canmsg[idx2].can.cd.uc[idx3],tmp.ui); // Load payload
 	return;
 }
 /* *************************************************************************
@@ -106,19 +148,22 @@ static void hvpayload(struct CONTACTORFUNCTION* pcf, uint8_t idx1,uint8_t idx2,u
  *	@brief	: Setup and send Keep-alive response
  * @param	: pcf = Pointer to working struct for Contactor function
  * *************************************************************************/
+
 void contactor_msg_ka(struct CONTACTORFUNCTION* pcf)
 {
-	/* Return command byte */
-	pcf->canmsg[CID_KA_R].can.cd.uc[0]  = pcf->pmbx_cid_keepalive_i->ncan.can.cd.uc[0];
+	/* Return command byte w primary state code */
+	pcf->canmsg[CID_KA_R].can.cd.uc[0]  = 
+     (pcf->pmbx_cid_keepalive_i->ncan.can.cd.uc[0] & 0xf0) |
+     (pcf->state & 0xf);
 
 	/* Fault code */
 	pcf->canmsg[CID_KA_R].can.cd.uc[1] = pcf->faultcode;
 
-	/* substate connect codes */
-	pcf->canmsg[CID_KA_R].can.cd.uc[1] = (pcf->substateC << 0);
-	pcf->canmsg[CID_KA_R].can.cd.uc[1] = (pcf->substateC << 4);
+	/* substate codes */
+	pcf->canmsg[CID_KA_R].can.cd.uc[2]  = (pcf->substateC << 0) & 0xf;
+	pcf->canmsg[CID_KA_R].can.cd.uc[2] |= (pcf->substateX << 4);
 
-	pcf->canmsg[CID_KA_R].can.dlc = 8; // Number of payload bytes
+	pcf->canmsg[CID_KA_R].can.dlc = 3; // Payload size
 
 	// Queue CAN msg
 	xQueueSendToBack(CanTxQHandle,&pcf->canmsg[CID_KA_R],portMAX_DELAY);
