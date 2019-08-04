@@ -31,15 +31,21 @@ LAT_LON_HT
 */
 
 /* ************************************************************************* 
- * void payload_extract(struct MAILBOXCAN* pmbx, struct CANRCVBUFN* pncan);
+ * void payload_extract(struct MAILBOXCAN* pmbx);
  *	@brief	: Lookup CAN ID and load mailbox with extract payload reading(s)
  * @param	: pmbx  = pointer to mailbox
- * @param	: pncan = pointer to CAN msg in can_face.c circular buffer
  * *************************************************************************/
-void payload_extract(struct MAILBOXCAN* pmbx, struct CANRCVBUFN* pncan)
+void payload_extract(struct MAILBOXCAN* pmbx)
 {
 	switch (pmbx->paytype)
 	{
+	case U8:
+	case U8_VAR:
+		if (pmbx->ncan.can.dlc >= 1)
+		{
+			pmbx->mbx.pre8[0] = pmbx->ncan.can.cd.uc[0];
+		}
+		break;		
 	case FF:
 	case U32:
 	case S32:
@@ -134,9 +140,6 @@ void payload_extract(struct MAILBOXCAN* pmbx, struct CANRCVBUFN* pncan)
 		}
 		break;	
 	}
-
-	/*  Copy struct to update CAN msg */
-	pmbx->ncan = *pncan; 
 
 	return;
 }

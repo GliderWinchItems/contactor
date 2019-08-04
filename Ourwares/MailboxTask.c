@@ -52,7 +52,7 @@ taskENTER_CRITICAL();
 	if (ppmbxarray == NULL) {taskEXIT_CRITICAL(); morse_trap(23);}
 
 	/* xMailboxTaskCreate needs to be called before this 'add to list' */
-	if (MailboxTaskHandle == NULL) {taskEXIT_CRITICAL();morse_trap(24);}
+	if (MailboxTaskHandle == NULL) {taskEXIT_CRITICAL(); morse_trap(24);}
 
 	/* Get a circular buffer 'take' pointer for this CAN module. */
 	// The first three notification bits are reserved for CAN modules 
@@ -67,7 +67,7 @@ taskENTER_CRITICAL();
 	/* Start with no mailboxes created. */
 	mbxcannum[pctl->canidx].arraysizecur = 0;
 
-	/* What is important to return a non-NULL pointer to show success. */
+	/* What is important here is to return a non-NULL pointer to show success. */
 taskEXIT_CRITICAL();
 	return &mbxcannum[pctl->canidx];
 }
@@ -138,10 +138,10 @@ struct MAILBOXCAN* MailboxTask_add(struct CAN_CTLBLOCK* pctl,\
 	struct MAILBOXCAN** ppmbx;
 
 	/* Check that the bozo programmer got the prior initializations done correctly. */
-	if (canid == 0)    return NULL;
-	if (pctl  == NULL) return NULL;
-	if (pctl->canidx >= STM32MAXCANNUM) return NULL;
-	if (mbxcannum[pctl->canidx].pctl == NULL) return NULL;
+	if (canid == 0)    morse_trap(25); // return NULL;
+	if (pctl  == NULL) morse_trap(26); //return NULL;
+	if (pctl->canidx >= STM32MAXCANNUM) morse_trap(27);       //return NULL;
+	if (mbxcannum[pctl->canidx].pctl == NULL) morse_trap(28); //return NULL;
 
 	if (tskhandle == NULL)
 		tskhandle = xTaskGetCurrentTaskHandle();
@@ -156,7 +156,7 @@ taskENTER_CRITICAL();
 	for (j = 0; j < mbxcannum[pctl->canidx].arraysizecur; j++)
 	{
 		pmbx = *(ppmbx+j);  // Get pointer to a mailbox from array of pointers
-		if (pmbx == NULL) morse_trap(20); // jic|debug
+		if (pmbx == NULL) morse_trap(23); // jic|debug
 		if (pmbx->ncan.can.id == canid)
 		{ // Here, CAN id already has a mailbox, so a notification must be wanted by this task
 			if (notebit != 0)
@@ -164,7 +164,7 @@ taskENTER_CRITICAL();
 
 				/* Get a notification block. */
 				pnotex = (struct CANNOTIFYLIST*)calloc(1, sizeof(struct CANNOTIFYLIST));
-				if (pnotex == NULL){ taskEXIT_CRITICAL();return NULL;}
+				if (pnotex == NULL){taskEXIT_CRITICAL(); morse_trap(29);}//return NULL;}
 
 				/* Check if this mailbox has any notifications */
 				if (pmbx->pnote == NULL)
@@ -199,8 +199,7 @@ taskENTER_CRITICAL();
 			}
 			/* Here, no notification bit, but CAN id already has a mailbox!
             Either the canid is wrong, or this call was not necessary. */
-			taskEXIT_CRITICAL();
-			return NULL;
+			taskEXIT_CRITICAL(); morse_trap(34);//return NULL;
 		}
 	}
 
@@ -213,27 +212,41 @@ taskENTER_CRITICAL();
    //                 pointer to beginning   + number of entries
 	ppmbx = mbxcannum[pctl->canidx].pmbxarray + mbxcannum[pctl->canidx].arraysizecur;
 
+
+
 	/* Create one mailbox */
 	pmbx = (struct MAILBOXCAN*)calloc(1, sizeof(struct MAILBOXCAN));
-	if (pmbx == NULL){ taskEXIT_CRITICAL();return NULL;}
+	if (pmbx == NULL){taskEXIT_CRITICAL();morse_trap(33);}//return NULL;}
 
-	pmbx->ctr   = 0;       // Redundant (calloc set it zero)
-	pmbx->pnote = NULL;    // Redundant (calloc set it zero)
-	pmbx->ncan. can.id = canid;   // Save CAN id
+	pmbx->ctr          = 0;       // Redundant (calloc set it zero)
+	pmbx->pnote        = NULL;    // Redundant (calloc set it zero)
+	pmbx->paytype      = paytype; // Payload layout code
+	pmbx->ncan.can.id  = canid;   // Save CAN id
 	pmbx->ncan.toa     = DTWTIME; // Set current time for initial time-of-arrival
 
 	if (notebit != 0)
 	{ // Here, a notification is requested.  Add first instance of notification  
 		pnotex = (struct CANNOTIFYLIST*)calloc(1, sizeof(struct CANNOTIFYLIST));
-		if (pnotex == NULL){ taskEXIT_CRITICAL();return NULL;}
+		if (pnotex == NULL){ taskEXIT_CRITICAL();morse_trap(31);}//return NULL;}
 
-		pmbx->pnote       = pnotex; // Mailbox points to first notification
-		pnotex->pnext     = pnotex;	// Last on list points to self
+		pmbx->pnote       = pnotex;    // Mailbox points to first notification
+		pnotex->pnext     = pnotex;	 // Last on list points to self
 		pnotex->tskhandle = tskhandle; // Task to notify
-		pnotex->notebit   = notebit;  // Notification bit to use
-		pnotex->skip      = noteskip; // Skip notification flag
-	}
+		pnotex->notebit   = notebit;   // Notification bit to use
+		pnotex->skip      = noteskip;  // Skip notification flag
+	} 
 
+	/* Save pointer to mailbox in array of pointers to mailboxes. */
+	*(mbxcannum[pctl->canidx].pmbxarray+mbxcannum[pctl->canidx].arraysizecur) = pmbx;
+
+	/* Advance current size of number of mailboxes for this CAN module. */
+	    mbxcannum[pctl->canidx].arraysizecur += 1;
+	if (mbxcannum[pctl->canidx].arraysizecur 
+                               >=
+		 mbxcannum[pctl->canidx].arraysizemax)
+	{ // Here, the next addition will exceed size calloc'ed earlier!
+		{taskEXIT_CRITICAL();morse_trap(31);} // Bozo programmer. We gotcha.
+	}
 // TODO: Sort pointers for new Mailbox if later binary lookup on CAN ID.
 
 taskEXIT_CRITICAL();
@@ -344,6 +357,7 @@ static struct MAILBOXCAN* lookup(struct MAILBOXCANNUM* pmbxnum, struct CANRCVBUF
 		pmbx = *(ppmbx + i); // Point to mailbox[i]
 		if (pmbx->ncan.can.id == pncan->can.id)
 		{ // Here, found!
+			pmbx->ncan = *pncan; // Copy CAN msg to mailbox
 			return pmbx;
 		}
 	}
@@ -368,8 +382,8 @@ static struct MAILBOXCAN* loadmbx(struct MAILBOXCANNUM* pmbxnum, struct CANRCVBU
 	if (pmbx == NULL) return NULL; // Return: CAN id not in mailbox list
 
 	/* Here, this CAN msg has a mailbox. */
-	// Copy CAN msg into mailbox, and extract payload
-	payload_extract(pmbx, pncan);
+	// Extract payload (above 'lookup' copied ncan into mailbox)
+	payload_extract(pmbx);
 
 	/* Execute notifications */
 	pnotetmp = pmbx->pnote; // Get ptr to head of linked list

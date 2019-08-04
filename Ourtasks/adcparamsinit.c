@@ -131,6 +131,10 @@ struct ADCINTERNAL
 
 	p->intern.iv25 = (uint32_t)((double)(1 << ADCSCALEbitsy) * p->lc.calintern.dvtemp);
 
+	p->intern.dx25 = p->lc.calintern.dvtemp * (1.0/4.3E-3);
+
+	p->intern.dxdvref = p->intern.dvref * (1.0/4.3E-3);
+
 /* Reproduced for convenience
 struct ADCABSOLUTE
 {

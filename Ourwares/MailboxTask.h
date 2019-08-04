@@ -15,7 +15,7 @@
 #include "common_can.h"
 #include "can_iface.h"
 
-#define STM32MAXCANNUM 2	// So far just two CAN modules
+#define STM32MAXCANNUM 1	// F103 only has one CAN module
 
 /* Notification bit assignments for 'MailboxTask' */
 // The first three notification bits are reserved for CAN modules 
@@ -61,6 +61,7 @@ struct MAILBOXCAN
 	uint8_t paytype;             // Code for payload type
 };
 
+/* One of these for each CAN module. */
 struct MAILBOXCANNUM
 {
 	struct CAN_CTLBLOCK* pctl;     // CAN control block pointer associated with this mailbox list

@@ -267,7 +267,7 @@ int main(void)
 	/* Create Mailbox control block w 'take' pointer for each CAN module. */
 	struct MAILBOXCANNUM* pmbxret;
 	// (CAN1 control block pointer, size of circular buffer)
-	pmbxret = MailboxTask_add_CANlist(pctl0, 48);
+	pmbxret = MailboxTask_add_CANlist(pctl0, 16);
 	if (pmbxret == NULL) morse_trap(16);
 
 	/* Select interrupts for CAN1 */
@@ -457,8 +457,8 @@ static void MX_CAN_Init(void)
   hcan.Init.Prescaler = 4;
   hcan.Init.Mode = CAN_MODE_NORMAL;
   hcan.Init.SyncJumpWidth = CAN_SJW_2TQ;
-  hcan.Init.TimeSeg1 = CAN_BS1_13TQ;
-  hcan.Init.TimeSeg2 = CAN_BS2_2TQ;
+  hcan.Init.TimeSeg1 = CAN_BS1_12TQ;
+  hcan.Init.TimeSeg2 = CAN_BS2_5TQ;
   hcan.Init.TimeTriggeredMode = DISABLE;
   hcan.Init.AutoBusOff = DISABLE;
   hcan.Init.AutoWakeUp = DISABLE;
@@ -692,11 +692,11 @@ struct CONTACTORFUNCTION* pcf = &contactorfunction;
 
 osDelay(50); // Allow ADC task to get these initialized
 
-double dx25    = pcf->padc->lc.calintern.dvtemp * (1.0/4.3E-3);
-if (dx25 < 0.1) morse_trap(48);
+// Temperature precomputed ratio check
+if (pcf->padc->intern.dx25 < 0.1) morse_trap(48);
 
-double dxdvref = pcf->padc->intern.dvref * (1.0/4.3E-3);
-if (dxdvref < 0.1) morse_trap(49);
+//double dxdvref = pcf->padc->intern.dvref * (1.0/4.3E-3);
+if (pcf->padc->intern.dxdvref < 0.1) morse_trap(49);
 
 // DTW time duration checks
 extern uint32_t adcdbg2;
@@ -736,7 +736,7 @@ extern char dbgline[32];
 
 #endif
 
-//#define SHOWSUMMEDADCCHANNELS
+#define SHOWSUMMEDADCCHANNELS
 #ifdef  SHOWSUMMEDADCCHANNELS
 		for (i = 0; i < 6; i++)
 		{	
@@ -756,13 +756,13 @@ extern char dbgline[32];
 		yprintf(&pbuf1,"\n\r");
 #endif
 
-//#define SHOWINTERNALTEMPERATURECALCULATIONS 
+#define SHOWINTERNALTEMPERATURECALCULATIONS 
 #ifdef SHOWINTERNALTEMPERATURECALCULATIONS
 	/* Internal temperature computation check. */
 	// The following takes 1418 sysclock ticks
-	dt1 = (dx25 - (dxdvref * ((double)pcf->padc->intern.adcfiltemp / (double)pcf->padc->intern.adcfilvref )))  + pcf->padc->lc.calintern.drmtemp;
+	dt1 = (pcf->padc->intern.dx25 - (pcf->padc->intern.dxdvref * ((double)pcf->padc->intern.adcfiltemp / (double)pcf->padc->intern.adcfilvref )))  + pcf->padc->lc.calintern.drmtemp;
 
-	yprintf(&pbuf1,"\n\rT degC: (doubles)%6.2f (scaled int)%6.2f\n\r", dt1,(double)pcf->padc->intern.itemp/(1<<ADCSCALEbits), adcdbg2,pcf->padc->intern.adccmpvref);
+	yprintf(&pbuf1,"\n\rT degC: (doubles)%6.2f %6.2f (scaled int)%i\n\r", dt1,(double)pcf->padc->intern.itemp/(1<<ADCSCALEbits), adcdbg2,pcf->padc->intern.adccmpvref);
 #endif
 
 //      pcf->padc->chan[ADC1IDX_5VOLTSUPPLY].ival,  pcf->padc->v5.adcfil, 
@@ -784,7 +784,7 @@ extern char dbgline[32];
 	  (pcf->padc->v12.k * (double)pcf->padc->v12.ival * (1.0/(1<<ADCSCALEbits))) );
 #endif
 
-#define SHOWHVUARTDATA
+//#define SHOWHVUARTDATA
 #ifdef  SHOWHVUARTDATA
 
 yprintf(&pbuf1,"UART ctr: %i X:%s\n\rhv %8i %9i %9i\n\r",dbgCE1-dbgCE1_prev,dbgline,

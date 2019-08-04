@@ -67,6 +67,7 @@ void StartCanTxTask(void const * argument)
 {
    BaseType_t Qret;	// queue receive return
 	struct CANTXQMSG txq;
+	int ret;
 
 //osDelay(512*4); // Debug delay
 
@@ -77,7 +78,12 @@ HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13); // ORANGE
 		Qret = xQueueReceive(CanTxQHandle,&txq,portMAX_DELAY);
 		if (Qret == pdPASS) // Break loop if not empty
 		{
-			can_driver_put(txq.pctl, &txq.can, txq.maxretryct, txq.bits);
+			ret = can_driver_put(txq.pctl, &txq.can, txq.maxretryct, txq.bits);
+/* ===> Trap errors
+ *				: -1 = Buffer overrun (no free slots for the new msg)
+ *				: -2 = Bogus CAN id rejected
+ *				: -3 = control block pointer NULL */
+			if (ret < -1) morse_trap(90 - ret);
 		}
   }
 }

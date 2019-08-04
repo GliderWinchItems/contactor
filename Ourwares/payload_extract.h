@@ -11,10 +11,9 @@
 #include "MailboxTask.h"
 
 /* *************************************************************************/
-void payload_extract(struct MAILBOXCAN* pmbx, struct CANRCVBUFN* pncan);
+void payload_extract(struct MAILBOXCAN* pmbx);
 /*	@brief	: Lookup CAN ID and load mailbox with extract payload reading(s)
  * @param	: pmbx  = pointer to mailbox
- * @param	: pncan = pointer to CAN msg in can_face.c circular buffer
  * *************************************************************************/
 
 #endif

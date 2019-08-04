@@ -74,6 +74,15 @@ void ContactorEvents_03(struct CONTACTORFUNCTION* pcf)
 void ContactorEvents_04(struct CONTACTORFUNCTION* pcf)
 {
 	pcf->evstat |= CNCTEVTIMER1;	// Show that TIMER1 timed out
+
+	/* Update reset status */
+	{ // Here, request to reset
+		pcf->evstat |= CMDRESET;		
+	}
+
+	/* Send status msg as a status heartbeat. */
+	contactor_msg_ka(pcf);
+
 	return;
 }
 /* *************************************************************************
@@ -106,6 +115,9 @@ void ContactorEvents_07(struct CONTACTORFUNCTION* pcf)
 
 	/* Incoming command byte with command bits */
 	uint8_t cmd = pcf->pmbx_cid_keepalive_i->ncan.can.cd.uc[0];
+
+	/* Send status msg in response. */
+	contactor_msg_ka(pcf);
 
 	/* Update connect request status */
 	if ( (cmd & CMDCONNECT) != 0) // Command to connect

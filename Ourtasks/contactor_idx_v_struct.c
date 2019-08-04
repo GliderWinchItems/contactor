@@ -8,7 +8,6 @@
 #include "contactor_idx_v_struct.h"
 #include "SerialTaskReceive.h"
 
-
 /* *************************************************************************
  * void contactor_idx_v_struct_hardcode_params(struct struct CONTACTORLC* p);
  * @brief	: Init struct from hard-coded parameters (rather than database params in highflash)
@@ -82,23 +81,23 @@ struct CONTACTORLC
 	// Battery_minus-to-contactor #1
 	p->calhv[IDXHV1].iir.k     = 3;
 	p->calhv[IDXHV1].iir.scale = 2;
- 	p->calhv[IDXHV1].dvcal  = 12.45; // Applied voltage
-	p->calhv[IDXHV1].adchv  = 1336; // ADC reading (received from uart)
+ 	p->calhv[IDXHV1].dvcal  = 12.99; // Applied voltage
+	p->calhv[IDXHV1].adchv  = 1396; // ADC reading (received from uart)
 	p->calhv[IDXHV1].offset =  3;   // ADC reading zero volts
 
 	// Battery_minus-to-contactor #1 DMOC_plus
 	p->calhv[IDXHV2].iir.k     = 3;
 	p->calhv[IDXHV2].iir.scale = 2;
- 	p->calhv[IDXHV2].dvcal  = 12.45; // Applied voltage
-	p->calhv[IDXHV2].adchv  = 1379; // ADC reading (received from uart)
-	p->calhv[IDXHV2].offset =  4;   // ADC reading zero volts
+ 	p->calhv[IDXHV2].dvcal  = 12.99; // Applied voltage
+	p->calhv[IDXHV2].adchv  = 1442; // ADC reading (received from uart)
+	p->calhv[IDXHV2].offset =  5;   // ADC reading zero volts
 
 	// Battery_minus-to-contactor #1 DMOC_minus
 	p->calhv[IDXHV3].iir.k     = 3;
 	p->calhv[IDXHV3].iir.scale = 2;
- 	p->calhv[IDXHV3].dvcal  = 12.45; // Applied voltage
-	p->calhv[IDXHV3].adchv  = 1371; // ADC reading (received from uart)
-	p->calhv[IDXHV3].offset =  5;   // ADC reading zero volts
+ 	p->calhv[IDXHV3].dvcal  = 12.99; // Applied voltage
+	p->calhv[IDXHV3].adchv  = 1436; // ADC reading (received from uart)
+	p->calhv[IDXHV3].offset =  4;   // ADC reading zero volts
 
    //                 CANID_HEX      CANID_NAME       CAN_MSG_FMT     DESCRIPTION
 	p->cid_hb1        = 0xFF800000; // CANID_HB_CNTCTR1V  : FF_FF : Contactor1: Heartbeat: High voltage1:Current sensor1
@@ -106,11 +105,11 @@ struct CONTACTORLC
    p->cid_msg1       = 0x50400000; // CANID_MSG_CNTCTR1V : FF_FF : Contactor1: poll response: High voltage1:Current sensor1
    p->cid_msg2       = 0x50600000; // CANID_MSG_CNTCTR1A : FF_FF : Contactor1: poll response: battery gnd to: DMOC+, DMOC-
 	p->cid_cmd_r      = 0xE3600000; // CANID_CMD_CNTCTR1R : U8_VAR: Contactor1: R: Command response
-	p->cid_keepalive_r= 0xE3640000; // CANID_CMD_CNTCTRKAR: U8_U8 : Contactor1: R KeepAlive response
+	p->cid_keepalive_r= 0xE3C00000; // CANID_CMD_CNTCTRKAR: U8_U8 : Contactor1: R KeepAlive response
 
 	// List of CAN ID's for setting up hw filter for incoming msgs
 	p->cid_cmd_i        = 0xE360000C; // CANID_CMD_CNTCTR1I: U8_VAR: Contactor1: I: Command CANID incoming
-	p->cid_keepalive_i  = 0xE3620000; // CANID_CMD_CNTCTRKAR:U8',    Contactor1: I KeepAlive and connect command
+	p->cid_keepalive_i  = 0xE3800000; // CANID_CMD_CNTCTRKAI:U8',    Contactor1: I KeepAlive and connect command
 	p->cid_gps_sync     = 0x00400000; // CANID_HB_TIMESYNC:  U8 : GPS_1: U8 GPS time sync distribution msg-GPS time sync msg
 	p->code_CAN_filt[3] = 0xFFFFFFFC; // CANID_DUMMY: UNDEF: Dummy ID: Lowest priority possible (Not Used)
 	p->code_CAN_filt[4] = 0xFFFFFFFC; // CANID_DUMMY: UNDEF: Dummy ID: Lowest priority possible (Not Used)

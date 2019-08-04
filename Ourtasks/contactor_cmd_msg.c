@@ -43,7 +43,7 @@ enum CONTACTOR_CMD_CODES
 #include "can_iface.h"
 #include "CanTask.h"
 
-static void loadadc(struct CONTACTORFUNCTION* pcf, uint8_t idx);
+static void loadadc(struct CONTACTORFUNCTION* pcf, double dx, uint8_t idx);
 static void loadhv(struct CONTACTORFUNCTION* pcf, uint8_t idx);
 static void load4(uint8_t *po, uint32_t n);
 
@@ -80,6 +80,7 @@ enum CONTACTOR_CMD_CODES
 
 */
 	int i;
+	double dt1;
 	uint8_t pay0 = pcf->pmbx_cid_cmd_i->ncan.can.cd.uc[0];
 
 	// Return payload request code
@@ -93,12 +94,18 @@ enum CONTACTOR_CMD_CODES
 	case ADCRAWCUR1:       // PA5 IN5  - Current sensor: total battery current
 	case ADCRAWCUR2:       // PA6 IN6  - Current sensor: motor
 	case ADCRAW12V:        // PA7 IN7  - +12 Raw power to board
-	case ADCINTERNALTEMP:  // IN17     - Internal temperature sensor
 	case ADCINTERNALVREF:  // IN18     - Internal voltage reference
-
-			loadadc(pcf,pay0); 
+			loadadc(pcf,0,pay0); 
 			break;
 
+	case ADCINTERNALTEMP:  // IN17     - Internal temperature sensor
+		// Convert readings to degC
+		dt1 = (pcf->padc->intern.dx25 - (pcf->padc->intern.dxdvref * 
+          ((double)pcf->padc->intern.adcfiltemp / (double)pcf->padc->intern.adcfilvref ))) + 
+          pcf->padc->lc.calintern.drmtemp;
+		loadadc(pcf,dt1,pay0);
+		break;
+	
 	/* External uart high voltage sensor readings. */
 	case UARTWHV1: loadhv(pcf,IDXHV1); break;
 	case UARTWHV2: loadhv(pcf,IDXHV2); break;
@@ -130,7 +137,7 @@ static void load4(uint8_t *po, uint32_t n)
  * static void loadadc(struct CONTACTORFUNCTION* pcf, uint8_t idx);
  *	@brief	: Load high voltage readings and send CAN msg
  * *************************************************************************/
-static void loadadc(struct CONTACTORFUNCTION* pcf, uint8_t idx)
+static void loadadc(struct CONTACTORFUNCTION* pcf, double dx, uint8_t idx)
 {
 	// For loading float into payload
 	union UIF
@@ -146,9 +153,9 @@ static void loadadc(struct CONTACTORFUNCTION* pcf, uint8_t idx)
 
 	// Calibrated 
 	// Load reading as a float into payload
-	double dtmp  = pcf->padc->chan[idx].ival;  // Convert int to float
-	       dtmp *= pcf->padc->chan[idx].dscale; // Final scaling
-	tmp.f = dtmp;  // Convert double to float
+//	double dtmp  = pcf->padc->chan[idx].ival;  // Convert int to float
+//	       dtmp *= pcf->padc->chan[idx].dscale; // Final scaling
+	tmp.f = dx;  // Convert double to float
 	load4(&pcf->canmsg[CID_CMD_R].can.cd.uc[3],tmp.ui); // Load payload
 
 	pcf->canmsg[CID_CMD_R].can.dlc = 7; // Number of payload bytes
