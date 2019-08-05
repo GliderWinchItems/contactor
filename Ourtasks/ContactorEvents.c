@@ -63,8 +63,10 @@ void ContactorEvents_03(struct CONTACTORFUNCTION* pcf)
 {  // Readings failed to come in before timer timed out.
 	pcf->evstat |= CNCTEVTIMER3;	// Set timeout bit 
 
-	/* Queue keep-alive response CAN msg */
-	pcf->outstat |= CNCTOUT05KA;
+	pcf->evstat &= ~CNCTEVHV;      // Show new HV readings NOT available
+
+	/* Show uart RX timer timed out, i.e. no readings. */
+	pcf->outstat |= CNCTOUTUART3;
 	return;
 }
 /* *************************************************************************
@@ -73,12 +75,10 @@ void ContactorEvents_03(struct CONTACTORFUNCTION* pcf)
  * *************************************************************************/
 void ContactorEvents_04(struct CONTACTORFUNCTION* pcf)
 {
-	pcf->evstat |= CNCTEVTIMER1;	// Show that TIMER1 timed out
+	pcf->evstat |= CNCTEVTIMER1;	// SEt: Show that TIMER1 timed out
 
 	/* Update reset status */
-	{ // Here, request to reset
-		pcf->evstat |= CMDRESET;		
-	}
+	pcf->evstat |= CMDRESET;		
 
 	/* Send status msg as a status heartbeat. */
 	contactor_msg_ka(pcf);
@@ -109,9 +109,8 @@ void ContactorEvents_06(struct CONTACTORFUNCTION* pcf)
  * *************************************************************************/
 void ContactorEvents_07(struct CONTACTORFUNCTION* pcf)
 {
-	/* Queue keep-alive response CAN msg */
-	pcf->outstat |=  CNCTOUT05KA;
-	pcf->evstat  &= ~CNCTEVTIMER1; // Reset timer1 timeout bit
+	pcf->outstat |=  CNCTOUT05KA;  // Output status bit: Show keep-alive
+	pcf->evstat  &= ~CNCTEVTIMER1; // Reset timer1 keep-alive timed-out bit
 
 	/* Incoming command byte with command bits */
 	uint8_t cmd = pcf->pmbx_cid_keepalive_i->ncan.can.cd.uc[0];
@@ -119,14 +118,14 @@ void ContactorEvents_07(struct CONTACTORFUNCTION* pcf)
 	/* Send status msg in response. */
 	contactor_msg_ka(pcf);
 
-	/* Update connect request status */
+	/* Update connect request status bits */
 	if ( (cmd & CMDCONNECT) != 0) // Command to connect
 	{ // Here, request to connect
 		pcf->evstat |= CNCTEVCMDCN;		
 	}
 	else
 	{
-		pcf->evstat &= !CNCTEVCMDCN;		
+		pcf->evstat &= ~CNCTEVCMDCN;		
 	}
 	/* Update reset status */
 	if ( (cmd & CMDRESET ) != 0) // Command to reset
@@ -135,7 +134,7 @@ void ContactorEvents_07(struct CONTACTORFUNCTION* pcf)
 	}
 	else
 	{
-		pcf->evstat &= !CMDRESET;		
+		pcf->evstat &= ~CMDRESET;		
 	}
 	return;
 }	

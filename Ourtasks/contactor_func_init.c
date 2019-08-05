@@ -50,8 +50,7 @@ void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* p
 	}
 
 	/* Battery low voltage as scaled uint32_t. */
-	double dtmp = p->lc.fbattlow / p->hv[IDXHV1].dscale; 
-	p->ibattlow = (dtmp * (1 << ADCSCALEbits));
+	p->ibattlow = (p->lc.fbattlow * (1 << ADCSCALEbits));
 
 	/* Prep-charge end volts threshold */
 	p->iprechgendv = (p->lc.ddiffb4 * (1 << ADCSCALEbits));

@@ -324,6 +324,8 @@ static void open_contactors(struct CONTACTORFUNCTION* pcf)
 	{
 		xTimerChangePeriod(pcf->swtimer2,pcf->open1_k, 2); 
 	}
+	pcf->evstat &= ~CNCTEVTIMER2;	// Reset timeout bit 
+
 	/* De-engerize both contactors and pwm'ing if on */
 	pcf->outstat      &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw);
 	pcf->outstat_prev |=  (CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw);

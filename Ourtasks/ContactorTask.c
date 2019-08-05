@@ -100,13 +100,14 @@ void StartContactorTask(void const * argument)
 	pcf->swtimer1 = xTimerCreate("swtim1",pcf->ka_k,pdTRUE,\
 		(void *) 0, swtim1_callback);
 	if (pcf->swtimer1 == NULL) {morse_trap(41);}
+
 	/* Create timer for other delays. One-shot */
 	pcf->swtimer2 = xTimerCreate("swtim2",10,pdFALSE,\
 		(void *) 0, &swtim2_callback);
 	if (pcf->swtimer2 == NULL) {morse_trap(42);}
 
 	/* Create timer uart RX keep-alive. One-shot */
-	pcf->swtimer3 = xTimerCreate("swtim3",10,pdFALSE,\
+	pcf->swtimer3 = xTimerCreate("swtim3",30,pdFALSE,\
 		(void *) 0, &swtim3_callback);
 	if (pcf->swtimer3 == NULL) {morse_trap(43);}
 
@@ -148,13 +149,14 @@ void StartContactorTask(void const * argument)
 			ContactorEvents_03(pcf);			
 		}
 		if ((noteval & CNCTBIT04) != 0)
-		{ // TIMER1: Command Keep Alive duration tick
+		{ // TIMER1: Command Keep Alive time out (periodic)
 			noteused |= CNCTBIT04; // We handled the bit
 			ContactorEvents_04(pcf);
 		}
 		if ((noteval & CNCTBIT05) != 0)
 		{ // TIMER2: Multiple use Delay timed out
 			noteused |= CNCTBIT05; // We handled the bit
+//			ContactorEvents_05(pcf);
 		}
 		if ((noteval & CNCTBIT06) != 0) 
 		{ // CAN: cid_cmd_i 
@@ -162,7 +164,7 @@ void StartContactorTask(void const * argument)
 			ContactorEvents_06(pcf);
 		}
 		if ((noteval & CNCTBIT07) != 0) 
-		{ // CAN: cid_keepalive_i 
+		{ // CAN: cid_keepalive_i received
 			noteused |= CNCTBIT07; // We handled the bit
 			ContactorEvents_07(pcf);
 		}
@@ -172,10 +174,6 @@ void StartContactorTask(void const * argument)
 			ContactorEvents_08(pcf);
 		}
   /* ========= States =============================== */
-		if (pcf->evstat == CNCTEVTIMER1)	// Show that TIMER1 timed out
-		{
-			transition_faulting(pcf,KEEP_ALIVE_TIMER_TIMEOUT);
-		}
 
 		switch (pcf->state)
 		{

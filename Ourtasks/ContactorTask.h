@@ -122,6 +122,7 @@ NOTES:
 #define CNCTOUT05KA  (1 << 5) // 1 = CAN msg queue: KA status
 #define CNCTOUT06KAw (1 << 6) // 1 = contactor #1 energized & pwm'ed
 #define CNCTOUT07KAw (1 << 7) // 1 = contactor #2 energized & pwm'ed
+#define CNCTOUTUART3 (1 << 8) // 1 = uart3 rx with high voltage timer timed out
 
 /* AUX contact pins. */
 #define AUX1_GPIO_REG GPIOA
@@ -164,6 +165,7 @@ enum CONTACTOR_FAULTCODE
 	CONTACTOR1_CLOSED_VOLTSTOOBIG,
 	CONTACTOR2_CLOSED_VOLTSTOOBIG,
 	KEEP_ALIVE_TIMER_TIMEOUT,
+	NO_UART3_HV_READINGS,
 };
 
 enum CONTACTOR_STATE

@@ -63,7 +63,7 @@ struct CONTACTORLC
 	/* Bits that define the hw features. */
 	p->hwconfig   = 0;  // None of the additional hw features!
 
-
+	p->fbattlow   = 9.0;  // Battery string low voltage (volts)
 
 	p->ka_t       = 1500; // Command/Keep-alive CAN msg timeout duration.
 	p->ddiffb4    = 15.0; // hv1-hv2 voltage difference before closing (volts)
