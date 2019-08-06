@@ -115,8 +115,6 @@ void StartContactorTask(void const * argument)
 	BaseType_t bret = xTimerReset(pcf->swtimer1, 10);
 	if (bret != pdPASS) {morse_trap(44);}
 
-//while(1==1) osDelay(10); // Some debugging & testing
-
   /* Infinite loop */
   for(;;)
   {
@@ -156,7 +154,7 @@ void StartContactorTask(void const * argument)
 		if ((noteval & CNCTBIT05) != 0)
 		{ // TIMER2: Multiple use Delay timed out
 			noteused |= CNCTBIT05; // We handled the bit
-//			ContactorEvents_05(pcf);
+			ContactorEvents_05(pcf);
 		}
 		if ((noteval & CNCTBIT06) != 0) 
 		{ // CAN: cid_cmd_i 

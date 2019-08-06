@@ -15,6 +15,10 @@
 
 extern osThreadId GatewayTaskHandle;
 
+// The following two for debugging
+#include "ContactorTask.h"
+extern struct CONTACTORFUNCTION contactorfunction;
+
 /* One struct for each CAN module, e.g. CAN 1, 2, 3, ... */
 struct MAILBOXCANNUM mbxcannum[STM32MAXCANNUM] = {0};
 
@@ -242,7 +246,7 @@ taskENTER_CRITICAL();
 	/* Advance current size of number of mailboxes for this CAN module. */
 	    mbxcannum[pctl->canidx].arraysizecur += 1;
 	if (mbxcannum[pctl->canidx].arraysizecur 
-                               >=
+                             >=
 		 mbxcannum[pctl->canidx].arraysizemax)
 	{ // Here, the next addition will exceed size calloc'ed earlier!
 		{taskEXIT_CRITICAL();morse_trap(31);} // Bozo programmer. We gotcha.

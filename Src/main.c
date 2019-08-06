@@ -756,7 +756,7 @@ extern char dbgline[32];
 		yprintf(&pbuf1,"\n\r");
 #endif
 
-#define SHOWINTERNALTEMPERATURECALCULATIONS 
+//#define SHOWINTERNALTEMPERATURECALCULATIONS 
 #ifdef SHOWINTERNALTEMPERATURECALCULATIONS
 	/* Internal temperature computation check. */
 	// The following takes 1418 sysclock ticks
@@ -784,7 +784,7 @@ extern char dbgline[32];
 	  (pcf->padc->v12.k * (double)pcf->padc->v12.ival * (1.0/(1<<ADCSCALEbits))) );
 #endif
 
-//#define SHOWHVUARTDATA
+#define SHOWHVUARTDATA
 #ifdef  SHOWHVUARTDATA
 
 yprintf(&pbuf1,"UART ctr: %i X:%s\n\rhv %8i %9i %9i\n\r",dbgCE1-dbgCE1_prev,dbgline,
@@ -807,6 +807,16 @@ yprintf(&pbuf1,"D %0.7f %0.7f %0.7f\n\r",pcf->hv[0].dscale,pcf->hv[1].dscale,pcf
 yprintf(&pbuf1,"hvc %7i %9i %9i\n\r",pcf->hv[0].hvcal,pcf->hv[1].hvcal,pcf->hv[2].hvcal);
 
 yprintf(&pbuf1,"dhvc%8.2f%9.2f %9.2f\n\r",pcf->hv[0].dhvc,pcf->hv[1].dhvc,pcf->hv[2].dhvc);
+
+#endif
+
+#define SHOWBATTERYLOWSTUFF
+#ifdef  SHOWBATTERYLOWSTUFF
+
+yprintf(&pbuf1,"ibattlow: %i  fbattlow: %0.2f  hv[0]: %i battnow: %02f\n\r",
+   pcf->ibattlow, pcf->lc.fbattlow,
+   pcf->hv[0].hv,
+   (double)pcf->hv[0].dscale*(double)pcf->hv[0].hv);
 
 #endif
 	

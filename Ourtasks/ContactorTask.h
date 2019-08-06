@@ -223,7 +223,7 @@ struct CONTACTORFUNCTION
 	struct CONTACTORLC lc; // Parameters for contactors
 
 	struct ADCFUNCTION* padc; // Pointer to ADC working struct
-
+uint32_t padding[2];
 	/* Events status */
 	uint32_t evstat;
 

@@ -78,7 +78,7 @@ void ContactorEvents_04(struct CONTACTORFUNCTION* pcf)
 	pcf->evstat |= CNCTEVTIMER1;	// SEt: Show that TIMER1 timed out
 
 	/* Update reset status */
-	pcf->evstat |= CMDRESET;		
+	pcf->evstat |= CNCTEVCMDCN;		
 
 	/* Send status msg as a status heartbeat. */
 	contactor_msg_ka(pcf);
@@ -130,11 +130,11 @@ void ContactorEvents_07(struct CONTACTORFUNCTION* pcf)
 	/* Update reset status */
 	if ( (cmd & CMDRESET ) != 0) // Command to reset
 	{ // Here, request to reset
-		pcf->evstat |= CMDRESET;		
+		pcf->evstat |= CNCTEVCMDRS;		
 	}
 	else
 	{
-		pcf->evstat &= ~CMDRESET;		
+		pcf->evstat &= ~CNCTEVCMDRS;		
 	}
 	return;
 }	

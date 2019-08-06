@@ -68,6 +68,7 @@ struct CONTACTORLC
 	p->ka_t       = 1500; // Command/Keep-alive CAN msg timeout duration.
 	p->ddiffb4    = 15.0; // hv1-hv2 voltage difference before closing (volts)
 	p->fdiffafter = 2.0;  // allowable hv1-hv2 voltage difference after closure (volts)
+	p->prechgmin_t= 3000; // always allow this amount of time after closing contactor #1 (timeout delay ms)
 	p->prechgmax_t= 6500; // allowable delay for diffafter to reach closure point (timeout delay ms)
 	p->close1_t   = 25;   // contactor #1 coil energize-closure (timeout delay ms)
 	p->close2_t   = 25;   // contactor #2 coil energize-closure (timeout delay ms)
@@ -111,11 +112,11 @@ struct CONTACTORLC
 	p->cid_cmd_i        = 0xE360000C; // CANID_CMD_CNTCTR1I: U8_VAR: Contactor1: I: Command CANID incoming
 	p->cid_keepalive_i  = 0xE3800000; // CANID_CMD_CNTCTRKAI:U8',    Contactor1: I KeepAlive and connect command
 	p->cid_gps_sync     = 0x00400000; // CANID_HB_TIMESYNC:  U8 : GPS_1: U8 GPS time sync distribution msg-GPS time sync msg
+	p->code_CAN_filt[0] = 0xFFFFFFFC; // CANID_DUMMY: UNDEF: Dummy ID: Lowest priority possible (Not Used)
+	p->code_CAN_filt[1] = 0xFFFFFFFC; // CANID_DUMMY: UNDEF: Dummy ID: Lowest priority possible (Not Used)
+	p->code_CAN_filt[2] = 0xFFFFFFFC; // CANID_DUMMY: UNDEF: Dummy ID: Lowest priority possible (Not Used)
 	p->code_CAN_filt[3] = 0xFFFFFFFC; // CANID_DUMMY: UNDEF: Dummy ID: Lowest priority possible (Not Used)
 	p->code_CAN_filt[4] = 0xFFFFFFFC; // CANID_DUMMY: UNDEF: Dummy ID: Lowest priority possible (Not Used)
-	p->code_CAN_filt[5] = 0xFFFFFFFC; // CANID_DUMMY: UNDEF: Dummy ID: Lowest priority possible (Not Used)
-	p->code_CAN_filt[6] = 0xFFFFFFFC; // CANID_DUMMY: UNDEF: Dummy ID: Lowest priority possible (Not Used)
-	p->code_CAN_filt[7] = 0xFFFFFFFC; // CANID_DUMMY: UNDEF: Dummy ID: Lowest priority possible (Not Used)
 
 	return;
 }

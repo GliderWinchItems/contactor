@@ -64,8 +64,8 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 	uint32_t tmp;
 
 	/* Check for battery string below threshold. */
-	if (pcf->hv[IDXHV1].hvc < pcf->ibattlow)
-	{ // Here, battery voltage is too low (or missing!)
+	if (pcf->hv[IDXHV1].hv < pcf->ibattlow)
+	{ // Here, battery voltage is too low (or readings missing!)
 		transition_faulting(pcf,BATTERYLOW);
 		return;
 	}
@@ -119,6 +119,7 @@ static void transition_connecting(struct CONTACTORFUNCTION* pcf)
 	pcf->substateC = CONNECT_C1;
 
 	/* Set one-shot timer for contactor #1 closure delay */
+	if (pcf->close1_k == 0) morse_trap(81);
 	xTimerChangePeriod(pcf->swtimer2,pcf->close1_k, 2); 
 
 	/* Energize coil #1 */
@@ -174,6 +175,7 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 		}
 
 		/* Set one-shot timer for a minimum pre-charge duration. */
+		if (pcf->prechgmin_k == 0) morse_trap(82);
 		xTimerChangePeriod(pcf->swtimer2, pcf->prechgmin_k, 2); 
 
 		pcf->substateC = CONNECT_C2;
@@ -198,6 +200,7 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 					pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
 
 					/* Set one-shot timer for contactor (relay) 2 closure duration. */
+					if (pcf->close2_k == 0) morse_trap(83);
 					xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
 
 					pcf->substateC = CONNECT_C3; // Next substate
@@ -211,6 +214,8 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 					pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
 
 					/* Set one-shot timer for contactor 2 closure duration. */
+
+					if (pcf->close2_k == 0) morse_trap(84);
 					xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
 
 					pcf->substateC = CONNECT_C3; // Next substate
@@ -291,9 +296,9 @@ void ContactorStates_faulting(struct CONTACTORFUNCTION* pcf)
 /* ===== FAULTED ======================================================= */
 void ContactorStates_faulted(struct CONTACTORFUNCTION* pcf)
 {
-	if ((pcf->evstat & CMDRESET) != 0)
+	if ((pcf->evstat & CNCTEVCMDRS) != 0)
 	{ // Command to RESET
-		pcf->faultcode = 0; // Clear fault code.
+		pcf->faultcode = NOFAULT; // Clear fault code.
 		new_state(pcf,DISCONNECTED);
 	}
 	/* Stuck in this state until Command to Reset */
@@ -302,7 +307,7 @@ void ContactorStates_faulted(struct CONTACTORFUNCTION* pcf)
 /* ===== RESET ========================================================= */
 void ContactorStates_reset(struct CONTACTORFUNCTION* pcf)
 {
-	if ((pcf->evstat & CMDRESET) != 0)
+	if ((pcf->evstat & CNCTEVCMDRS) != 0)
 	{ // Command to RESET
 		transition_disconnecting(pcf);
 	}
@@ -318,10 +323,12 @@ static void open_contactors(struct CONTACTORFUNCTION* pcf)
 	/* Set one-shot timer for contactors opening duration. */
 	if (pcf->open2_k > pcf->open1_k)
 	{
+		if (pcf->open2_k == 0) morse_trap(85);
 		xTimerChangePeriod(pcf->swtimer2,pcf->open2_k, 2);
 	} 
 	else
 	{
+		if (pcf->open1_k == 0) morse_trap(86);
 		xTimerChangePeriod(pcf->swtimer2,pcf->open1_k, 2); 
 	}
 	pcf->evstat &= ~CNCTEVTIMER2;	// Reset timeout bit 
