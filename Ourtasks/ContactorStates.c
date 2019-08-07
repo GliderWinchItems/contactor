@@ -98,14 +98,14 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 		}
 	}
 	/* Command/Keep-alive CAN msg received. */
-	if ((pcf->evstat & CMDCONNECT) != 0)
+	if ((pcf->evstat & CNCTEVCMDCN) != 0)
 	{ // Here, request to connect
 		transition_connecting(pcf);
 		return;
 	}
-
 	/* JIC.  Be sure Updates have both coils de-energized. */
 	pcf->outstat &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw);
+	return;
 }
 /* *************************************************************************
  * void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf);
@@ -299,7 +299,9 @@ void ContactorStates_faulted(struct CONTACTORFUNCTION* pcf)
 	if ((pcf->evstat & CNCTEVCMDRS) != 0)
 	{ // Command to RESET
 		pcf->faultcode = NOFAULT; // Clear fault code.
-		new_state(pcf,DISCONNECTED);
+
+		pcf->state = DISCONNECTED;
+//		new_state(pcf,DISCONNECTED);
 	}
 	/* Stuck in this state until Command to Reset */
 	return;
@@ -320,6 +322,7 @@ void ContactorStates_reset(struct CONTACTORFUNCTION* pcf)
  * *************************************************************************/
 static void open_contactors(struct CONTACTORFUNCTION* pcf)
 {
+#ifdef DEBUGGINGSLOWDOWNTEST
 	/* Set one-shot timer for contactors opening duration. */
 	if (pcf->open2_k > pcf->open1_k)
 	{
@@ -331,6 +334,9 @@ static void open_contactors(struct CONTACTORFUNCTION* pcf)
 		if (pcf->open1_k == 0) morse_trap(86);
 		xTimerChangePeriod(pcf->swtimer2,pcf->open1_k, 2); 
 	}
+#endif
+xTimerChangePeriod(pcf->swtimer2,1500, 2); 
+
 	pcf->evstat &= ~CNCTEVTIMER2;	// Reset timeout bit 
 
 	/* De-engerize both contactors and pwm'ing if on */
@@ -346,7 +352,11 @@ static void open_contactors(struct CONTACTORFUNCTION* pcf)
  * *************************************************************************/
 static void new_state(struct CONTACTORFUNCTION* pcf, uint32_t newstate)
 {
-	pcf->outstat |= CNCTOUT05KA;	// Queue keep-alive status CAN msg
+	if (pcf->faultcode != pcf->faultcode_prev)
+	{
+		pcf->faultcode_prev = pcf->faultcode;
+		pcf->outstat |= CNCTOUT05KA;	// Queue keep-alive status CAN msg
+	}
 	pcf->state = newstate;
 	return;
 }

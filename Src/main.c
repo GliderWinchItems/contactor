@@ -257,11 +257,11 @@ int main(void)
 	// See canfilter_setup.h
 
 	/* Contactor control. */
-	Thrdret = xContactorTaskCreate(1);
+	Thrdret = xContactorTaskCreate(0);
 	if (Thrdret == NULL) morse_trap(18);
 
 	/* Create MailboxTask */
-	Thrdret = xMailboxTaskCreate(1);
+	Thrdret = xMailboxTaskCreate(3);
 	if (Thrdret == NULL) morse_trap(19);
 
 	/* Create Mailbox control block w 'take' pointer for each CAN module. */
@@ -706,6 +706,9 @@ uint32_t dbgCE1_prev = dbgCE1;
 
 extern char dbgline[32];
 
+extern uint32_t dbgev04;
+uint32_t dbgev04_prev = dbgev04;;
+
   /* Infinite loop */
   for(;;)
   {
@@ -819,6 +822,9 @@ yprintf(&pbuf1,"ibattlow: %i  fbattlow: %0.2f  hv[0]: %i battnow: %02f\n\r",
    (double)pcf->hv[0].dscale*(double)pcf->hv[0].hv);
 
 #endif
+
+yprintf(&pbuf1,"TIMER1 CT: %i\n\r",dbgev04);
+dbgev04_prev = dbgev04;
 	
   } // END OF FOR LOOP
 

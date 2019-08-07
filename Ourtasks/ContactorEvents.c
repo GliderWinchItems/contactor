@@ -73,12 +73,15 @@ void ContactorEvents_03(struct CONTACTORFUNCTION* pcf)
  * void ContactorEvents_04(struct CONTACTORFUNCTION* pcf);
  * @brief	: TIMER1: Command Keep Alive failed (loss of command control)
  * *************************************************************************/
+uint32_t dbgev04;
+
 void ContactorEvents_04(struct CONTACTORFUNCTION* pcf)
 {
+dbgev04 += 1;
 	pcf->evstat |= CNCTEVTIMER1;	// SEt: Show that TIMER1 timed out
 
 	/* Update reset status */
-	pcf->evstat |= CNCTEVCMDCN;		
+	pcf->evstat &= ~CNCTEVCMDCN;		
 
 	/* Send status msg as a status heartbeat. */
 	contactor_msg_ka(pcf);
@@ -107,14 +110,19 @@ void ContactorEvents_06(struct CONTACTORFUNCTION* pcf)
  * void ContactorEvents_07(struct CONTACTORFUNCTION* pcf);
  * @brief	: CAN: cid_keepalive_i 
  * *************************************************************************/
+uint8_t dbgevcmd;
+
 void ContactorEvents_07(struct CONTACTORFUNCTION* pcf)
 {
+	BaseType_t bret = xTimerReset(pcf->swtimer1, 10);
+	if (bret != pdPASS) {morse_trap(44);}
+
 	pcf->outstat |=  CNCTOUT05KA;  // Output status bit: Show keep-alive
 	pcf->evstat  &= ~CNCTEVTIMER1; // Reset timer1 keep-alive timed-out bit
 
 	/* Incoming command byte with command bits */
 	uint8_t cmd = pcf->pmbx_cid_keepalive_i->ncan.can.cd.uc[0];
-
+dbgevcmd = cmd;
 	/* Send status msg in response. */
 	contactor_msg_ka(pcf);
 

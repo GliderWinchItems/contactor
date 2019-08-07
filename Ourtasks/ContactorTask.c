@@ -115,6 +115,8 @@ void StartContactorTask(void const * argument)
 	BaseType_t bret = xTimerReset(pcf->swtimer1, 10);
 	if (bret != pdPASS) {morse_trap(44);}
 
+if (pcf->evstat != 0) morse_trap(46); // Debugging check
+
   /* Infinite loop */
   for(;;)
   {

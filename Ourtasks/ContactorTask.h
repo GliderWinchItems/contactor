@@ -170,13 +170,13 @@ enum CONTACTOR_FAULTCODE
 
 enum CONTACTOR_STATE
 {
-	DISCONNECTED,
-	CONNECTING,
-	CONNECTED,
-	FAULTING,
-	FAULTED,
-	RESETTING,
-	DISCONNECTING,
+	DISCONNECTED,   /*  0 */
+	CONNECTING,     /*  1 */
+	CONNECTED,      /*  2 */
+	FAULTING,       /*  3 */
+	FAULTED,        /*  4 */
+	RESETTING,      /*  5 */
+	DISCONNECTING,  /*  6 */
 };
 
 enum CONTACTOR_SUBSTATEC
@@ -223,7 +223,7 @@ struct CONTACTORFUNCTION
 	struct CONTACTORLC lc; // Parameters for contactors
 
 	struct ADCFUNCTION* padc; // Pointer to ADC working struct
-uint32_t padding[2];
+
 	/* Events status */
 	uint32_t evstat;
 
@@ -233,6 +233,7 @@ uint32_t padding[2];
 
 	/* Current fault code */
 	enum CONTACTOR_FAULTCODE faultcode;
+	enum CONTACTOR_FAULTCODE faultcode_prev;
 
 /* In the disconnect state the battery string voltage must be above the following. */
 	uint32_t ibattlow;   // Minimum battery volts required to connect
