@@ -424,7 +424,7 @@ static void moveremove2(struct CAN_CTLBLOCK* pctl)
 /*#######################################################################################
  * ISR CAN Callback routines
  *####################################################################################### */
-
+uint32_t dbgcantxctr;
 
 /* *********************************************************************
  * struct CAN_CTLBLOCK* getpctl(CAN_HandleTypeDef *phcan);
@@ -449,6 +449,7 @@ struct CAN_CTLBLOCK* getpctl(CAN_HandleTypeDef *phcan)
 void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *phcan)
 {
 	struct CAN_CTLBLOCK* pctl = getpctl(phcan); // Lookup our pointer
+dbgcantxctr += 1;
 
 	/* Loop back CAN =>TX<= msgs. */
 volatile	struct CAN_POOLBLOCK* p = pctl->pend.plinknext;
@@ -522,13 +523,13 @@ debugTX1c += 1;
  * @param	: phcan = pointer to 'MX CAN handle (control block)
  * @return	: Pointer to our CAN control bock
  * *********************************************************************/
-uint32_t debug1;
+uint32_t dbgcanrxctr;
 
 static void unloadfifo(CAN_HandleTypeDef *phcan, uint32_t RxFifo)
 {
 	struct CANRCVBUFN ncan; // CAN msg plus pctl
 	ncan.toa = DTWTIME;
-debug1 += 1;
+
 	HAL_StatusTypeDef ret;
 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 	CAN_RxHeaderTypeDef header;
@@ -551,6 +552,9 @@ debug1 += 1;
 			*pctl->cirptrs.pwork = ncan; // Copy struct
 			pctl->cirptrs.pwork++;       // Advance 'add' pointer
 			if (pctl->cirptrs.pwork == pctl->cirptrs.pend) pctl->cirptrs.pwork = pctl->cirptrs.pbegin;
+
+if (ncan.can.id == 0x00400000) dbgcanrxctr += 1;
+//dbgcanrxctr += 1;
 
 			if (pctl->tsknote.tskhandle != NULL)
 			{ // Here, notify one task a new msg added to circular buffer

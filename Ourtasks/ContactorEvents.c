@@ -84,7 +84,7 @@ dbgev04 += 1;
 	pcf->evstat &= ~CNCTEVCMDCN;		
 
 	/* Send status msg as a status heartbeat. */
-	contactor_msg_ka(pcf);
+//	contactor_msg_ka(pcf);
 
 	return;
 }
@@ -123,8 +123,6 @@ void ContactorEvents_07(struct CONTACTORFUNCTION* pcf)
 	/* Incoming command byte with command bits */
 	uint8_t cmd = pcf->pmbx_cid_keepalive_i->ncan.can.cd.uc[0];
 dbgevcmd = cmd;
-	/* Send status msg in response. */
-	contactor_msg_ka(pcf);
 
 	/* Update connect request status bits */
 	if ( (cmd & CMDCONNECT) != 0) // Command to connect

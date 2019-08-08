@@ -28,15 +28,11 @@ extern TIM_HandleTypeDef htim4;
  * *************************************************************************/
 void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 {
-	/* Queue KA response CAN msg. */
+	/* Queue keep-alive status CAN msg */
 	if ((pcf->outstat & CNCTOUT05KA) != 0)
-	{ // Here, someone flagged to have this msg sent
-		pcf->outstat &= ~CNCTOUT05KA; // Reset request
-		
-		/* Load payload */
-		pcf->canmsg[0].can.cd.uc[0] = pcf->state;
-		// TODO set bits 7 & 6
-		xQueueSendToBack(CanTxQHandle,&pcf->canmsg[0],portMAX_DELAY);
+	{
+		pcf->outstat &= !CNCTOUT05KA;	
+		contactor_msg_ka(pcf);
 	}
 
 	/* Contactor #1 on/off energization */
@@ -104,12 +100,6 @@ void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 			pcf->outstat_prev &= ~(pcf->outstat & CNCTOUT07KAw);		
 		}
 	}
-
-	/* Queue keep-alive status CAN msg */
-	if ((pcf->outstat & CNCTOUT05KA) != 0)
-	{
-		pcf->outstat &= !CNCTOUT05KA;	
-		contactor_msg_ka(pcf);
-	}
+	return;
 }
 

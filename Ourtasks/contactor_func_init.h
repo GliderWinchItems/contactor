@@ -16,6 +16,10 @@ void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* p
  * @param	: p    = pointer to ContactorTask
  * @param	: padc = pointer to ADC working struct
  * *************************************************************************/
+void contactor_func_init_canfilter(struct CONTACTORFUNCTION* p);
+/*	@brief	: Setup CAN hardware filter with CAN addresses to receive
+ * @param	: p    = pointer to ContactorTask
+ * *************************************************************************/
 
 #endif
 

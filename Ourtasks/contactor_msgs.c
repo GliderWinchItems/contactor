@@ -55,6 +55,8 @@ SENT by contactor function:
 #include "contactor_msgs.h"
 #include "MailboxTask.h"
 
+#define ADDFLOATTOPAYLOAD
+
 static void hvpayload(struct CONTACTORFUNCTION* pcf, uint8_t idx1,uint8_t idx2,uint8_t idx3);
 static void load4(uint8_t *po, uint32_t n);
 
@@ -80,14 +82,14 @@ void contactor_msg1(struct CONTACTORFUNCTION* pcf, uint8_t w)
 		idx2 = CID_MSG1;
 	else
 		idx2 = CID_HB1;
-
+#ifdef ADDFLOATTOPAYLOAD
 	// Load Battery string voltage (IDXHV1) as float into payload
 	pcf->hv[IDXHV1].dhvc = (double)pcf->hv[IDXHV1].dscale * (double)pcf->hv[IDXHV1].hv;
 	tmp.f = pcf->hv[IDXHV1].dhvc; // Convert to float
 	load4(&pcf->canmsg[idx2].can.cd.uc[0],tmp.ui); // Load float
-
 	// Load high voltage 1 as a float into payload
 	hvpayload(pcf, IDXHV1, idx2, 0);
+#endif
 
 	pcf->canmsg[idx2].can.dlc = 8;
 
@@ -110,13 +112,13 @@ void contactor_msg2(struct CONTACTORFUNCTION* pcf, uint8_t w)
 		idx2 = CID_MSG2;
 	else
 		idx2 = CID_HB2;
-
+#ifdef ADDFLOATTOPAYLOAD
 	// Load high voltage 2 as a float into payload
 	hvpayload(pcf, IDXHV2, idx2, 0);
 
 	// Load high voltage 3 as a float into payload
 	hvpayload(pcf, IDXHV3, idx2, 4);
-
+#endif
 	// Queue CAN msg
 	xQueueSendToBack(CanTxQHandle,&pcf->canmsg[idx2],portMAX_DELAY);
 	return;
@@ -148,7 +150,6 @@ static void hvpayload(struct CONTACTORFUNCTION* pcf, uint8_t idx1,uint8_t idx2,u
  *	@brief	: Setup and send Keep-alive response
  * @param	: pcf = Pointer to working struct for Contactor function
  * *************************************************************************/
-
 void contactor_msg_ka(struct CONTACTORFUNCTION* pcf)
 {
 	/* Return command byte w primary state code */

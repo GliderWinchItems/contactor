@@ -16,12 +16,13 @@
 #include "ContactorTask.h"
 #include "main.h"
 #include "stm32f1xx_hal_tim.h"
+#include "morse.h"
+#include "canfilter_setup.h"
 
 /* From 'main.c' */
 extern struct CAN_CTLBLOCK* pctl0;	// Pointer to CAN1 control block
 extern TIM_HandleTypeDef htim4;
-
-
+extern CAN_HandleTypeDef hcan;
 
 /* *************************************************************************
  * void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* padc);
@@ -29,6 +30,7 @@ extern TIM_HandleTypeDef htim4;
  * @param	: p    = pointer to ContactorTask
  * @param	: padc = pointer to ADC working struct
  * *************************************************************************/
+
 void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* padc)
 {
 	int i;
@@ -98,6 +100,39 @@ p->hbct2_k     = pdMS_TO_TICKS(p->lc.hbct2_t);     // Heartbeat ct: ticks betwee
 	p->canmsg[CID_CMD_R].can.id  = p->lc.cid_cmd_r;
 	p->canmsg[CID_HB1  ].can.id  = p->lc.cid_hb1;
 	p->canmsg[CID_HB2  ].can.id  = p->lc.cid_hb2;
+
+	return;
+}
+/* *************************************************************************
+ * void contactor_func_init_canfilter(struct CONTACTORFUNCTION* p);
+ *	@brief	: Setup CAN hardware filter with CAN addresses to receive
+ * @param	: p    = pointer to ContactorTask
+ * *************************************************************************/
+void contactor_func_init_canfilter(struct CONTACTORFUNCTION* p)
+{
+/*	HAL_StatusTypeDef canfilter_setup_add32b_id(uint8_t cannum, CAN_HandleTypeDef *phcan, \
+    uint32_t id,   \
+    uint8_t  fifo );
+ @brief	: Add a 32b id, advance bank number & odd/even
+ * @param	: cannum = CAN module number 1, 2, or 3
+ * @param	: phcan = Pointer to HAL CAN handle (control block)
+ * @param	: id    = 32b CAN id
+ * @param	: fifo  = fifo: 0 or 1
+ * @return	: HAL_ERROR or HAL_OK
+*/
+	HAL_StatusTypeDef ret;
+
+	// CANID_CMD_CNTCTR1I: U8_VAR: Contactor1: I: Command CANID incoming
+	ret = canfilter_setup_add32b_id(1,&hcan,p->lc.cid_cmd_i,0);
+	if (ret == HAL_ERROR) morse_trap(61);	
+
+	// CANID_CMD_CNTCTRKAI:U8',    Contactor1: I KeepAlive and connect command
+	ret = canfilter_setup_add32b_id(1,&hcan,p->lc.cid_keepalive_i,0);
+	if (ret == HAL_ERROR) morse_trap(62);	
+
+	// CANID_HB_TIMESYNC:  U8 : GPS_1: U8 GPS time sync distribution msg-GPS time sync msg
+	ret = canfilter_setup_add32b_id(1,&hcan,p->lc.cid_gps_sync,0);
+	if (ret == HAL_ERROR) morse_trap(63);	
 
 	return;
 }

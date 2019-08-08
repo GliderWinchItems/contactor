@@ -19,18 +19,17 @@ HAL_StatusTypeDef canfilter_setup_first(uint8_t cannum, CAN_HandleTypeDef *phcan
  * @param	: slavebankdmarc = For CAN2, filter bank number demarcation, where CAN2 banks start
  * @return	: HAL_ERROR or HAL_OK
  * *************************************************************************/
-HAL_StatusTypeDef canfilter_setup_add32b_mskmode(uint8_t cannum, CAN_HandleTypeDef *phcan, \
+HAL_StatusTypeDef canfilter_setup_add32b_mskmode(uint8_t cannum, \
+	 CAN_HandleTypeDef *phcan, \
     uint32_t id,   \
     uint32_t msk,  \
-    uint8_t  fifo, \
-    uint8_t  banknum);
+    uint8_t  fifo  );
 /* @brief	: Add a 32b  id and mask to a specified filter bank
  * @param	: cannum = CAN module number 1, 2, or 3
  * @param	: phcan = Pointer to HAL CAN handle (control block)
  * @param	: id    = 32b CAN id
  * @param	: msk   = 32b mask (0's are don't cares)
  * @param	: fifo  = fifo: 0 or 1
- * @param	: banknum = filter bank number 0 - 14/28 depending on single or slave
  * @return	: HAL_ERROR or HAL_OK
  * *************************************************************************/
 HAL_StatusTypeDef canfilter_setup_add32b_id(uint8_t cannum, CAN_HandleTypeDef *phcan, \

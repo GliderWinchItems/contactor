@@ -8,6 +8,7 @@
 #include "stm32f1xx_hal_can.h"
 #include "CanTask.h"
 #include "can_iface.h"
+#include "morse.h"
 
 void StartCanTxTask(void const * argument);
 void StartCanRxTask(void const * argument);
@@ -83,7 +84,9 @@ HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13); // ORANGE
  *				: -1 = Buffer overrun (no free slots for the new msg)
  *				: -2 = Bogus CAN id rejected
  *				: -3 = control block pointer NULL */
-			if (ret < -1) morse_trap(90 - ret);
+			if (ret == -1) morse_trap(91);
+			if (ret == -2) morse_trap(92);
+			if (ret == -3) morse_trap(93);
 		}
   }
 }

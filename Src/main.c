@@ -119,6 +119,7 @@ DMA_HandleTypeDef hdma_adc1;
 
 CAN_HandleTypeDef hcan;
 
+TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart1;
@@ -140,6 +141,7 @@ static void MX_USART3_UART_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_TIM1_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
@@ -187,6 +189,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_TIM4_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -250,7 +253,7 @@ int main(void)
 
 	/* Setup CAN hardware filters to default to accept all ids. */
 	HAL_StatusTypeDef Cret;
-	Cret = canfilter_setup_first(0, &hcan, 15); // CAN1
+	Cret = canfilter_setup_first(1, &hcan, 15); // CAN1
 	if (Cret == HAL_ERROR) morse_trap(9);
 
 	/* Remove "accept all" CAN msgs and add specific id & mask, or id here. */
@@ -472,6 +475,92 @@ static void MX_CAN_Init(void)
   /* USER CODE BEGIN CAN_Init 2 */
 
   /* USER CODE END CAN_Init 2 */
+
+}
+
+/**
+  * @brief TIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM1_Init(void)
+{
+
+  /* USER CODE BEGIN TIM1_Init 0 */
+
+  /* USER CODE END TIM1_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+  TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
+
+  /* USER CODE BEGIN TIM1_Init 1 */
+
+  /* USER CODE END TIM1_Init 1 */
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 36000-1;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 0;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_TIMING;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+  sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+  sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+  sBreakDeadTimeConfig.DeadTime = 0;
+  sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+  sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+  sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+  if (HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM1_Init 2 */
+
+  /* USER CODE END TIM1_Init 2 */
 
 }
 
@@ -707,12 +796,23 @@ uint32_t dbgCE1_prev = dbgCE1;
 extern char dbgline[32];
 
 extern uint32_t dbgev04;
-uint32_t dbgev04_prev = dbgev04;;
+
+extern uint32_t dbgcantxctr;
+extern uint32_t dbgcanrxctr;
+uint32_t dbgcantxctr_prev = dbgcantxctr;
+uint32_t dbgcanrxctr_prev = dbgcanrxctr;
+
+#define LOOPDELAY 1000
+uint32_t tickct = xTaskGetTickCount();
+int32_t loopdelay;
 
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1000);
+	tickct += LOOPDELAY;
+	loopdelay = (tickct - xTaskGetTickCount());
+	if (loopdelay < 1) morse_trap(333);
+   osDelay(loopdelay);
 
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13); // LED Green
 #define SHOWSTACKWATERMARK
@@ -823,8 +923,9 @@ yprintf(&pbuf1,"ibattlow: %i  fbattlow: %0.2f  hv[0]: %i battnow: %02f\n\r",
 
 #endif
 
-yprintf(&pbuf1,"TIMER1 CT: %i\n\r",dbgev04);
-dbgev04_prev = dbgev04;
+yprintf(&pbuf1,"TIMER1 CT: %i rxct: %i txct: %i\n\r",dbgev04,dbgcanrxctr-dbgcanrxctr_prev, dbgcantxctr-dbgcantxctr_prev);
+dbgcanrxctr_prev = dbgcanrxctr;
+dbgcantxctr_prev = dbgcantxctr;
 	
   } // END OF FOR LOOP
 

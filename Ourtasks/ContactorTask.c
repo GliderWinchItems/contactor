@@ -95,9 +95,12 @@ void StartContactorTask(void const * argument)
 	/* Initialize working struc for ContactorTask. */
 	extern struct ADCFUNCTION adc1;
 	contactor_func_init_init(pcf, &adc1);
+
+	/* CAN hardware filter: restrict incoming to necessary CAN msgs. */
+	contactor_func_init_canfilter(pcf);
       
 	/* Create timer for keep-alive.  Auto-reload/periodic */
-	pcf->swtimer1 = xTimerCreate("swtim1",pcf->ka_k,pdTRUE,\
+	pcf->swtimer1 = xTimerCreate("swtim1",pcf->ka_k,pdFALSE,\
 		(void *) 0, swtim1_callback);
 	if (pcf->swtimer1 == NULL) {morse_trap(41);}
 

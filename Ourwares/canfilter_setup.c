@@ -46,8 +46,8 @@ HAL_StatusTypeDef canfilter_setup_first(uint8_t cannum, CAN_HandleTypeDef *phcan
 	case 2:	p = &canfilt3; break; // CAN 3
 	default:		return HAL_ERROR;
 	} // CAN1 & CAN3 start at zero
-	if (cannum != 1)
-	{
+	if (cannum != 2)
+	{ // Here, CAN 1 or CAN 3
 		p->filt.FilterBank = 0;  // Filter bank number
 	}
 	else
@@ -70,28 +70,24 @@ HAL_StatusTypeDef canfilter_setup_first(uint8_t cannum, CAN_HandleTypeDef *phcan
 	return ret;
 }
 /* *************************************************************************
- * HAL_StatusTypeDef canfilter_setup_add32b_mskmode(uint8_t cannum, CAN_HandleTypeDef *phcan, \
-    uint32_t id,   \ 
+ * HAL_StatusTypeDef canfilter_setup_add32b_mskmode(uint8_t cannum, \
+	 CAN_HandleTypeDef *phcan, \
+    uint32_t id,   \
     uint32_t msk,  \
-    uint8_t  fifo, \
-    uint8_t  banknum);
+    uint8_t  fifo  );
  * @brief	: Add a 32b  id and mask to a specified filter bank
  * @param	: cannum = CAN module number 1, 2, or 3
  * @param	: phcan = Pointer to HAL CAN handle (control block)
  * @param	: id    = 32b CAN id
  * @param	: msk   = 32b mask (0's are don't cares)
  * @param	: fifo  = fifo: 0 or 1
- * @param	: banknum = filter bank number 0 - 14/28 depending on single or slave
  * @return	: HAL_ERROR or HAL_OK
  * *************************************************************************/
-/* NOTE: banknum is "absolute" and overrides "banknum" that may have been incremented
-   by additions.
-*/
-HAL_StatusTypeDef canfilter_setup_add32b_mskmode(uint8_t cannum, CAN_HandleTypeDef *phcan, \
+HAL_StatusTypeDef canfilter_setup_add32b_mskmode(uint8_t cannum, \
+	 CAN_HandleTypeDef *phcan, \
     uint32_t id,   \
     uint32_t msk,  \
-    uint8_t  fifo, \
-    uint8_t  banknum)
+    uint8_t  fifo  )
 {
 	struct CANFILTERW* p;
 	HAL_StatusTypeDef ret;
@@ -110,8 +106,8 @@ HAL_StatusTypeDef canfilter_setup_add32b_mskmode(uint8_t cannum, CAN_HandleTypeD
 		canfilter_setup_first(cannum, phcan, 14);
 	}
 
-	/* Check for bozo call. */
-	if ((cannum == 2) && (banknum <= p->filt.SlaveStartFilterBank))
+	/* Check for bozo programmer call. */
+	if ((cannum == 2) && (p->banknum <= p->filt.SlaveStartFilterBank))
 	{ // Here, bank number is in CAN1 area
 		return HAL_ERROR;
 	}
@@ -123,7 +119,7 @@ HAL_StatusTypeDef canfilter_setup_add32b_mskmode(uint8_t cannum, CAN_HandleTypeD
 		p->odd = 0;
 	}
 
-	p->filt.FilterBank       = banknum;
+	p->filt.FilterBank       = p->banknum;
 	p->filt.FilterIdHigh     = (id  >> 16) & 0xffff;
 	p->filt.FilterIdLow      = (id  >>  0) & 0xffff;
 	p->filt.FilterMaskIdHigh = (msk >> 16) & 0xffff;
@@ -154,6 +150,8 @@ HAL_StatusTypeDef canfilter_setup_add32b_id(uint8_t cannum, CAN_HandleTypeDef *p
 	struct CANFILTERW* p;
 	HAL_StatusTypeDef ret;
 
+	if (phcan == NULL) return  HAL_ERROR;
+
 	switch(cannum)
 	{
 	case 1:	p = &canfilt1; break; // CAN 1
@@ -171,29 +169,31 @@ HAL_StatusTypeDef canfilter_setup_add32b_id(uint8_t cannum, CAN_HandleTypeDef *p
 
 	/* Check for bad CAN1,2 bank number */
 	if ((cannum == 2) && (p->banknum <= p->filt.SlaveStartFilterBank))
-	{ // Here, bank number is in CAN1 area
+	{ // Here, bank number is in CAN1 area, but CAN2 request
 		return HAL_ERROR;
 	}
 
 	if (p->odd != 0)
 	{ // Here, next available is in the odd position
 
-		/* Setup First position of pair with ID */
-		p->filt.FilterIdHigh = (id >> 16) & 0xffff;
-		p->filt.FilterIdLow  = (id >>  0) & 0xffff;
-
 		/* Advance one of ID (out of pair for one bank) */
 		p->odd = 0;	// Reset to even
 		p->banknum += 1; // Advance bank number
 		if (p->banknum >= 28) return HAL_ERROR; // Oops check
+
+		/* Setup First position of pair with ID */
+		p->filt.FilterMaskIdHigh = (id >> 16) & 0xffff;
+		p->filt.FilterMaskIdLow  = (id >>  0) & 0xffff;
+
 	}
 	else
 	{ // Here, next position is in the first/even of pair. */
 		/* Setup 2nd position of pair with ID */
-		p->filt.FilterMaskIdHigh = (id >> 16) & 0xffff;
-		p->filt.FilterMaskIdLow  = (id >>  0) & 0xffff;
+		p->filt.FilterIdHigh = (id >> 16) & 0xffff;
+		p->filt.FilterIdLow  = (id >>  0) & 0xffff;
 		p->odd = 1;
 	}
+	p->filt.FilterBank = p->banknum;
 	p->filt.FilterFIFOAssignment = fifo & 0x1;
 	p->filt.FilterMode           = CAN_FILTERMODE_IDLIST;
 	ret = HAL_CAN_ConfigFilter(phcan, &p->filt); // Store in hardware
