@@ -148,9 +148,19 @@ dbgevcmd = cmd;
  * void ContactorEvents_08(struct CONTACTORFUNCTION* pcf);
  * @brief	: CAN: cid_gps_sync: send response CAN msgs
  * *************************************************************************/
+uint32_t dbggpsflag;
+
 void ContactorEvents_08(struct CONTACTORFUNCTION* pcf)
 {
-	contactor_msg1(pcf, 1); // Send battery string voltage and current
+struct CANRCVBUF* pcan = &pcf->pmbx_cid_gps_sync->ncan.can;
+if (pcan->id != 0x00400000) morse_trap(55);
+if (pcan->id == 0x00400000)
+{
+	if (pcan->cd.uc[0] == 0)
+      dbggpsflag += 1;
+}
+
+//	contactor_msg1(pcf, 1); // Send battery string voltage and current
 	contactor_msg2(pcf, 1); // Send DMOC+ and DMOC- voltages
 	return;
 }

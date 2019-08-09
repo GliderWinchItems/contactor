@@ -449,13 +449,15 @@ struct CAN_CTLBLOCK* getpctl(CAN_HandleTypeDef *phcan)
 void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef *phcan)
 {
 	struct CAN_CTLBLOCK* pctl = getpctl(phcan); // Lookup our pointer
-dbgcantxctr += 1;
 
 	/* Loop back CAN =>TX<= msgs. */
 volatile	struct CAN_POOLBLOCK* p = pctl->pend.plinknext;
 	struct CANRCVBUFN ncan;
 	ncan.pctl = pctl;
 	ncan.can = p->can;
+
+if (p->can.id == 0xff000000) dbgcantxctr += 1;
+
 	
 	/* Either loop back all, or msg-by-msg select loopback */
 #ifndef CANMSGLOOPBACKALL
@@ -553,8 +555,8 @@ static void unloadfifo(CAN_HandleTypeDef *phcan, uint32_t RxFifo)
 			pctl->cirptrs.pwork++;       // Advance 'add' pointer
 			if (pctl->cirptrs.pwork == pctl->cirptrs.pend) pctl->cirptrs.pwork = pctl->cirptrs.pbegin;
 
-if (ncan.can.id == 0x00400000) dbgcanrxctr += 1;
-//dbgcanrxctr += 1;
+//if (ncan.can.id == 0xe360000c) dbgcanrxctr += 1;
+dbgcanrxctr += 1;
 
 			if (pctl->tsknote.tskhandle != NULL)
 			{ // Here, notify one task a new msg added to circular buffer

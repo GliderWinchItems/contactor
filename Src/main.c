@@ -238,7 +238,7 @@ int main(void)
 	if (Thrdret == NULL) morse_trap(21);
 
   /* definition and creation of CanTxTask - CAN driver TX interface. */
-  Qidret = xCanTxTaskCreate(0, 32); // CanTask priority, Number of msgs in queue
+  Qidret = xCanTxTaskCreate(1, 32); // CanTask priority, Number of msgs in queue
 	if (Qidret < 0) morse_trap(5); // Panic LED flashing
 
   /* definition and creation of CanRxTask - CAN driver RX interface. */
@@ -260,7 +260,7 @@ int main(void)
 	// See canfilter_setup.h
 
 	/* Contactor control. */
-	Thrdret = xContactorTaskCreate(0);
+	Thrdret = xContactorTaskCreate(1);
 	if (Thrdret == NULL) morse_trap(18);
 
 	/* Create MailboxTask */
@@ -283,7 +283,7 @@ int main(void)
 	HAL_CAN_Start(&hcan); // CAN1
 
 	/* ADC summing, calibration, etc. */
-	Thrdret = 	xADCTaskCreate(2);
+	Thrdret = 	xADCTaskCreate(1);
 	if (Thrdret == NULL) morse_trap(20);
 	
 /* =================================================== */
@@ -802,6 +802,19 @@ extern uint32_t dbgcanrxctr;
 uint32_t dbgcantxctr_prev = dbgcantxctr;
 uint32_t dbgcanrxctr_prev = dbgcanrxctr;
 
+extern uint32_t dbgmsg1ctr;
+extern uint32_t dbgkactr;
+uint32_t dbgmsg1ctr_prev = dbgmsg1ctr;
+uint32_t dbgkactr_prev = dbgkactr;
+
+extern uint32_t dbggpsflag;
+uint32_t dbggpsflag_prev = dbggpsflag;;
+
+uint32_t prev = 0;
+
+extern uint32_t dbgmbxctr;
+uint32_t dbgmbxctr_prev = dbgmbxctr;
+
 #define LOOPDELAY 1000
 uint32_t tickct = xTaskGetTickCount();
 int32_t loopdelay;
@@ -809,10 +822,13 @@ int32_t loopdelay;
   /* Infinite loop */
   for(;;)
   {
-	tickct += LOOPDELAY;
-	loopdelay = (tickct - xTaskGetTickCount());
-	if (loopdelay < 1) morse_trap(333);
-   osDelay(loopdelay);
+//	tickct += LOOPDELAY;
+//	loopdelay = (tickct - xTaskGetTickCount());
+//	if (loopdelay < 1) morse_trap(333);
+//   osDelay(loopdelay);
+osDelay(5000);
+//while( (dbggpsflag-dbggpsflag_prev) == 0);
+//dbggpsflag_prev = dbggpsflag;
 
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13); // LED Green
 #define SHOWSTACKWATERMARK
@@ -923,10 +939,16 @@ yprintf(&pbuf1,"ibattlow: %i  fbattlow: %0.2f  hv[0]: %i battnow: %02f\n\r",
 
 #endif
 
-yprintf(&pbuf1,"TIMER1 CT: %i rxct: %i txct: %i\n\r",dbgev04,dbgcanrxctr-dbgcanrxctr_prev, dbgcantxctr-dbgcantxctr_prev);
+yprintf(&pbuf1,"TIMER1 CT: %i rxct: %i txct: %i msg1ct: %i kact: %i diff: %i mbxctr: %i %i\n\r",dbgev04,dbgcanrxctr-dbgcanrxctr_prev, dbgcantxctr-dbgcantxctr_prev,
+	dbgmsg1ctr-dbgmsg1ctr_prev,  dbgkactr-dbgkactr_prev,(int)(dbgcantxctr-dbgmsg1ctr),pcf->pmbx_cid_gps_sync->ctr-prev,dbgmbxctr-dbgmbxctr_prev);
+
 dbgcanrxctr_prev = dbgcanrxctr;
 dbgcantxctr_prev = dbgcantxctr;
-	
+dbgmsg1ctr_prev = dbgmsg1ctr;
+dbgkactr_prev = dbgkactr;
+prev = pcf->pmbx_cid_gps_sync->ctr;
+dbgmbxctr_prev = dbgmbxctr;
+
   } // END OF FOR LOOP
 
   /* USER CODE END 5 */ 

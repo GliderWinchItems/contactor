@@ -41,9 +41,9 @@ HAL_StatusTypeDef canfilter_setup_first(uint8_t cannum, CAN_HandleTypeDef *phcan
 
 	switch(cannum)
 	{
-	case 0:	p = &canfilt1; break; // CAN 1
-	case 1: 	p = &canfilt2; break; // CAN 2
-	case 2:	p = &canfilt3; break; // CAN 3
+	case 1:	p = &canfilt1; break; // CAN 1
+	case 2: 	p = &canfilt2; break; // CAN 2
+	case 3:	p = &canfilt3; break; // CAN 3
 	default:		return HAL_ERROR;
 	} // CAN1 & CAN3 start at zero
 	if (cannum != 2)
@@ -196,6 +196,7 @@ HAL_StatusTypeDef canfilter_setup_add32b_id(uint8_t cannum, CAN_HandleTypeDef *p
 	p->filt.FilterBank = p->banknum;
 	p->filt.FilterFIFOAssignment = fifo & 0x1;
 	p->filt.FilterMode           = CAN_FILTERMODE_IDLIST;
+	p->filt.FilterActivation     = ENABLE;
 	ret = HAL_CAN_ConfigFilter(phcan, &p->filt); // Store in hardware
 
 	return ret;

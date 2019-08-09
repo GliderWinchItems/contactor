@@ -55,7 +55,7 @@ SENT by contactor function:
 #include "contactor_msgs.h"
 #include "MailboxTask.h"
 
-#define ADDFLOATTOPAYLOAD
+//#define ADDFLOATTOPAYLOAD
 
 static void hvpayload(struct CONTACTORFUNCTION* pcf, uint8_t idx1,uint8_t idx2,uint8_t idx3);
 static void load4(uint8_t *po, uint32_t n);
@@ -66,6 +66,8 @@ static void load4(uint8_t *po, uint32_t n);
  * @param	: pcf = Pointer to working struct for Contactor function
  * @param	: w = switch for CID_HB1 (0) or CID_MSG1 CAN ids (1)
  * *************************************************************************/
+uint32_t dbgmsg1ctr;
+
 void contactor_msg1(struct CONTACTORFUNCTION* pcf, uint8_t w)
 {
 	// For loading float into payload
@@ -93,6 +95,8 @@ void contactor_msg1(struct CONTACTORFUNCTION* pcf, uint8_t w)
 
 	pcf->canmsg[idx2].can.dlc = 8;
 
+dbgmsg1ctr += 1;
+
 	// Queue CAN msg
 	xQueueSendToBack(CanTxQHandle,&pcf->canmsg[idx2],portMAX_DELAY);
 	return;
@@ -107,6 +111,7 @@ void contactor_msg1(struct CONTACTORFUNCTION* pcf, uint8_t w)
 void contactor_msg2(struct CONTACTORFUNCTION* pcf, uint8_t w)
 {
 	uint8_t idx2;
+dbgmsg1ctr += 1;
 
 	if (w == 0) 
 		idx2 = CID_MSG2;
@@ -150,8 +155,10 @@ static void hvpayload(struct CONTACTORFUNCTION* pcf, uint8_t idx1,uint8_t idx2,u
  *	@brief	: Setup and send Keep-alive response
  * @param	: pcf = Pointer to working struct for Contactor function
  * *************************************************************************/
+uint32_t dbgkactr;
 void contactor_msg_ka(struct CONTACTORFUNCTION* pcf)
 {
+dbgkactr += 1;
 	/* Return command byte w primary state code */
 	pcf->canmsg[CID_KA_R].can.cd.uc[0]  = 
      (pcf->pmbx_cid_keepalive_i->ncan.can.cd.uc[0] & 0xf0) |

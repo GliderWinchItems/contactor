@@ -374,6 +374,8 @@ static struct MAILBOXCAN* lookup(struct MAILBOXCANNUM* pmbxnum, struct CANRCVBUF
  * @param	: pmbxnum = pointer to mailbox control block
  * @param	: pncan = pointer to CAN msg in can_face.c circular buffer
  * *************************************************************************/
+uint32_t dbgmbxctr;
+
 static struct MAILBOXCAN* loadmbx(struct MAILBOXCANNUM* pmbxnum, struct CANRCVBUFN* pncan)
 {
 	struct CANNOTIFYLIST* pnotetmp;	
@@ -392,6 +394,8 @@ static struct MAILBOXCAN* loadmbx(struct MAILBOXCANNUM* pmbxnum, struct CANRCVBU
 	/* Execute notifications */
 	pnotetmp = pmbx->pnote; // Get ptr to head of linked list
 	if (pnotetmp == NULL) return pmbx; // CANID found, but no notifications
+
+	pmbx->ctr += 1; // Count updates
 	
 	// Traverse linked list making notifications
 	do 
@@ -399,9 +403,8 @@ static struct MAILBOXCAN* loadmbx(struct MAILBOXCANNUM* pmbxnum, struct CANRCVBU
 		/* Make a notification if "not skip" and 'taskhandle and 'notebit' were setup */
 		if ((pnotetmp->skip == 0) && (pnotetmp->tskhandle != NULL) && (pnotetmp->notebit != 0))
 		{
-			xTaskNotifyFromISR(pnotetmp->tskhandle,\
-				pnotetmp->notebit, eSetBits,\
-				&xHigherPriorityTaskWoken );	
+dbgmbxctr += 1;
+			xTaskNotify(pnotetmp->tskhandle, pnotetmp->notebit, eSetBits);	
 		}
 
 		/* Step to next item in list. */
