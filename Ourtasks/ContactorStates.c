@@ -69,6 +69,10 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 		transition_faulting(pcf,BATTERYLOW);
 		return;
 	}
+	else
+	{
+		pcf->faultcode = NOFAULT;
+	}
 	/* Check if aux contacts match, if aux contacts present. */
 	if ((pcf->lc.hwconfig & AUX1PRESENT) != 0)
 	{ // Aux contacts are present
@@ -177,6 +181,7 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 		/* Set one-shot timer for a minimum pre-charge duration. */
 		if (pcf->prechgmin_k == 0) morse_trap(82);
 		xTimerChangePeriod(pcf->swtimer2, pcf->prechgmin_k, 2); 
+		pcf->evstat &= ~CNCTEVTIMER2;
 
 		pcf->substateC = CONNECT_C2;
 		break;
@@ -287,7 +292,7 @@ void transition_faulting(struct CONTACTORFUNCTION* pcf, uint8_t fc)
 void ContactorStates_faulting(struct CONTACTORFUNCTION* pcf)
 {
 	if ((pcf->evstat & CNCTEVTIMER2) != 0)
-	{
+	{ // Timer 2 timed out, and contactors should be open
 			new_state(pcf,FAULTED);
 	}		
 	/* Here, still waiting for TIMER2 to time out. */
@@ -298,10 +303,7 @@ void ContactorStates_faulted(struct CONTACTORFUNCTION* pcf)
 {
 	if ((pcf->evstat & CNCTEVCMDRS) != 0)
 	{ // Command to RESET
-		pcf->faultcode = NOFAULT; // Clear fault code.
-
-		pcf->state = DISCONNECTED;
-//		new_state(pcf,DISCONNECTED);
+		transition_disconnecting(pcf);
 	}
 	/* Stuck in this state until Command to Reset */
 	return;
@@ -311,6 +313,7 @@ void ContactorStates_reset(struct CONTACTORFUNCTION* pcf)
 {
 	if ((pcf->evstat & CNCTEVCMDRS) != 0)
 	{ // Command to RESET
+		pcf->faultcode = NOFAULT; // Clear fault code.
 		transition_disconnecting(pcf);
 	}
 	return;
@@ -322,7 +325,6 @@ void ContactorStates_reset(struct CONTACTORFUNCTION* pcf)
  * *************************************************************************/
 static void open_contactors(struct CONTACTORFUNCTION* pcf)
 {
-#ifdef DEBUGGINGSLOWDOWNTEST
 	/* Set one-shot timer for contactors opening duration. */
 	if (pcf->open2_k > pcf->open1_k)
 	{
@@ -334,8 +336,6 @@ static void open_contactors(struct CONTACTORFUNCTION* pcf)
 		if (pcf->open1_k == 0) morse_trap(86);
 		xTimerChangePeriod(pcf->swtimer2,pcf->open1_k, 2); 
 	}
-#endif
-xTimerChangePeriod(pcf->swtimer2,1500, 2); 
 
 	pcf->evstat &= ~CNCTEVTIMER2;	// Reset timeout bit 
 

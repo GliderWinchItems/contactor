@@ -80,9 +80,6 @@ void StartContactorTask(void const * argument)
 	/* A notification copies the internal notification word to this. */
 	uint32_t noteval = 0;    // Receives notification word upon an API notify
 
-	/* notification bits processed after a 'Wait. */
-	uint32_t noteused = 0;
-
 	/* Setup serial receive for uart (HV sensing) */
 	/* Get buffer control block for incoming uart lines. */
 	// 8 line buffers of 16 chars, no dma buff, char-by-char line mode
@@ -100,7 +97,7 @@ void StartContactorTask(void const * argument)
 	contactor_func_init_canfilter(pcf);
       
 	/* Create timer for keep-alive.  Auto-reload/periodic */
-	pcf->swtimer1 = xTimerCreate("swtim1",pcf->ka_k,pdFALSE,\
+	pcf->swtimer1 = xTimerCreate("swtim1",pcf->ka_k,pdTRUE,\
 		(void *) 0, swtim1_callback);
 	if (pcf->swtimer1 == NULL) {morse_trap(41);}
 
@@ -124,8 +121,8 @@ if (pcf->evstat != 0) morse_trap(46); // Debugging check
   for(;;)
   {
 		/* Wait for notifications */
-		xTaskNotifyWait(noteused, 0, &noteval, portMAX_DELAY);
-		noteused = 0;	// Accumulate bits in 'noteval' processed.
+		xTaskNotifyWait(0,0xffffffff, &noteval, portMAX_DELAY);
+//		noteused = 0;	// Accumulate bits in 'noteval' processed.
   /* ========= Events =============================== */
 // NOTE: this could be made into a loop that shifts 'noteval' bits
 // and calls from table of addresses.  This would have an advantage
@@ -134,46 +131,37 @@ if (pcf->evstat != 0) morse_trap(46); // Debugging check
 		// Check notification and deal with it if set.
 		if ((noteval & CNCTBIT00) != 0)
 		{ // ADC readings ready
-			noteused |= CNCTBIT00; // We handled the bit
 			ContactorEvents_00(pcf);
 		}
 		if ((noteval & CNCTBIT01) != 0)
 		{ // uart RX line ready
-			noteused |= CNCTBIT01; // We handled the bit
 			ContactorEvents_01(pcf);
 		}
 		if ((noteval & CNCTBIT02) != 0)
 		{ // (spare)
-			noteused |= CNCTBIT02; // We handled the bit
 		}
 		if ((noteval & CNCTBIT03) != 0)
 		{ // TIMER3: uart RX keep alive timed out
-			noteused |= CNCTBIT03; // We handled the bit
 			ContactorEvents_03(pcf);			
 		}
 		if ((noteval & CNCTBIT04) != 0)
 		{ // TIMER1: Command Keep Alive time out (periodic)
-			noteused |= CNCTBIT04; // We handled the bit
 			ContactorEvents_04(pcf);
 		}
 		if ((noteval & CNCTBIT05) != 0)
 		{ // TIMER2: Multiple use Delay timed out
-			noteused |= CNCTBIT05; // We handled the bit
 			ContactorEvents_05(pcf);
 		}
 		if ((noteval & CNCTBIT06) != 0) 
 		{ // CAN: cid_cmd_i 
-			noteused |= CNCTBIT06; // We handled the bit
 			ContactorEvents_06(pcf);
 		}
 		if ((noteval & CNCTBIT07) != 0) 
 		{ // CAN: cid_keepalive_i received
-			noteused |= CNCTBIT07; // We handled the bit
 			ContactorEvents_07(pcf);
 		}
 		if ((noteval & CNCTBIT08) != 0) 
 		{ // CAN: cid_gps_sync 
-			noteused |= CNCTBIT08; // We handled the bit
 			ContactorEvents_08(pcf);
 		}
   /* ========= States =============================== */

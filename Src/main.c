@@ -826,7 +826,7 @@ int32_t loopdelay;
 //	loopdelay = (tickct - xTaskGetTickCount());
 //	if (loopdelay < 1) morse_trap(333);
 //   osDelay(loopdelay);
-osDelay(5000);
+osDelay(1000);
 //while( (dbggpsflag-dbggpsflag_prev) == 0);
 //dbggpsflag_prev = dbggpsflag;
 

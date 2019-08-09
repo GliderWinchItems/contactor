@@ -31,7 +31,7 @@ void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 	/* Queue keep-alive status CAN msg */
 	if ((pcf->outstat & CNCTOUT05KA) != 0)
 	{
-		pcf->outstat &= !CNCTOUT05KA;	
+		pcf->outstat &= ~CNCTOUT05KA;	
 		contactor_msg_ka(pcf);
 	}
 

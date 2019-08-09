@@ -78,13 +78,18 @@ uint32_t dbgev04;
 void ContactorEvents_04(struct CONTACTORFUNCTION* pcf)
 {
 dbgev04 += 1;
-	pcf->evstat |= CNCTEVTIMER1;	// SEt: Show that TIMER1 timed out
+	pcf->evstat |= CNCTEVTIMER1;	// Set to show that TIMER1 timed out
 
-	/* Update reset status */
-	pcf->evstat &= ~CNCTEVCMDCN;		
+	/* Update connect command and reset status */
+	pcf->evstat &= ~(CNCTEVCMDCN | CNCTEVCMDCN);
 
 	/* Send status msg as a status heartbeat. */
 //	contactor_msg_ka(pcf);
+	pcf->outstat |=  CNCTOUT05KA;  // Output status bit: Show keep-alive
+
+	/* Send with CAN id for heartbeat. */
+	contactor_msg1(pcf, 1); // Send battery string voltage and current
+	contactor_msg2(pcf, 1); // Send DMOC+ and DMOC- voltages
 
 	return;
 }
@@ -152,16 +157,17 @@ uint32_t dbggpsflag;
 
 void ContactorEvents_08(struct CONTACTORFUNCTION* pcf)
 {
+
+/* Testing: use incoming gps msg to time defaultTask loop. */
 struct CANRCVBUF* pcan = &pcf->pmbx_cid_gps_sync->ncan.can;
-if (pcan->id != 0x00400000) morse_trap(55);
 if (pcan->id == 0x00400000)
 {
 	if (pcan->cd.uc[0] == 0)
       dbggpsflag += 1;
 }
-
-//	contactor_msg1(pcf, 1); // Send battery string voltage and current
-	contactor_msg2(pcf, 1); // Send DMOC+ and DMOC- voltages
+	/* Send with regular polled CAN ID */
+	contactor_msg1(pcf, 0); // Send battery string voltage and current
+	contactor_msg2(pcf, 0); // Send DMOC+ and DMOC- voltages
 	return;
 }
 	
