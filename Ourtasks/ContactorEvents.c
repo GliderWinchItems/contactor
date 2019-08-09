@@ -88,8 +88,8 @@ dbgev04 += 1;
 	pcf->outstat |=  CNCTOUT05KA;  // Output status bit: Show keep-alive
 
 	/* Send with CAN id for heartbeat. */
-	contactor_msg1(pcf, 1); // Send battery string voltage and current
-	contactor_msg2(pcf, 1); // Send DMOC+ and DMOC- voltages
+	contactor_msg1(pcf, 0); // Send battery string voltage and current
+	contactor_msg2(pcf, 0); // Send DMOC+ and DMOC- voltages
 
 	return;
 }
@@ -166,8 +166,8 @@ if (pcan->id == 0x00400000)
       dbggpsflag += 1;
 }
 	/* Send with regular polled CAN ID */
-	contactor_msg1(pcf, 0); // Send battery string voltage and current
-	contactor_msg2(pcf, 0); // Send DMOC+ and DMOC- voltages
+	contactor_msg1(pcf, 1); // Send battery string voltage and current
+	contactor_msg2(pcf, 1); // Send DMOC+ and DMOC- voltages
 	return;
 }
 	
