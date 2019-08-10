@@ -46,6 +46,7 @@ dbgCE1 += 1;
 	xTimerReset(pcf->swtimer3,1); // Reset keep-alive timer
 	pcf->evstat &= ~CNCTEVTIMER3;	// Clear timeout bit 
 	pcf->evstat |= CNCTEVHV;      // Show new HV readings available
+	pcf->hvuartctr += 1;		// Running count of lines received
 	return;
 }
 /* *************************************************************************

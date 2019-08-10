@@ -23,6 +23,7 @@ enum connecting_state
 	CONNECT_C4,  // Contactor #2 closure delay
 };
 
+void ContactorStates_otosettling_init(struct CONTACTORFUNCTION* pcf);
 void ContactorStates_disconnecting(struct CONTACTORFUNCTION* pcf);
 void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf);
 void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf);
@@ -31,8 +32,6 @@ void ContactorStates_faulting(struct CONTACTORFUNCTION* pcf);
 void ContactorStates_faulted(struct CONTACTORFUNCTION* pcf);
 void ContactorStates_reset(struct CONTACTORFUNCTION* pcf);
 void transition_faulting(struct CONTACTORFUNCTION* pcf, uint8_t fc);
-
-
 
 #endif
 

@@ -52,6 +52,23 @@ extern TIM_HandleTypeDef htim4; // Needs this for autoreload period
 /* *************************************************************************
  * @brief	: 
  * *************************************************************************/
+
+void ContactorStates_otosettling_init(struct CONTACTORFUNCTION* pcf)
+{
+	/* Check if uart hv readings timer timed out. */
+	if ((pcf->evstat & CNCTEVTIMER3) != 0)
+	{ // Here, keep-alive uart rx timer timed out
+		transition_faulting(pcf, NO_UART3_HV_READINGS);
+		return;
+	}
+
+	/* Delay using data for a few cycles of readings. */
+	if (pcf->hvuartctr < 5) return;
+
+	new_state(pcf, DISCONNECTED);
+	return;
+}
+
 /* ==== xDISCONNECTED ======================================= */
 void static transition_disconnected(struct CONTACTORFUNCTION* pcf)
 { // Intialize disconnected state

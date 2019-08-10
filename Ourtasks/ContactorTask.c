@@ -189,6 +189,9 @@ if (pcf->evstat != 0) morse_trap(46); // Debugging check
 		case DISCONNECTING:
 			ContactorStates_disconnecting(pcf);
 			break;
+		case OTOSETTLING:
+			ContactorStates_otosettling_init(pcf);
+			break;
 		}
   /* ========= Update outputs ======================= */
 		ContactorUpdates(pcf);

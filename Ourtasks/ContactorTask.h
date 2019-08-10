@@ -177,6 +177,7 @@ enum CONTACTOR_STATE
 	FAULTED,        /*  4 */
 	RESETTING,      /*  5 */
 	DISCONNECTING,  /*  6 */
+	OTOSETTLING,    /*  7 */
 };
 
 enum CONTACTOR_SUBSTATEC
@@ -276,6 +277,7 @@ struct CONTACTORFUNCTION
 
 	/* High voltage readings */
 	struct CNCNTHV hv[NUMHV];
+	uint32_t hvuartctr;	// Running count of uart lines received from hv sensor
 
 	/* Pointers to incoming CAN msg mailboxes. */
 	struct MAILBOXCAN* pmbx_cid_cmd_i;      //
