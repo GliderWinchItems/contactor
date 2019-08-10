@@ -115,6 +115,9 @@ void StartContactorTask(void const * argument)
 	BaseType_t bret = xTimerReset(pcf->swtimer1, 10);
 	if (bret != pdPASS) {morse_trap(44);}
 
+	/* Upon startup allow some sensor readings to settle. */
+	pcf->state = OTOSETTLING;
+
 if (pcf->evstat != 0) morse_trap(46); // Debugging check
 
   /* Infinite loop */
