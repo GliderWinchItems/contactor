@@ -80,6 +80,12 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 {
 	uint32_t tmp;
 
+	if ((pcf->evstat & CNCTEVTIMER3) != 0)
+	{ // Here, not receiving readings from uart3 sensor
+		transition_faulting(pcf,NO_UART3_HV_READINGS);
+		return;
+	}
+
 	/* Check for battery string below threshold. */
 	if (pcf->hv[IDXHV1].hv < pcf->ibattlow)
 	{ // Here, battery voltage is too low (or readings missing!)
@@ -210,6 +216,14 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 			transition_faulting(pcf,PRECHGVOLT_NOTREACHED);
 			return;
 		}
+
+		/* Check that we are getting new hv readings. */
+		if ((pcf->evstat & CNCTEVTIMER3) != 0)
+		{ // Here, not receiving readings from uart3 sensor
+			transition_faulting(pcf,NO_UART3_HV_READINGS);
+			return;
+		}
+
 		/* Check if voltage has reached cutoff. */
 		if ((pcf->evstat & CNCTEVHV) != 0)
 		{ // Here, new readings available
