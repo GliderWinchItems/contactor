@@ -128,7 +128,7 @@ NOTES:
 #define AUX1_GPIO_REG GPIOA
 #define AUX1_GPIO_IN  GPIO_PIN_1
 #define AUX2_GPIO_REG GPIOA
-#define AUX2_GPIO_IN  GPIO_PIN_2
+#define AUX2_GPIO_IN  GPIO_PIN_5
 
 /* Command request bits assignments. */
 #define CMDCONNECT (1 << 7) // 1 = Connect requested; 0 = Disconnect requested
@@ -235,6 +235,9 @@ struct CONTACTORFUNCTION
 	/* Current fault code */
 	enum CONTACTOR_FAULTCODE faultcode;
 	enum CONTACTOR_FAULTCODE faultcode_prev;
+
+	/* OTO settling */
+	uint32_t otosw;
 
 /* In the disconnect state the battery string voltage must be above the following. */
 	uint32_t ibattlow;   // Minimum battery volts required to connect

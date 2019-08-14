@@ -79,6 +79,7 @@ void StartContactorTask(void const * argument)
 
 	/* A notification copies the internal notification word to this. */
 	uint32_t noteval = 0;    // Receives notification word upon an API notify
+	uint32_t noteuse = 0xffffffff;
 
 	/* Setup serial receive for uart (HV sensing) */
 	/* Get buffer control block for incoming uart lines. */
@@ -124,7 +125,7 @@ if (pcf->evstat != 0) morse_trap(46); // Debugging check
   for(;;)
   {
 		/* Wait for notifications */
-		xTaskNotifyWait(0,0xffffffff, &noteval, portMAX_DELAY);
+		xTaskNotifyWait(noteuse,noteuse, &noteval, portMAX_DELAY);
 //		noteused = 0;	// Accumulate bits in 'noteval' processed.
   /* ========= Events =============================== */
 // NOTE: this could be made into a loop that shifts 'noteval' bits
@@ -132,40 +133,50 @@ if (pcf->evstat != 0) morse_trap(46); // Debugging check
 // if the high rate bits are shifted out first since a test for
 // no bits left could end the testing early.
 		// Check notification and deal with it if set.
+		noteuse = 0;
 		if ((noteval & CNCTBIT00) != 0)
 		{ // ADC readings ready
 			ContactorEvents_00(pcf);
+			noteuse |= CNCTBIT00;
 		}
 		if ((noteval & CNCTBIT01) != 0)
 		{ // uart RX line ready
 			ContactorEvents_01(pcf);
+			noteuse |= CNCTBIT01;
 		}
 		if ((noteval & CNCTBIT02) != 0)
 		{ // (spare)
+			noteuse |= CNCTBIT02;
 		}
 		if ((noteval & CNCTBIT03) != 0)
 		{ // TIMER3: uart RX keep alive timed out
 			ContactorEvents_03(pcf);			
+			noteuse |= CNCTBIT03;
 		}
 		if ((noteval & CNCTBIT04) != 0)
 		{ // TIMER1: Command Keep Alive time out (periodic)
 			ContactorEvents_04(pcf);
+			noteuse |= CNCTBIT04;
 		}
 		if ((noteval & CNCTBIT05) != 0)
 		{ // TIMER2: Multiple use Delay timed out
 			ContactorEvents_05(pcf);
+			noteuse |= CNCTBIT05;
 		}
 		if ((noteval & CNCTBIT06) != 0) 
 		{ // CAN: cid_cmd_i 
 			ContactorEvents_06(pcf);
+			noteuse |= CNCTBIT06;
 		}
 		if ((noteval & CNCTBIT07) != 0) 
 		{ // CAN: cid_keepalive_i received
 			ContactorEvents_07(pcf);
+			noteuse |= CNCTBIT07;
 		}
 		if ((noteval & CNCTBIT08) != 0) 
 		{ // CAN: cid_gps_sync 
 			ContactorEvents_08(pcf);
+			noteuse |= CNCTBIT08;
 		}
   /* ========= States =============================== */
 

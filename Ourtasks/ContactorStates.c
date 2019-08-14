@@ -63,9 +63,9 @@ void ContactorStates_otosettling_init(struct CONTACTORFUNCTION* pcf)
 	}
 
 	/* Delay using data for a few cycles of readings. */
-	if (pcf->hvuartctr < 5) return;
+	if (pcf->hvuartctr < 50) return;
 
-	new_state(pcf, DISCONNECTED);
+	transition_disconnecting(pcf);
 	return;
 }
 
@@ -132,6 +132,7 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 	}
 	/* JIC.  Be sure Updates have both coils de-energized. */
 	pcf->outstat &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw);
+	pcf->outstat_prev |= (CNCTOUT00K1 | CNCTOUT01K2); // jic
 	return;
 }
 /* *************************************************************************
@@ -148,9 +149,11 @@ static void transition_connecting(struct CONTACTORFUNCTION* pcf)
 	/* Set one-shot timer for contactor #1 closure delay */
 	if (pcf->close1_k == 0) morse_trap(81);
 	xTimerChangePeriod(pcf->swtimer2,pcf->close1_k, 2); 
+	pcf->evstat &= ~CNCTEVTIMER2;
 
 	/* Energize coil #1 */
 	pcf->outstat |= CNCTOUT00K1; // Energize coil during update section
+	pcf->outstat &= ~CNCTOUT06KAw; // No pwm, JIC
 
 	/* Update main state */
 	new_state(pcf,CONNECTING);
@@ -165,7 +168,8 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 	{
 	case CONNECT_C1:  // Contactor #1 closure delay
 		if ((pcf->evstat & CNCTEVTIMER2) == 0) break;
-		/* Timer timed out, so contactor #1 should be closed. */
+
+		/* Here, timer timed out, so contactor #1 should be closed. */
 
 		/* Check if aux contacts match, if aux contacts present. */
 		if ((pcf->lc.hwconfig & AUX1PRESENT) != 0)
@@ -179,16 +183,18 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 			{ // Transition to fault state; set fault code
 				/* Aux contact says it did not close. */
 				transition_faulting(pcf,CONTACTOR1_ON_AUX1_OFF);
+morse_trap(66);
 				return;			
 			}
 		}
 
 		/* For two contactor config, we can check if it looks closed. */
-		if ((pcf->lc.hwconfig & ONECONTACTOR) != 0)
+		if ((pcf->lc.hwconfig & ONECONTACTOR) == 0)
 		{ // Here, two contactor config, so voltage should jump up
 			if ((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) < pcf->ihv1mhv2max) // 
 			{
 				transition_faulting(pcf,CONTACTOR1_DOES_NOT_APPEAR_CLOSED); 
+morse_trap(67);
 				return;
 			}
 		}	
@@ -202,9 +208,9 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 		}
 
 		/* Set one-shot timer for a minimum pre-charge duration. */
-		if (pcf->prechgmin_k == 0) morse_trap(82);
+		if (pcf->prechgmin_k == 0) morse_trap(82); // Oops! Bad initialization
 		xTimerChangePeriod(pcf->swtimer2, pcf->prechgmin_k, 2); 
-		pcf->evstat &= ~CNCTEVTIMER2;
+		pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 
 		pcf->substateC = CONNECT_C2;
 		break;
@@ -212,11 +218,10 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 	case CONNECT_C2:  // Minimum pre-charge duration delay
 		if ((pcf->evstat & CNCTEVTIMER2) != 0)
 		{ // Timer2 timed out before cutoff voltage reached
-			pcf->evstat &= ~CNCTEVTIMER2;	// Clear timeout bit 
+//?			pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 			transition_faulting(pcf,PRECHGVOLT_NOTREACHED);
 			return;
 		}
-
 		/* Check that we are getting new hv readings. */
 		if ((pcf->evstat & CNCTEVTIMER3) != 0)
 		{ // Here, not receiving readings from uart3 sensor
@@ -236,8 +241,9 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 					pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
 
 					/* Set one-shot timer for contactor (relay) 2 closure duration. */
-					if (pcf->close2_k == 0) morse_trap(83);
+if (pcf->close2_k == 0) morse_trap(83);
 					xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
+					pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 
 					pcf->substateC = CONNECT_C3; // Next substate
 					return;			
@@ -251,9 +257,9 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 
 					/* Set one-shot timer for contactor 2 closure duration. */
 
-					if (pcf->close2_k == 0) morse_trap(84);
+if (pcf->close2_k == 0) morse_trap(84);
 					xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
-
+					pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 					pcf->substateC = CONNECT_C3; // Next substate
 					return;
 				}
@@ -280,7 +286,9 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 		}
 		/* event not relevant. Continue waiting for timer2 */
 		break;
+default: morse_trap(69);break;
 	}
+
 }
 		
 /* ======= CONNECTED ==================================================== */
@@ -361,18 +369,20 @@ static void open_contactors(struct CONTACTORFUNCTION* pcf)
 	{
 		if (pcf->open2_k == 0) morse_trap(85);
 		xTimerChangePeriod(pcf->swtimer2,pcf->open2_k, 2);
+		pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 	} 
 	else
 	{
 		if (pcf->open1_k == 0) morse_trap(86);
 		xTimerChangePeriod(pcf->swtimer2,pcf->open1_k, 2); 
+		pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 	}
 
 	pcf->evstat &= ~CNCTEVTIMER2;	// Reset timeout bit 
 
 	/* De-engerize both contactors and pwm'ing if on */
 	pcf->outstat      &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw);
-	pcf->outstat_prev |=  (CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw);
+	pcf->outstat_prev |= (CNCTOUT00K1 | CNCTOUT01K2); // jic
 	return;
 }
 /* *************************************************************************

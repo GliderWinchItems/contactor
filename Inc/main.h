@@ -90,12 +90,30 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define BP_green_LED_Pin GPIO_PIN_13
+#define BP_green_LED_GPIO_Port GPIOC
 #define DMOC_FET_gate_driver_Pin GPIO_PIN_14
 #define DMOC_FET_gate_driver_GPIO_Port GPIOC
-#define FET_drive_contactor__2_Pin GPIO_PIN_8
-#define FET_drive_contactor__2_GPIO_Port GPIOB
-#define FET_drive_contactor__1_Pin GPIO_PIN_9
-#define FET_drive_contactor__1_GPIO_Port GPIOB
+#define Supply_5V_Pin GPIO_PIN_0
+#define Supply_5V_GPIO_Port GPIOA
+#define aux__1_Pin GPIO_PIN_1
+#define aux__1_GPIO_Port GPIOA
+#define Battery_current_sensor_Pin GPIO_PIN_2
+#define Battery_current_sensor_GPIO_Port GPIOA
+#define hv_by_pass_Pin GPIO_PIN_3
+#define hv_by_pass_GPIO_Port GPIOA
+#define spare_current_sensor_Pin GPIO_PIN_4
+#define spare_current_sensor_GPIO_Port GPIOA
+#define aux__2_Pin GPIO_PIN_5
+#define aux__2_GPIO_Port GPIOA
+#define Supply_12V_Pin GPIO_PIN_7
+#define Supply_12V_GPIO_Port GPIOA
+#define coil__2_drive__U25_2_Pin GPIO_PIN_5
+#define coil__2_drive__U25_2_GPIO_Port GPIOB
+#define FET_drive_contactor__1__U26_2_Pin GPIO_PIN_8
+#define FET_drive_contactor__1__U26_2_GPIO_Port GPIOB
+#define test_pin_Pin GPIO_PIN_9
+#define test_pin_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

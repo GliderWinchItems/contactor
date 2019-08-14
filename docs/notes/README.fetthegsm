@@ -18,6 +18,18 @@ https://media.digikey.com/pdf/Data%20Sheets/Silicon%20Laboratories%20PDFs/Si826x
 
 - FET hole drain -> contactor coil -
 - FET hole gnd   -> 12v supply gnd
-- FET hole +     -> 12v supply + (15v max)
+
++12v to JP-2 (single pin) to supply FET gate driver.
+
+4. R8 (LED3) 
+
+Layout had R8 going to Drive FET gnd and for isolation it needs to go to
+the BP Ard board gnd (pin 1 of the RJ jack).
+
+R8 - 3.4K (and still much brighter than necessary).
+
+Fix: Turned R8 sidewise and ran short wire to U25-1 (gnd on BP Ard board side).
+
+
 
 

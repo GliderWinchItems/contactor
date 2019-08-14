@@ -80,7 +80,7 @@ p->hbct2_k     = pdMS_TO_TICKS(p->lc.hbct2_t);     // Heartbeat ct: ticks betwee
 	p->sConfigOCn.OCPolarity = TIM_OCPOLARITY_HIGH;
 	p->sConfigOCn.OCFastMode = TIM_OCFAST_DISABLE;
 
-	// Convert PWM as percent to timer count
+	// Convert PWM as percent to timer count used in HAL setup struct
    p->ipwmpct1 = p->lc.fpwmpct1 * 0.01 * (htim4.Init.Period + 1) - 1;
    p->ipwmpct2 = p->lc.fpwmpct2 * 0.01 * (htim4.Init.Period + 1) - 1;
 

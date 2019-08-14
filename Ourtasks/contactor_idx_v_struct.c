@@ -61,23 +61,27 @@ struct CONTACTORLC
    p->version    = 1;
 
 	/* Bits that define the hw features. */
-	p->hwconfig   = 0;  // None of the additional hw features!
+	p->hwconfig   = PWMCONTACTOR1;  // PWM coil #1
 
 	p->fbattlow   = 9.0;  // Battery string low voltage (volts)
 
 	p->ka_t       = 1500; // Command/Keep-alive CAN msg timeout duration.
 	p->ddiffb4    = 15.0; // hv1-hv2 voltage difference before closing (volts)
 	p->fdiffafter = 2.0;  // allowable hv1-hv2 voltage difference after closure (volts)
-	p->prechgmin_t= 3000; // always allow this amount of time after closing contactor #1 (timeout delay ms)
-	p->prechgmax_t= 6500; // allowable delay for diffafter to reach closure point (timeout delay ms)
-	p->close1_t   = 25;   // contactor #1 coil energize-closure (timeout delay ms)
-	p->close2_t   = 25;   // contactor #2 coil energize-closure (timeout delay ms)
+	p->prechgmin_t= 6000; // always allow this amount of time after closing contactor #1 (timeout delay ms)
+	p->prechgmax_t= 12000; // allowable delay for diffafter to reach closure point (timeout delay ms)
+	p->close1_t   = 800;//25;   // contactor #1 coil energize-closure (timeout delay ms)
+	p->close2_t   = 800;//25;   // contactor #2 coil energize-closure (timeout delay ms)
 	p->open1_t    = 15;   // contactor #1 coil de-energize-open (timeout delay ms)
 	p->open2_t    = 15;   // contactor #2 coil de-energize-open (timeout delay ms)
 	p->hv2stable_t=  5;   // hv 2 reading stable after closure (duration ms)
 	p->keepalive_t= 1000; // keep-alive timeout (timeout delay ms)
 	p->hbct1_t    = 1000; // Heartbeat ct: ticks between sending msgs hv1:cur1
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2
+
+/* PWM durations (0.0- 100.0) */
+	p->fpwmpct1  = 5.0;  // Percent PWM after closure delay at 100% coil #1
+	p->fpwmpct2  = 25.0;  // Percent PWM after closure delay at 100% coil #2
 
 	// Battery_minus-to-contactor #1
 	p->calhv[IDXHV1].iir.k     = 3;

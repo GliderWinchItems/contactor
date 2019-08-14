@@ -55,8 +55,8 @@ NOTE: 5v supply w LM2596 dc-dc switcher
 /* ADC reading sequence/array indices                         */
 /* These indices -=>MUST<= match the hardware ADC scan sequence    */
 #define ADC1IDX_5VOLTSUPPLY   0   // PA0 IN0  - 5V sensor supply
-#define ADC1IDX_CURRENTTOTAL  1   // PA5 IN5  - Current sensor: total battery current
-#define ADC1IDX_CURRENTMOTOR  2   // PA6 IN6  - Current sensor: motor
+#define ADC1IDX_CURRENTTOTAL  1   // PA2 IN2  - Current sensor: total battery current
+#define ADC1IDX_CURRENTMOTOR  2   // PA4 IN4  - Current sensor: motor
 #define ADC1IDX_12VRAWSUPPLY  3   // PA7 IN7  - +12 Raw power to board
 #define ADC1IDX_INTERNALTEMP  4   // IN17     - Internal temperature sensor
 #define ADC1IDX_INTERNALVREF  5   // IN18     - Internal voltage reference
