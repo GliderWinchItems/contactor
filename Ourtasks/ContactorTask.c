@@ -125,7 +125,7 @@ if (pcf->evstat != 0) morse_trap(46); // Debugging check
   for(;;)
   {
 		/* Wait for notifications */
-		xTaskNotifyWait(noteuse,noteuse, &noteval, portMAX_DELAY);
+		xTaskNotifyWait(0,0xffffffff, &noteval, portMAX_DELAY);
 //		noteused = 0;	// Accumulate bits in 'noteval' processed.
   /* ========= Events =============================== */
 // NOTE: this could be made into a loop that shifts 'noteval' bits

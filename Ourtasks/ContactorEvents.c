@@ -82,7 +82,7 @@ dbgev04 += 1;
 	pcf->evstat |= CNCTEVTIMER1;	// Set to show that TIMER1 timed out
 
 	/* Update connect command and reset status */
-	pcf->evstat &= ~(CNCTEVCMDCN | CNCTEVCMDCN);
+	pcf->evstat &= ~(CNCTEVCMDCN | CNCTEVCMDRS);
 
 	/* Send status msg as a status heartbeat. */
 //	contactor_msg_ka(pcf);

@@ -286,7 +286,7 @@ int main(void)
 	HAL_CAN_Start(&hcan); // CAN1
 
 	/* ADC summing, calibration, etc. */
-	Thrdret = 	xADCTaskCreate(1);
+	Thrdret = 	xADCTaskCreate(2);
 	if (Thrdret == NULL) morse_trap(20);
 	
 /* =================================================== */
