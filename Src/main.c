@@ -865,23 +865,6 @@ extern char dbgline[32];
 
 extern uint32_t dbgev04;
 
-extern uint32_t dbgcantxctr;
-extern uint32_t dbgcanrxctr;
-uint32_t dbgcantxctr_prev = dbgcantxctr;
-uint32_t dbgcanrxctr_prev = dbgcanrxctr;
-
-extern uint32_t dbgmsg1ctr;
-extern uint32_t dbgkactr;
-uint32_t dbgmsg1ctr_prev = dbgmsg1ctr;
-uint32_t dbgkactr_prev = dbgkactr;
-
-extern uint32_t dbggpsflag;
-uint32_t dbggpsflag_prev = dbggpsflag;;
-
-uint32_t prev = 0;
-
-extern uint32_t dbgmbxctr;
-uint32_t dbgmbxctr_prev = dbgmbxctr;
 
 #define LOOPDELAY 1000
 uint32_t tickct = xTaskGetTickCount();
@@ -1008,6 +991,26 @@ yprintf(&pbuf1,"ibattlow: %i  fbattlow: %0.2f  hv[0]: %i battnow: %0.2f\n\r",
 
 #endif
 
+#ifdef SHOWCANMSGCOUNTSATVARIOUSPOINTS
+extern uint32_t dbgcantxctr;
+extern uint32_t dbgcanrxctr;
+uint32_t dbgcantxctr_prev = dbgcantxctr;
+uint32_t dbgcanrxctr_prev = dbgcanrxctr;
+
+extern uint32_t dbgmsg1ctr;
+extern uint32_t dbgkactr;
+uint32_t dbgmsg1ctr_prev = dbgmsg1ctr;
+uint32_t dbgkactr_prev = dbgkactr;
+
+extern uint32_t dbggpsflag;
+uint32_t dbggpsflag_prev = dbggpsflag;;
+
+uint32_t prev = 0;
+
+extern uint32_t dbgmbxctr;
+uint32_t dbgmbxctr_prev = dbgmbxctr;
+
+
 yprintf(&pbuf1,"TIMER1 CT: %i rxct: %i txct: %i msg1ct: %i kact: %i diff: %i mbxctr: %i %i\n\r",dbgev04,dbgcanrxctr-dbgcanrxctr_prev, dbgcantxctr-dbgcantxctr_prev,
 	dbgmsg1ctr-dbgmsg1ctr_prev,  dbgkactr-dbgkactr_prev,(int)(dbgcantxctr-dbgmsg1ctr),pcf->pmbx_cid_gps_sync->ctr-prev,dbgmbxctr-dbgmbxctr_prev);
 
@@ -1018,11 +1021,16 @@ dbgkactr_prev = dbgkactr;
 prev = pcf->pmbx_cid_gps_sync->ctr;
 dbgmbxctr_prev = dbgmbxctr;
 
-int z1 = (pcf->outstat & CNCTOUT00K1);
-int z2 = (pcf->outstat & CNCTOUT06KAw);
-int z3 = (pcf->outstat_prev & CNCTOUT00K1);
-int z4 = (pcf->outstat_prev & CNCTOUT06KAw);
-yprintf(&pbuf1,"outstat: %i %i %i %i\n\r", z1, z2,z3,z4 );
+#endif
+
+#define TESTHVBYPASSPIN
+#ifdef  TESTHVBYPASSPIN
+/* Should show '1' when jumper removed; '0' when present. */
+int pin = 0;
+if (HAL_GPIO_ReadPin(HVBYPASSPINPORT,  HVBYPASSPINPIN) == GPIO_PIN_SET) pin = 1;
+yprintf(&pbuf1,"HV by-pass pin: %i\n\r",pin);
+
+#endif
 
   } // END OF FOR LOOP
 

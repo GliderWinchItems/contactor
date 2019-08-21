@@ -130,6 +130,10 @@ NOTES:
 #define AUX2_GPIO_REG GPIOA
 #define AUX2_GPIO_IN  GPIO_PIN_5
 
+/* HV by-pass jumper pin. */
+#define HVBYPASSPINPORT GPIOA
+#define HVBYPASSPINPIN  GPIO_PIN_3
+
 /* Command request bits assignments. */
 #define CMDCONNECT (1 << 7) // 1 = Connect requested; 0 = Disconnect requested
 #define CMDRESET   (1 << 6) // 1 = Reset fault requested; 0 = no command

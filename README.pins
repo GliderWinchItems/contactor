@@ -68,6 +68,7 @@ DMOC enable FET--20v 2a, (Digikey) MTM232270LBFCT-ND
   "ooo" = 3 pin header (JP16)
    left = + to diode; middle = FET drain; right = gnd
    left pin and flyback diode not needed for DMOC pull-down
+	R24 = zero ohm;  R16 = 820 ohms; configure for internal pull-up
 
 RJ-11 jack usage--
 
