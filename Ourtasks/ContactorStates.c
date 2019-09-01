@@ -164,6 +164,12 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 {
 	uint32_t tmp;
 
+	/* Terminate CONNECTED if commands are disconnect or reset. */
+	if ( ((pcf->evstat & CNCTEVCMDCN) == 0) | ((pcf->evstat & CMDRESET) != 0) ) 
+	{ // 
+		transition_disconnecting(pcf);
+	}
+
 	switch(pcf->substateC)
 	{
 	case CONNECT_C1:  // Contactor #1 closure delay
@@ -194,7 +200,7 @@ morse_trap(66);
 			if ((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) < pcf->ihv1mhv2max) // 
 			{
 				transition_faulting(pcf,CONTACTOR1_DOES_NOT_APPEAR_CLOSED); 
-morse_trap(67);
+//morse_trap(67);
 				return;
 			}
 		}	
@@ -217,10 +223,12 @@ morse_trap(67);
 /* ...................................................................... */
 	case CONNECT_C2:  // Minimum pre-charge duration delay
 		if ((pcf->evstat & CNCTEVTIMER2) != 0)
-		{ // Timer2 timed out before cutoff voltage reached
-//?			pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
-			transition_faulting(pcf,PRECHGVOLT_NOTREACHED);
-			return;
+		{ // Minimum pre-charge time has expired.
+			if (pcf->prechgmax_k == 0) morse_trap(83); // Oops! Bad initialization
+			xTimerChangePeriod(pcf->swtimer2, pcf->prechgmax_k, 2); 
+			pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
+			pcf->substateC = CONNECT_C3;
+			break;
 		}
 		/* Check that we are getting new hv readings. */
 		if ((pcf->evstat & CNCTEVTIMER3) != 0)
@@ -228,51 +236,63 @@ morse_trap(67);
 			transition_faulting(pcf,NO_UART3_HV_READINGS);
 			return;
 		}
+		break;
 
+/* ...................................................................... */
+	case CONNECT_C3:
 		/* Check if voltage has reached cutoff. */
+
+// This may not be useful.
 		if ((pcf->evstat & CNCTEVHV) != 0)
 		{ // Here, new readings available
 			pcf->evstat &= ~CNCTEVHV; // Clear new reading bit
+		}
 
-			if ((pcf->lc.hwconfig & ONECONTACTOR) == 0)
-			{ // Here, one contactor
-				if ((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) < pcf->iprechgendv)
-				{ // Here, end of pre-charge.  Energize contactor 2
-					pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
+		/* Check timeout waiting for voltage to reach threshold */
+		if ((pcf->evstat & CNCTEVTIMER2) != 0)
+		{ // Maximum pre-charge time has expired.
+			transition_faulting(pcf,PRECHGVOLT_NOTREACHED);
+			return;
+		}
 
-					/* Set one-shot timer for contactor (relay) 2 closure duration. */
-if (pcf->close2_k == 0) morse_trap(83);
-					xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
-					pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
+		/* Here, timer is still timing. Check if cutoff voltage reached */
 
-					pcf->substateC = CONNECT_C3; // Next substate
-					return;			
-				}
-			}
-			else
-			{ // Here, two contactors
-				if (pcf->hv[IDXHV3].hvc < pcf->iprechgendv)
-				{ // Here, end of pre-charge. Energize contactor 2
-					pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
+		if ((pcf->lc.hwconfig & ONECONTACTOR) != 0)
+		{ // Here, one contactor w pre-charge relay
+			if ((pcf->hv[IDXHV1].hv - pcf->hv[IDXHV2].hv) < pcf->iprechgendv)
+			{ // Here, end of pre-charge.  Energize contactor 2
+				pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
 
-					/* Set one-shot timer for contactor 2 closure duration. */
+				/* Set one-shot timer for contactor (relay) 2 closure duration. */
+if (pcf->close2_k == 0) morse_trap(85);
+				xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
+				pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 
-if (pcf->close2_k == 0) morse_trap(84);
-					xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
-					pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
-					pcf->substateC = CONNECT_C3; // Next substate
-					return;
-				}
+				pcf->substateC = CONNECT_C4; // Next substate
+				return;			
 			}
 		}
-		// Here, event was not relevant
+		else
+		{ // Here, two contactors
+			if (pcf->hv[IDXHV3].hv < pcf->iprechgendv)
+			{ // Here, end of pre-charge. Energize contactor 2
+				pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
+
+				/* Set one-shot timer for contactor 2 closure duration. */
+if (pcf->close2_k == 0) morse_trap(88);
+				xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
+				pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
+				pcf->substateC = CONNECT_C4; // Next substate
+				return;
+			}
+		}
 		break;
 /* ...................................................................... */
-	case CONNECT_C3:  // Contactor #2 close
+	case CONNECT_C4:  // Contactor #2 close
 
 		if ((pcf->evstat & CNCTEVTIMER2) != 0)
 		{ // Timer2 timed out: Contactor #2 should be closed
-			if (((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) > pcf->ihv1mhv2max))
+			if (((pcf->hv[IDXHV1].hv - pcf->hv[IDXHV2].hv) > pcf->ihv1mhv2max))
 			{ // Here, something not right with contactor closing
 				transition_faulting(pcf,CONTACTOR2_CLOSED_VOLTSTOOBIG);
 			}
@@ -367,13 +387,13 @@ static void open_contactors(struct CONTACTORFUNCTION* pcf)
 	/* Set one-shot timer for contactors opening duration. */
 	if (pcf->open2_k > pcf->open1_k)
 	{
-		if (pcf->open2_k == 0) morse_trap(85);
+		if (pcf->open2_k == 0) morse_trap(86);
 		xTimerChangePeriod(pcf->swtimer2,pcf->open2_k, 2);
 		pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 	} 
 	else
 	{
-		if (pcf->open1_k == 0) morse_trap(86);
+		if (pcf->open1_k == 0) morse_trap(87);
 		xTimerChangePeriod(pcf->swtimer2,pcf->open1_k, 2); 
 		pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 	}

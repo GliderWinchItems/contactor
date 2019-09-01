@@ -61,15 +61,16 @@ struct CONTACTORLC
    p->version    = 1;
 
 	/* Bits that define the hw features. */
-	p->hwconfig   = PWMCONTACTOR1;  // PWM coil #1
+//	p->hwconfig   = PWMCONTACTOR1;  // PWM coil #1
+	p->hwconfig   = 0; // Default configuration
 
 	p->fbattlow   = 9.0;  // Battery string low voltage (volts)
 
 	p->ka_t       = 1500; // Command/Keep-alive CAN msg timeout duration.
-	p->ddiffb4    = 15.0; // hv1-hv2 voltage difference before closing (volts)
-	p->fdiffafter = 2.0;  // allowable hv1-hv2 voltage difference after closure (volts)
-	p->prechgmin_t= 8000; // always allow this amount of time after closing contactor #1 (timeout delay ms)
-	p->prechgmax_t= 14000; // allowable delay for diffafter to reach closure point (timeout delay ms)
+	p->ddiffb4    = 4.3;  // hv3, or (hv1-hv2) voltage across pre-charge resistor
+	p->fdiffafter = 0.6;  // allowable hv1-hv2 voltage difference after closure (volts)
+	p->prechgmin_t= 9000; // always allow this amount of time after closing contactor #1 (timeout delay ms)
+	p->prechgmax_t= 23000; // allowable delay for diffafter to reach closure point (timeout delay ms)
 	p->close1_t   = 1500;//25;   // contactor #1 coil energize-closure (timeout delay ms)
 	p->close2_t   = 1500;//25;   // contactor #2 coil energize-closure (timeout delay ms)
 	p->open1_t    = 15;   // contactor #1 coil de-energize-open (timeout delay ms)
@@ -80,8 +81,8 @@ struct CONTACTORLC
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2
 
 /* PWM durations (0.0- 100.0) */
-	p->fpwmpct1  = 5.0;  // Percent PWM after closure delay at 100% coil #1
-	p->fpwmpct2  = 25.0;  // Percent PWM after closure delay at 100% coil #2
+	p->fpwmpct1  = 50.0;  // Percent PWM after closure delay at 100% coil #1
+	p->fpwmpct2  = 33.3;  // Percent PWM after closure delay at 100% coil #2
 
 	// Battery_minus-to-contactor #1
 	p->calhv[IDXHV1].iir.k     = 3;
@@ -93,16 +94,16 @@ struct CONTACTORLC
 	// Battery_minus-to-contactor #1 DMOC_plus
 	p->calhv[IDXHV2].iir.k     = 3;
 	p->calhv[IDXHV2].iir.scale = 2;
- 	p->calhv[IDXHV2].dvcal  = 12.99; // Applied voltage
+ 	p->calhv[IDXHV2].dvcal  = 12.70; // Applied voltage
 	p->calhv[IDXHV2].adchv  = 1442; // ADC reading (received from uart)
-	p->calhv[IDXHV2].offset =  5;   // ADC reading zero volts
+	p->calhv[IDXHV2].offset =  7;   // ADC reading zero volts
 
 	// Battery_minus-to-contactor #1 DMOC_minus
 	p->calhv[IDXHV3].iir.k     = 3;
 	p->calhv[IDXHV3].iir.scale = 2;
  	p->calhv[IDXHV3].dvcal  = 12.99; // Applied voltage
 	p->calhv[IDXHV3].adchv  = 1436; // ADC reading (received from uart)
-	p->calhv[IDXHV3].offset =  4;   // ADC reading zero volts
+	p->calhv[IDXHV3].offset =  3;   // ADC reading zero volts
 
    //                 CANID_HEX      CANID_NAME       CAN_MSG_FMT     DESCRIPTION
 	p->cid_hb1        = 0xFF800000; // CANID_HB_CNTCTR1V  : FF_FF : Contactor1: Heartbeat: High voltage1:Current sensor1

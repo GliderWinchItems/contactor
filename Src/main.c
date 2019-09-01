@@ -989,6 +989,8 @@ yprintf(&pbuf1,"ibattlow: %i  fbattlow: %0.2f  hv[0]: %i battnow: %0.2f\n\r",
    pcf->hv[0].hv,
    (double)pcf->hv[0].dscale*(double)pcf->hv[0].hv);
 
+yprintf(&pbuf1,"iprechgendv: %i hv[IDXHV3].hvc: %i\n\r",pcf->iprechgendv,pcf->hv[IDXHV3].hv);
+
 #endif
 
 #ifdef SHOWCANMSGCOUNTSATVARIOUSPOINTS

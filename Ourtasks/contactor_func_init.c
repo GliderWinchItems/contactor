@@ -55,7 +55,7 @@ void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* p
 	p->ibattlow = p->lc.fbattlow / p->hv[0].dscale;
 
 	/* Prep-charge end volts threshold */
-	p->iprechgendv = (p->lc.ddiffb4 * (1 << ADCSCALEbits));
+	p->iprechgendv = (p->lc.ddiffb4 / p->hv[0].dscale);
 
 	/* Convert ms to timer ticks. */
 p->ka_k        = pdMS_TO_TICKS(p->lc.ka_t);        // Command/Keep-alive CAN msg timeout duration.
