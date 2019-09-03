@@ -96,9 +96,6 @@ struct CONTACTORLC
    to be reached. */
    uint32_t prechgmax_t; // Maximum allowed for voltage to reach threshold
 
-/* With two contactor config, (hv1-hv2) max when contactor #1 closes */
-	float fhv1mhv2max;
-
 /* Allowable hv1-hv2 voltage difference after closure (volts) */
 	float fdiffafter;
 

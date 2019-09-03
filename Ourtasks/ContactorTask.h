@@ -77,16 +77,30 @@ SENT by contactor function:
 
 =========================================    
 NOTES:
-1. The command/keep-alive msgs are sent
+1. CONTACTOR DESIGNATION--
+   (Important for following ContactorStates.c code)
+
+   a. Two contactor configuration
+      #1 Battery string plus-to-DMOC plus
+      #2 Battery string minus-to-DMOC minus
+          with pre-charge resistor across #2's contacts.
+
+   b. One contactor (with small pre-charge relay)
+      #1 Battery string plus-to-DMOC plus
+      #2 Battery string plus-to-pre-charge resistor,
+          with pre-charge resistor to DMOC plus
+
+2. The command/keep-alive msgs are sent
    - As a response to every command/keep-alive
    - Immediately when the program state changes
    - Every keep-alive timer timeout when incoming keep-alive
      msgs are not being receive, i.e. becomes a status heartbeat.
 
-2. hv3 cannot measure negative voltages which might occur during
+3. hv3 cannot measure negative voltages which might occur during
    regeneration with contactor #2 closed.  Likewise, hv2 can 
    exceed hv1 so that the difference becomes negative.  In both
    case the negative values would be small.
+
 */
 
 
@@ -186,10 +200,10 @@ enum CONTACTOR_STATE
 
 enum CONTACTOR_SUBSTATEC
 {
-	CONNECTING1,
-	CONNECTING2,
-	CONNECTING3,
-	CONNECTING4,
+	CONNECTING1,   /*  0 */
+	CONNECTING2,   /*  1 */
+	CONNECTING3,   /*  2 */
+	CONNECTING4,   /*  3 */
 };
 
 /* Function command response payload codes. */
@@ -225,7 +239,7 @@ CID_HB2,
 struct CONTACTORFUNCTION
 {
    // Parameter loaded either by high-flash copy, or hard-coded subroutine
-	struct CONTACTORLC lc; // Parameters for contactors
+	struct CONTACTORLC lc; // Parameters for contactors, (lc = Local Copy)
 
 	struct ADCFUNCTION* padc; // Pointer to ADC working struct
 

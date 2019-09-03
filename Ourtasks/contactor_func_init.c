@@ -52,10 +52,13 @@ void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* p
 	}
 
 	/* Battery low voltage as scaled uint32_t. */
-	p->ibattlow = p->lc.fbattlow / p->hv[0].dscale;
+	p->ibattlow = p->lc.fbattlow / p->hv[IDXHV1].dscale;
 
 	/* Prep-charge end volts threshold */
-	p->iprechgendv = (p->lc.ddiffb4 / p->hv[0].dscale);
+	p->iprechgendv = (p->lc.ddiffb4 / p->hv[IDXHV3].dscale);
+
+	/* Voltage across contactor #1 after expected closure. */
+	p->idiffafter = (p->lc.fdiffafter /  p->hv[IDXHV1].dscale);
 
 	/* Convert ms to timer ticks. */
 p->ka_k        = pdMS_TO_TICKS(p->lc.ka_t);        // Command/Keep-alive CAN msg timeout duration.

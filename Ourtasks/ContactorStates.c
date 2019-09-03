@@ -163,6 +163,7 @@ static void transition_connecting(struct CONTACTORFUNCTION* pcf)
 void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 {
 	uint32_t tmp;
+	int32_t stmp;
 
 	/* Terminate CONNECTED if commands are disconnect or reset. */
 	if ( ((pcf->evstat & CNCTEVCMDCN) == 0) | ((pcf->evstat & CMDRESET) != 0) ) 
@@ -261,10 +262,10 @@ morse_trap(66);
 		{ // Here, one contactor w pre-charge relay
 			if ((pcf->hv[IDXHV1].hv - pcf->hv[IDXHV2].hv) < pcf->iprechgendv)
 			{ // Here, end of pre-charge.  Energize contactor 2
-				pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
+				pcf->outstat |= CNCTOUT01K2; // Energize #2 during update section
 
 				/* Set one-shot timer for contactor (relay) 2 closure duration. */
-if (pcf->close2_k == 0) morse_trap(85);
+if (pcf->close2_k == 0) morse_trap(85); // Initialization mistake
 				xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
 				pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 
@@ -276,10 +277,10 @@ if (pcf->close2_k == 0) morse_trap(85);
 		{ // Here, two contactors
 			if (pcf->hv[IDXHV3].hv < pcf->iprechgendv)
 			{ // Here, end of pre-charge. Energize contactor 2
-				pcf->outstat |= CNCTOUT07KAw; // Energize #2 during update section
+				pcf->outstat |= CNCTOUT01K2; // Energize #2 during update section
 
 				/* Set one-shot timer for contactor 2 closure duration. */
-if (pcf->close2_k == 0) morse_trap(88);
+if (pcf->close2_k == 0) morse_trap(88); // Initialization mistake
 				xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
 				pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 				pcf->substateC = CONNECT_C4; // Next substate
@@ -292,7 +293,11 @@ if (pcf->close2_k == 0) morse_trap(88);
 
 		if ((pcf->evstat & CNCTEVTIMER2) != 0)
 		{ // Timer2 timed out: Contactor #2 should be closed
-			if (((pcf->hv[IDXHV1].hv - pcf->hv[IDXHV2].hv) > pcf->ihv1mhv2max))
+			// Voltage across contacts should be very small unless it didn't close
+			// In case calibration makes diff negative, use absolute diff
+			stmp = (pcf->hv[IDXHV1].hv - pcf->hv[IDXHV2].hv);
+			if (stmp < 0) stmp = -stmp;
+			if ( stmp > pcf->idiffafter ) 
 			{ // Here, something not right with contactor closing
 				transition_faulting(pcf,CONTACTOR2_CLOSED_VOLTSTOOBIG);
 			}
@@ -302,6 +307,7 @@ if (pcf->close2_k == 0) morse_trap(88);
 			{ // TIM4 CH3 Lower PWM from 100%
 				pcf->outstat |= CNCTOUT07KAw; // Switch to lower pwm in update section
 			}
+
 			new_state(pcf,CONNECTED);
 		}
 		/* event not relevant. Continue waiting for timer2 */
