@@ -58,7 +58,7 @@ void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* p
 	p->iprechgendv = (p->lc.ddiffb4 / p->hv[IDXHV3].dscale);
 
 	/* Voltage across contactor #1 after expected closure. */
-	p->idiffafter = (p->lc.fdiffafter /  p->hv[IDXHV1].dscale);
+	p->idiffafter = ((1<<ADCSCALEbits)*p->lc.fdiffafter /  p->hv[IDXHV1].dscale);
 
 	/* Convert ms to timer ticks. */
 p->ka_k        = pdMS_TO_TICKS(p->lc.ka_t);        // Command/Keep-alive CAN msg timeout duration.

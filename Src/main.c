@@ -1032,6 +1032,11 @@ int pin = 0;
 if (HAL_GPIO_ReadPin(HVBYPASSPINPORT,  HVBYPASSPINPIN) == GPIO_PIN_SET) pin = 1;
 yprintf(&pbuf1,"HV by-pass pin: %i\n\r",pin);
 
+int aa = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
+if (aa < 0 ) aa = -aa;
+int bb = pcf->idiffafter;
+yprintf (&pbuf1,"THRES: %d %d %d %d\n\r",aa,bb,pcf->hv[IDXHV1].hvc,pcf->hv[IDXHV2].hvc);
+
 #endif
 
   } // END OF FOR LOOP

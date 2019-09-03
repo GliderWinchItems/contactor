@@ -295,7 +295,7 @@ if (pcf->close2_k == 0) morse_trap(88); // Initialization mistake
 		{ // Timer2 timed out: Contactor #2 should be closed
 			// Voltage across contacts should be very small unless it didn't close
 			// In case calibration makes diff negative, use absolute diff
-			stmp = (pcf->hv[IDXHV1].hv - pcf->hv[IDXHV2].hv);
+			stmp = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
 			if (stmp < 0) stmp = -stmp;
 			if ( stmp > pcf->idiffafter ) 
 			{ // Here, something not right with contactor closing
