@@ -62,17 +62,18 @@ struct CONTACTORLC
 
 	/* Bits that define the hw features. */
 //	p->hwconfig   = PWMCONTACTOR1;  // PWM coil #1
+//	p->hwconfig  |= PWMCONTACTOR2;  // PWM coil #2
 	p->hwconfig   = 0; // Default configuration
 
 	p->fbattlow   = 9.0;  // Battery string low voltage (volts)
 
 	p->ka_t       = 1500; // Command/Keep-alive CAN msg timeout duration.
-	p->ddiffb4    = 1.5;  // hv3, or (hv1-hv2) voltage across pre-charge resistor
+	p->ddiffb4    = 1.0;  // hv3, or (hv1-hv2) voltage across pre-charge resistor
 	p->fdiffafter = 0.7;  // allowable (hv1-hv2) voltage difference after closure (volts)
 	p->prechgmin_t= 4000; // always allow this amount of time after closing contactor #1 (timeout delay ms)
 	p->prechgmax_t= 8000; // allowable delay for diffafter to reach closure point (timeout delay ms)
-	p->close1_t   = 500; //25;   // contactor #1 coil energize-closure (timeout delay ms)
-	p->close2_t   = 500; //25;   // contactor #2 coil energize-closure (timeout delay ms)
+	p->close1_t   = 50; //25;   // contactor #1 coil energize-closure (timeout delay ms)
+	p->close2_t   = 25; //25;   // contactor #2 coil energize-closure (timeout delay ms)
 	p->open1_t    = 15;   // contactor #1 coil de-energize-open (timeout delay ms)
 	p->open2_t    = 15;   // contactor #2 coil de-energize-open (timeout delay ms)
 	p->hv2stable_t=  5;   // hv 2 reading stable after closure (duration ms)
@@ -81,8 +82,8 @@ struct CONTACTORLC
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2
 
 /* PWM durations (0.0- 100.0) */
-	p->fpwmpct1  = 50.0;  // Percent PWM after closure delay at 100% coil #1
-	p->fpwmpct2  = 33.3;  // Percent PWM after closure delay at 100% coil #2
+	p->fpwmpct1  = 40.0;  // Percent PWM after closure delay at 100% coil #1
+	p->fpwmpct2  = 40.3;  // Percent PWM after closure delay at 100% coil #2
 
 	// Battery_minus-to-contactor #1
 	p->calhv[IDXHV1].iir.k     = 3;
@@ -94,7 +95,7 @@ struct CONTACTORLC
 	// Battery_minus-to-contactor #1 DMOC_plus
 	p->calhv[IDXHV2].iir.k     = 3;
 	p->calhv[IDXHV2].iir.scale = 2;
- 	p->calhv[IDXHV2].dvcal  = 12.60; // Applied voltage
+ 	p->calhv[IDXHV2].dvcal  = 12.99; // Applied voltage
 	p->calhv[IDXHV2].adchv  = 1442; // ADC reading (received from uart)
 	p->calhv[IDXHV2].offset =  7;   // ADC reading zero volts
 

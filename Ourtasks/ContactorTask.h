@@ -195,15 +195,23 @@ enum CONTACTOR_STATE
 	FAULTED,        /*  4 */
 	RESETTING,      /*  5 */
 	DISCONNECTING,  /*  6 */
-	OTOSETTLING,    /*  7 */
+	OTOSETTLING,    /*  7 one time intializing. */
 };
 
+/* Substates for CONNECTING state */
 enum CONTACTOR_SUBSTATEC
 {
+/* Two contactor mode */
 	CONNECTING1,   /*  0 */
 	CONNECTING2,   /*  1 */
 	CONNECTING3,   /*  2 */
 	CONNECTING4,   /*  3 */
+/* One contactor mode: #1 is contactor, #2 pre-chg relay */
+	CONNECTING1B,  /*  4 */
+	CONNECTING2B,  /*  5 */
+	CONNECTING3B,  /*  6 */
+	CONNECTING4B,  /*  7 */
+
 };
 
 /* Function command response payload codes. */
@@ -264,7 +272,9 @@ struct CONTACTORFUNCTION
 /* In one contactor config, (hv1-hv2) max when contactor #2 closes */
 	uint32_t ihv1mhv2max;
 
-	uint32_t iprechgendv;// Prep-charge end volts threshold
+	uint32_t iprechgendv;  // Prep-charge end volts threshold: two contactor mode
+	uint32_t iprechgendvb; // Prep-charge end volts threshold: one contactor mode (b)
+
 
 /* Mininum pre-charge delay (before monitoring voltage) */
    uint32_t prechgmin_k; // Minimum pre-charge duration

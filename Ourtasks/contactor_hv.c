@@ -30,8 +30,6 @@ struct CNCNTHV
 	uint16_t hv;   // Raw reading as received from uart
 };
 */
-char dbgline[32];
-
 void contactor_hv_uartline(struct CONTACTORFUNCTION* pcf)
 {
 	int i;
@@ -42,7 +40,6 @@ void contactor_hv_uartline(struct CONTACTORFUNCTION* pcf)
 		pline = (uint8_t*)xSerialTaskReceiveGetline(pcf->prbcb3);
 		if (pline != NULL)
 		{ // Here, a line is ready.
-strncpy(dbgline,(char*)pline,31);
 			if (*(pline+12) != '\n') return; // Not correct line
 
 			for (i = 0; i < NUMHV; i++)

@@ -17,10 +17,16 @@
 /* Substate states for CONNECTING main state */
 enum connecting_state
 {
+/* Two contactor mode */
 	CONNECT_C1,  // Contactor #1 closure delay
 	CONNECT_C2,  // Minimum pre-charge duration delay
 	CONNECT_C3,  // Additional pre-charge delay, voltage test
 	CONNECT_C4,  // Contactor #2 closure delay
+/* One contactor mode: #1 is contactor, #2 pre-chg relay */
+	CONNECT_C1B, // Contactor #1 closure delay
+	CONNECT_C2B, // Minimum pre-charge duration delay
+	CONNECT_C3B, // Additional pre-charge delay, voltage test
+	CONNECT_C4B, // Contactor #2 closure delay
 };
 
 void ContactorStates_otosettling_init(struct CONTACTORFUNCTION* pcf);

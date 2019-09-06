@@ -80,22 +80,39 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 {
 	uint32_t tmp;
 
-	if ((pcf->evstat & CNCTEVTIMER3) != 0)
-	{ // Here, not receiving readings from uart3 sensor
-		transition_faulting(pcf,NO_UART3_HV_READINGS);
-		return;
-	}
-
-	/* Check for battery string below threshold. */
-	if (pcf->hv[IDXHV1].hv < pcf->ibattlow)
-	{ // Here, battery voltage is too low (or readings missing!)
-		transition_faulting(pcf,BATTERYLOW);
-		return;
+	/* Install jumper to ignore HV readings. */
+	// I/O pin shows '1' when jumper removed; '0' when present.
+	if (HAL_GPIO_ReadPin(HVBYPASSPINPORT,  HVBYPASSPINPIN) != GPIO_PIN_SET)
+	{ // Set configuration bit to skip HV reading logic
+		pcf->lc.hwconfig |= PWMNOHVSENSOR;
 	}
 	else
 	{
-		pcf->faultcode = NOFAULT;
+		pcf->lc.hwconfig &= ~PWMNOHVSENSOR;
 	}
+
+	/* Skip HV readings and battery string voltage check if no sensor. */
+	if ((pcf->lc.hwconfig & PWMNOHVSENSOR) == 0)
+	{ // Here, configuration: HV sensor is present
+
+		if ((pcf->evstat & CNCTEVTIMER3) != 0)
+		{ // Here: Not receiving readings from uart3 sensor
+			transition_faulting(pcf,NO_UART3_HV_READINGS);
+			return;
+		}
+
+		/* Check for battery string below threshold. */
+		if (pcf->hv[IDXHV1].hv < pcf->ibattlow)
+		{ // Here, battery voltage is too low (or readings missing!)
+			transition_faulting(pcf,BATTERYLOW);
+			return;
+		}
+	}
+	else
+	{
+		pcf->faultcode = NOFAULT; // Reset code
+	}
+
 	/* Check if aux contacts match, if aux contacts present. */
 	if ((pcf->lc.hwconfig & AUX1PRESENT) != 0)
 	{ // Aux contacts are present
@@ -124,9 +141,9 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 			return;			
 		}
 	}
-	/* Command/Keep-alive CAN msg received. */
+	/* Keep-alive CAN msgs carry commands. */
 	if ((pcf->evstat & CNCTEVCMDCN) != 0)
-	{ // Here, request to connect
+	{ // Here, ==> request to CONNECT <==
 		transition_connecting(pcf);
 		return;
 	}
@@ -143,17 +160,36 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 static void transition_connecting(struct CONTACTORFUNCTION* pcf)
 { // Intialize disconnected state
 
-	/* Reset sub-states for connecting */
-	pcf->substateC = CONNECT_C1;
+	/* Contactor configuration modes handled differently. */
+	if ((pcf->lc.hwconfig & ONECONTACTOR) == 0)
+	{ // Here, TWO CONTACTOR mode
 
-	/* Set one-shot timer for contactor #1 closure delay */
-	if (pcf->close1_k == 0) morse_trap(81);
-	xTimerChangePeriod(pcf->swtimer2,pcf->close1_k, 2); 
-	pcf->evstat &= ~CNCTEVTIMER2;
+		/* Reset sub-states for connecting in this mode */
+		pcf->substateC = CONNECT_C1;
 
-	/* Energize coil #1 */
-	pcf->outstat |= CNCTOUT00K1; // Energize coil during update section
-	pcf->outstat &= ~CNCTOUT06KAw; // No pwm, JIC
+		/* Set one-shot timer for contactor #1 closure delay */
+		if (pcf->close1_k == 0) morse_trap(81);
+		xTimerChangePeriod(pcf->swtimer2,pcf->close1_k, 2); 
+
+		/* Energize coil #1: Battery_string-to-DMOC+ */
+		pcf->outstat |= CNCTOUT00K1; // Energize coil during update section
+		pcf->outstat &= ~CNCTOUT06KAw; // No pwm, JIC
+	}
+	else
+	{ // Here, ONE CONTACTOR W PRE-CHG RELAY mode
+
+		/* Reset sub-states for connecting in this mode */
+		pcf->substateC = CONNECT_C1B;
+
+		/* Set one-shot timer for pre-chg relay (#2) closure delay */
+		if (pcf->close2_k == 0) morse_trap(81);
+		xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
+
+		/* Energize coil #2: (Pre-charge relay) */
+		pcf->outstat |= CNCTOUT01K2; // Energize coil during update section
+		pcf->outstat &= ~CNCTOUT07KAw; // No pwm, JIC
+	}
+	pcf->evstat &= ~CNCTEVTIMER2; // Reset sw2 timer timeout bit
 
 	/* Update main state */
 	new_state(pcf,CONNECTING);
@@ -173,6 +209,7 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 
 	switch(pcf->substateC)
 	{
+/* ============= TWO CONTACTOR MODE ===================================== */
 	case CONNECT_C1:  // Contactor #1 closure delay
 		if ((pcf->evstat & CNCTEVTIMER2) == 0) break;
 
@@ -190,21 +227,25 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 			{ // Transition to fault state; set fault code
 				/* Aux contact says it did not close. */
 				transition_faulting(pcf,CONTACTOR1_ON_AUX1_OFF);
-morse_trap(66);
+//morse_trap(66);
 				return;			
 			}
 		}
 
 		/* For two contactor config, we can check if it looks closed. */
-		if ((pcf->lc.hwconfig & ONECONTACTOR) == 0)
-		{ // Here, two contactor config, so voltage should jump up
-			if ((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) < pcf->ihv1mhv2max) // 
-			{
-				transition_faulting(pcf,CONTACTOR1_DOES_NOT_APPEAR_CLOSED); 
+		if ((pcf->lc.hwconfig & PWMNOHVSENSOR) == 0)
+		{ // Here, configuration: HV sensor is present
+
+			if ((pcf->lc.hwconfig & ONECONTACTOR) == 0)
+			{ // Here, two contactor config, so voltage should jump up
+				if ((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) < pcf->ihv1mhv2max) // 
+				{
+					transition_faulting(pcf,CONTACTOR1_DOES_NOT_APPEAR_CLOSED); 
 //morse_trap(67);
-				return;
-			}
-		}	
+					return;
+				}
+			}	
+		}
 
 		/* Here, looks good, so start a minimum pre-charge delay. */
 
@@ -215,7 +256,7 @@ morse_trap(66);
 		}
 
 		/* Set one-shot timer for a minimum pre-charge duration. */
-		if (pcf->prechgmin_k == 0) morse_trap(82); // Oops! Bad initialization
+if (pcf->prechgmin_k == 0) morse_trap(82); // Oops! Bad initialization
 		xTimerChangePeriod(pcf->swtimer2, pcf->prechgmin_k, 2); 
 		pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
 
@@ -252,40 +293,38 @@ morse_trap(66);
 		/* Check timeout waiting for voltage to reach threshold */
 		if ((pcf->evstat & CNCTEVTIMER2) != 0)
 		{ // Maximum pre-charge time has expired.
-			transition_faulting(pcf,PRECHGVOLT_NOTREACHED);
-			return;
-		}
-
-		/* Here, timer is still timing. Check if cutoff voltage reached */
-
-		if ((pcf->lc.hwconfig & ONECONTACTOR) != 0)
-		{ // Here, one contactor w pre-charge relay
-			if ((pcf->hv[IDXHV1].hv - pcf->hv[IDXHV2].hv) < pcf->iprechgendv)
-			{ // Here, end of pre-charge.  Energize contactor 2
-				pcf->outstat |= CNCTOUT01K2; // Energize #2 during update section
-
-				/* Set one-shot timer for contactor (relay) 2 closure duration. */
-if (pcf->close2_k == 0) morse_trap(85); // Initialization mistake
-				xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
-				pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
-
-				pcf->substateC = CONNECT_C4; // Next substate
-				return;			
+			if ((pcf->lc.hwconfig & PWMNOHVSENSOR) == 0)
+			{ // Here, configuration: HV sensor is present
+				transition_faulting(pcf,PRECHGVOLT_NOTREACHED);
+				return;
 			}
-		}
-		else
-		{ // Here, two contactors
-			if (pcf->hv[IDXHV3].hv < pcf->iprechgendv)
-			{ // Here, end of pre-charge. Energize contactor 2
-				pcf->outstat |= CNCTOUT01K2; // Energize #2 during update section
-
-				/* Set one-shot timer for contactor 2 closure duration. */
+			else
+			{ // Here, no HV sensor and timer timere out. Continue
 if (pcf->close2_k == 0) morse_trap(88); // Initialization mistake
 				xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
 				pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
-				pcf->substateC = CONNECT_C4; // Next substate
+				pcf->outstat |= CNCTOUT01K2;  // Energize #2 during update section
+				pcf->substateC = CONNECT_C4;  // Next substate
 				return;
 			}
+		}
+
+		/* Here, timer is still timing. Check if cutoff voltage reached */
+		if ((pcf->lc.hwconfig & PWMNOHVSENSOR) != 0)
+		{ // Here, configuration: HV sensor is NOT present
+			return; // Run until timer times out
+		}
+
+		if (pcf->hv[IDXHV3].hv < pcf->iprechgendv)
+		{ // Here, end of pre-charge. Energize contactor 2
+			pcf->outstat |= CNCTOUT01K2; // Energize #2 during update section
+
+			/* Set one-shot timer for contactor 2 closure duration. */
+if (pcf->close2_k == 0) morse_trap(88); // Initialization mistake
+			xTimerChangePeriod(pcf->swtimer2,pcf->close2_k, 2); 
+			pcf->evstat &= ~CNCTEVTIMER2;	 // Clear timedout status bit 
+			pcf->substateC = CONNECT_C4;   // Next substate
+			return;
 		}
 		break;
 /* ...................................................................... */
@@ -293,13 +332,18 @@ if (pcf->close2_k == 0) morse_trap(88); // Initialization mistake
 
 		if ((pcf->evstat & CNCTEVTIMER2) != 0)
 		{ // Timer2 timed out: Contactor #2 should be closed
-			// Voltage across contacts should be very small unless it didn't close
-			// In case calibration makes diff negative, use absolute diff
-			stmp = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
-			if (stmp < 0) stmp = -stmp;
-			if ( stmp > pcf->idiffafter ) 
-			{ // Here, something not right with contactor closing
-				transition_faulting(pcf,CONTACTOR2_CLOSED_VOLTSTOOBIG);
+
+			if ((pcf->lc.hwconfig & PWMNOHVSENSOR) == 0)
+			{ // Here, configuration: HV sensor is present
+
+				// Voltage across contacts should be very small unless it didn't close
+				// In case calibration makes diff negative, use absolute diff
+				stmp = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
+				if (stmp < 0) stmp = -stmp;
+				if ( stmp > pcf->idiffafter ) 
+				{ // Here, something not right with contactor closing
+					transition_faulting(pcf,CONTACTOR2_CLOSED_VOLTSTOOBIG);
+				}
 			}
 					
 			/* If this contactor is to be PWM'ed drop down from 100%. */
@@ -312,9 +356,147 @@ if (pcf->close2_k == 0) morse_trap(88); // Initialization mistake
 		}
 		/* event not relevant. Continue waiting for timer2 */
 		break;
-default: morse_trap(69);break;
-	}
+/* ============= ONE CONTACTOR MODE ===================================== */
+	case CONNECT_C1B:  // Pre-charge relay (#2) closure delay
+		if ((pcf->evstat & CNCTEVTIMER2) == 0) break;
 
+		/* Here, timer timed out, so pre-chg relay #2 is assumed closed. */
+
+		/* Check if aux contacts match, if aux contacts present. */
+		if ((pcf->lc.hwconfig & AUX2PRESENT) != 0)
+		{ // Aux contacts are present
+			tmp = HAL_GPIO_ReadPin(AUX2_GPIO_REG,AUX2_GPIO_IN);// read i/o pin
+			if ((pcf->lc.hwconfig & AUX2SENSE) == 1)
+			{ // Reverse sense of bit
+				tmp ^= 0x1;
+			}
+			if (tmp != GPIO_PIN_SET)
+			{ // Transition to fault state; set fault code
+				/* Aux contact says it did not close. */
+				transition_faulting(pcf,CONTACTOR2_ON_AUX2_OFF);
+//morse_trap(66);
+				return;			
+			}
+		}
+
+		/* Start a minimum pre-charge delay. */
+
+		/* If this relay is to be PWM'ed, drop down from 100%. */
+		if ((pcf->lc.hwconfig & PWMCONTACTOR2) != 0)
+		{ // TIM4 CH2 Lower PWM from 100%
+			pcf->outstat |= CNCTOUT07KAw; // Switch pwm during update section
+		}
+
+		/* Set one-shot timer for a minimum pre-charge duration. */
+if (pcf->prechgmin_k == 0) morse_trap(82); // Oops! Bad initialization
+		xTimerChangePeriod(pcf->swtimer2, pcf->prechgmin_k, 2); 
+		pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
+
+		pcf->substateC = CONNECT_C2B;
+		break;
+/* ...................................................................... */
+	case CONNECT_C2B:  // Minimum pre-charge duration delay
+		if ((pcf->evstat & CNCTEVTIMER2) != 0)
+		{ // Minimum pre-charge time has expired.
+if (pcf->prechgmax_k == 0) morse_trap(83); // Oops! Bad initialization
+			xTimerChangePeriod(pcf->swtimer2, pcf->prechgmax_k, 2); 
+			pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
+			pcf->substateC = CONNECT_C3B;
+			break;
+		}
+		/* Check that we are getting new hv readings. */
+		if ((pcf->evstat & CNCTEVTIMER3) != 0)
+		{ // Here, not receiving readings from uart3 sensor
+			transition_faulting(pcf,NO_UART3_HV_READINGS);
+			return;
+		}
+		break;
+
+/* ...................................................................... */
+	case CONNECT_C3B:
+		/* Check if voltage has reached cutoff. */
+
+// This may not be useful.
+		if ((pcf->evstat & CNCTEVHV) != 0)
+		{ // Here, new readings available
+			pcf->evstat &= ~CNCTEVHV; // Clear new reading bit
+		}
+
+		/* Check timeout waiting for voltage to reach threshold */
+		if ((pcf->evstat & CNCTEVTIMER2) != 0)
+		{ // Maximum pre-charge time has expired.
+			if ((pcf->lc.hwconfig & PWMNOHVSENSOR) == 0)
+			{ // Here, configuration: HV sensor is present
+				transition_faulting(pcf,PRECHGVOLT_NOTREACHED);
+				return;
+			}
+			else
+			{
+if (pcf->close1_k == 0) morse_trap(85); // Initialization mistake
+				xTimerChangePeriod(pcf->swtimer2,pcf->close1_k, 2); 
+				pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
+				pcf->outstat |= CNCTOUT00K1; // Energize #1 during update section
+				pcf->substateC = CONNECT_C4B; // Next substate
+			}
+		}
+
+		/* Here, timer is still timing. Check if cutoff voltage reached */
+		if ((pcf->lc.hwconfig & PWMNOHVSENSOR) != 0)
+		{ // Here, configuration: HV sensor is NOT present
+			return; // Run until timer times out
+		}
+
+		stmp = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
+		if (stmp < 0) stmp = -stmp; // JIC HV2 calibration makes difference negative
+		if (stmp < pcf->iprechgendvb)
+		{ // Here, end of pre-charge.  Energize contactor 1
+			pcf->outstat |= CNCTOUT00K1; // Energize #1 during update section
+
+			/* Set one-shot timer for contactor #1 closure duration. */
+if (pcf->close1_k == 0) morse_trap(85); // Initialization mistake
+			xTimerChangePeriod(pcf->swtimer2,pcf->close1_k, 2); 
+			pcf->evstat &= ~CNCTEVTIMER2;	// Clear timedout status bit 
+
+			pcf->substateC = CONNECT_C4B; // Next substate
+			return;			
+		}
+		break;
+/* ...................................................................... */
+	case CONNECT_C4B:  // Contactor #1 close
+
+		if ((pcf->evstat & CNCTEVTIMER2) != 0)
+		{ // Timer2 timed out: Contactor #1 assumed to be closed
+
+			if ((pcf->lc.hwconfig & PWMNOHVSENSOR) == 0)
+			{ // Here, configuration: HV sensor is present
+
+				// Voltage across contacts should be very small unless it didn't close
+				// In case calibration makes diff negative, use absolute diff
+				stmp = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
+				if (stmp < 0) stmp = -stmp; // jic HV2 slightly larger than HV1
+				if ( stmp > pcf->idiffafter ) 
+				{ // Here, something not right with contactor closing
+					transition_faulting(pcf,CONTACTOR1_CLOSED_VOLTSTOOBIG);
+				}
+			}
+					
+			/* If this contactor is to be PWM'ed drop down from 100%. */
+			if ((pcf->lc.hwconfig & PWMCONTACTOR1) != 0)
+			{ // TIM4 CH3 Lower PWM from 100%
+				pcf->outstat |= CNCTOUT07KAw; // Switch to lower pwm in update section
+			}
+
+			/* Open pre-chg relay, to prevent failure from toasting pre-chg resistor. */
+			pcf->outstat &= ~CNCTOUT01K2; // De-energize coil during update section
+			pcf->outstat &= ~CNCTOUT07KAw; // No pwm, JIC			
+
+			new_state(pcf,CONNECTED);
+		}
+		/* else: event not relevant. Continue waiting for timer2 */
+		break;
+
+default: morse_trap(69);break; // JIC bug trap
+	}
 }
 		
 /* ======= CONNECTED ==================================================== */

@@ -861,8 +861,6 @@ extern uint32_t adcdbg2;
 extern uint32_t dbgCE1;
 uint32_t dbgCE1_prev = dbgCE1;
 
-extern char dbgline[32];
-
 extern uint32_t dbgev04;
 
 
@@ -958,7 +956,7 @@ osDelay(1000);
 #define SHOWHVUARTDATA
 #ifdef  SHOWHVUARTDATA
 
-yprintf(&pbuf1,"UART ctr: %i X:%s\n\rhv %8i %9i %9i\n\r",dbgCE1-dbgCE1_prev,dbgline,
+yprintf(&pbuf1,"UART ctr: %i\n\rhv %8i %9i %9i\n\r",dbgCE1-dbgCE1_prev,
   pcf->hv[0].hv,pcf->hv[1].hv,pcf->hv[2].hv);
 dbgCE1_prev = dbgCE1;
 
