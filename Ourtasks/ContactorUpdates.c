@@ -48,7 +48,7 @@ void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 			}
 			else
 			{ // Contactor was on, switch to pwm
-				pcf->sConfigOCn.Pulse = pcf->ipwmpct1; // PWM period
+				pcf->sConfigOCn.Pulse = pcf->ipwmpct1; // PWM period for #1
 				pcf->outstat_prev |= CNCTOUT06KAw;
 			}
 			HAL_TIM_PWM_ConfigChannel(&htim4, &pcf->sConfigOCn, TIM_CHANNEL_3);
@@ -75,7 +75,7 @@ void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 			}
 			else
 			{ // Contactor was on, switch to pwm
-				pcf->sConfigOCn.Pulse = pcf->ipwmpct1; // PWM period
+				pcf->sConfigOCn.Pulse = pcf->ipwmpct2; // PWM period for #2
 				pcf->outstat_prev |= CNCTOUT07KAw;
 			}
 			HAL_TIM_PWM_ConfigChannel(&htim3, &pcf->sConfigOCn, TIM_CHANNEL_2);

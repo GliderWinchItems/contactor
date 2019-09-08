@@ -16,6 +16,8 @@
 #include "contactor_idx_v_struct.h"
 #include "morse.h"
 
+int dbgstmp;
+
 void static transition_disconnected(struct CONTACTORFUNCTION* pcf);
 static void transition_connecting(struct CONTACTORFUNCTION* pcf);
 static void transition_disconnecting(struct CONTACTORFUNCTION* pcf);
@@ -80,6 +82,9 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 {
 	uint32_t tmp;
 
+	/* Get rid of prior fault codes, mostly for display purposes. */
+	pcf->faultcode = NOFAULT; // Reset code
+
 	/* Install jumper to ignore HV readings. */
 	// I/O pin shows '1' when jumper removed; '0' when present.
 	if (HAL_GPIO_ReadPin(HVBYPASSPINPORT,  HVBYPASSPINPIN) != GPIO_PIN_SET)
@@ -107,10 +112,6 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 			transition_faulting(pcf,BATTERYLOW);
 			return;
 		}
-	}
-	else
-	{
-		pcf->faultcode = NOFAULT; // Reset code
 	}
 
 	/* Check if aux contacts match, if aux contacts present. */
@@ -448,6 +449,7 @@ if (pcf->close1_k == 0) morse_trap(85); // Initialization mistake
 
 		stmp = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
 		if (stmp < 0) stmp = -stmp; // JIC HV2 calibration makes difference negative
+dbgstmp = stmp;
 		if (stmp < pcf->iprechgendvb)
 		{ // Here, end of pre-charge.  Energize contactor 1
 			pcf->outstat |= CNCTOUT00K1; // Energize #1 during update section
@@ -464,37 +466,37 @@ if (pcf->close1_k == 0) morse_trap(85); // Initialization mistake
 /* ...................................................................... */
 	case CONNECT_C4B:  // Contactor #1 close
 
-		if ((pcf->evstat & CNCTEVTIMER2) != 0)
-		{ // Timer2 timed out: Contactor #1 assumed to be closed
+		if ((pcf->evstat & CNCTEVTIMER2) == 0) break;
 
-			if ((pcf->lc.hwconfig & PWMNOHVSENSOR) == 0)
-			{ // Here, configuration: HV sensor is present
+		// Timer2 timed out: Contactor #1 assumed to be closed
 
-				// Voltage across contacts should be very small unless it didn't close
-				// In case calibration makes diff negative, use absolute diff
-				stmp = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
-				if (stmp < 0) stmp = -stmp; // jic HV2 slightly larger than HV1
-				if ( stmp > pcf->idiffafter ) 
-				{ // Here, something not right with contactor closing
-					transition_faulting(pcf,CONTACTOR1_CLOSED_VOLTSTOOBIG);
-				}
+		if ((pcf->lc.hwconfig & PWMNOHVSENSOR) == 0)
+		{ // Here, configuration: HV sensor is present
+
+			// Voltage across contacts should be very small unless it didn't close
+			// In case calibration makes diff negative, use absolute diff
+			stmp = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
+			if (stmp < 0) stmp = -stmp; // jic HV2 slightly larger than HV1
+			if ( stmp > pcf->idiffafter ) 
+			{ // Here, something not right with contactor closing
+				transition_faulting(pcf,CONTACTOR1_CLOSED_VOLTSTOOBIG);
 			}
-					
-			/* If this contactor is to be PWM'ed drop down from 100%. */
-			if ((pcf->lc.hwconfig & PWMCONTACTOR1) != 0)
-			{ // TIM4 CH3 Lower PWM from 100%
-				pcf->outstat |= CNCTOUT07KAw; // Switch to lower pwm in update section
-			}
-
-			/* Open pre-chg relay, to prevent failure from toasting pre-chg resistor. */
-			pcf->outstat &= ~CNCTOUT01K2; // De-energize coil during update section
-			pcf->outstat &= ~CNCTOUT07KAw; // No pwm, JIC			
-
-			new_state(pcf,CONNECTED);
 		}
-		/* else: event not relevant. Continue waiting for timer2 */
+					
+		/* If this contactor is to be PWM'ed drop down from 100%. */
+		if ((pcf->lc.hwconfig & PWMCONTACTOR1) != 0)
+		{ // TIM4 CH3 Lower PWM from 100%
+			pcf->outstat |= CNCTOUT06KAw; // Switch to lower pwm in update section
+		}
+
+		/* Open pre-chg relay, to prevent failure from toasting pre-chg resistor. */
+		pcf->outstat &= ~CNCTOUT01K2;  // De-energize coil during update section
+		pcf->outstat &= ~CNCTOUT07KAw; // No pwm, JIC			
+
+		new_state(pcf,CONNECTED);
 		break;
 
+/* LAST OF SWITCH STATEMENT */
 default: morse_trap(69);break; // JIC bug trap
 	}
 }

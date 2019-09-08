@@ -156,7 +156,8 @@ NOTES:
 # define NUMCANMSGS 6
 
 /* High voltage readings */
-#define HVSCALEbits 16  // Scale factor HV
+//#define HVSCALEbits 16  // Scale factor HV
+
 struct CNCNTHV
 {
 	struct IIRFILTERL iir; // Intermediate filter params
@@ -165,7 +166,7 @@ struct CNCNTHV
 	double dhvc;           // HV calibrated
 	uint32_t hvcal;        // Calibrated, scaled volts/adc tick
 	uint32_t hvc;          // HV as scaled volts
-	uint16_t hv;           // Raw ADC reading received from uart
+	uint16_t hv;           // Raw ADC reading as received from uart
 
 };
 

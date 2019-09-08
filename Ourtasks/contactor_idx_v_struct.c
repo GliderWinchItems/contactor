@@ -14,76 +14,38 @@
  * @return	: 0
  * *************************************************************************/
 void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
-{ /*
-Copied for convenience--
+{
+	p->size       = 47;
+	p->crc        = 0;   // TBD
+   p->version    = 1;   // 
 
-struct CONTACTORLC
- {
-	uint32_t size;			// Number of items in struct
- 	uint32_t crc;			// crc-32 placed by loader
-	uint32_t version;		// struct version number
-	float fdiffb4;       // hv1-hv2 voltage difference before closing (volts)
-	float fdiffafter;    // allowable hv1-hv2 voltage difference after closure (volts)
-	uint32_t prechgmax_t;// allowable delay for diffafter to reach closure point (timeout delay ms)
-	uint32_t close1_t;   // contactor #1 coil energize-closure (timeout delay ms)
-	uint32_t close2_t;   // contactor #2 coil energize-closure (timeout delay ms)
-	uint32_t open1_t;    // contactor #1 coil de-energize-open (timeout delay ms)
-	uint32_t open2_t;    // contactor #2 coil de-energize-open (timeout delay ms)
-	uint32_t auxoc1_t;   // aux open/close diff from contactor coil #1 (duration ms)
-	uint32_t auxoc2_t;   // aux open/close diff from contactor coil #2 (duration ms)
-	uint32_t hv2stable_t;// hv 2 reading stable after closer (duration ms)
-	uint32_t keepalive_t;// keep-alive timeout (timeout delay ms)
-	uint32_t hbct1_t;		// Heartbeat ct: ticks between sending msgs hv1:cur1
-	uint32_t hbct2_t;		// Heartbeat ct: ticks between sending msgs hv2:cur2
-	// Calibrations (offset, scale)
-	struct CNTCTCALF fcalhv1;  // Battery_minus-to-contactor #1 Battery_plus
-	struct CNTCTCALF fcalhv2;  // Battery_minus-to-contactor #1 DMOC_plus
-	struct CNTCTCALF fcalhv3;  // Battery_minus-to-contactor #2 DMOC_minus
-
-   // Send CAN ids
-	uint32_t cid_hb1;    // CANID-Heartbeat msg volt1:cur1 (volts:amps)
-	uint32_t cid_hb2;    // CANID-Heartbeat msg volt2:cur2 (volts:amps)
-   uint32_t cid_msg1;   // CANID-contactor poll response msg: volt1:cur1 (volts:amps)
-   uint32_t cid_msg1;   // CANID-contactor poll response msg: volt2:cur2 (volts:amps)
-	uint32_t cid_cmd_r;  // CANID_CMD_CNTCTR1R
-	uint32_t cid_keepalive_r; // CANID-keepalive response (status)
-
-   // Receive CAN ids List of CAN ID's for setting up hw filter
-	uint32_t cid_cmd_i;       // CANID_CMD: incoming command
-	uint32_t cid_keepalive_i;// CANID-keepalive connect command
-	uint32_t cid_gps_sync;    // CANID-GPS time sync msg (poll msg)
-	uint32_t code_CAN_filt[CANFILTMAX-3];// Spare
- };
-
-*/
-	p->size       = 30;
-	p->crc        = 0;
-   p->version    = 1;
-
-	/* Bits that define the hw features. */
-//	p->hwconfig   = PWMCONTACTOR1;  // PWM coil #1
-//	p->hwconfig  |= PWMCONTACTOR2;  // PWM coil #2
+	/* Bits that define the hw configuration and features. */
 	p->hwconfig   = 0; // Default configuration
+//	p->hwconfig  |= ONECONTACTOR;   // One contactor w Pre-chg relay
+	p->hwconfig  |= PWMCONTACTOR1;  // PWM coil #1
+	p->hwconfig  |= PWMCONTACTOR2;  // PWM coil #2
 
+	/* Threshold for minimum battery voltage. */
 	p->fbattlow   = 9.0;  // Battery string low voltage (volts)
 
+	/* Timings in milliseconds. Converted later to timer ticks. */
 	p->ka_t       = 1500; // Command/Keep-alive CAN msg timeout duration.
-	p->ddiffb4    = 1.0;  // hv3, or (hv1-hv2) voltage across pre-charge resistor
+	p->ddiffb4    = 0.6;  // hv3, or (hv1-hv2) voltage across pre-charge resistor
 	p->fdiffafter = 0.7;  // allowable (hv1-hv2) voltage difference after closure (volts)
 	p->prechgmin_t= 4000; // always allow this amount of time after closing contactor #1 (timeout delay ms)
-	p->prechgmax_t= 8000; // allowable delay for diffafter to reach closure point (timeout delay ms)
-	p->close1_t   = 50; //25;   // contactor #1 coil energize-closure (timeout delay ms)
-	p->close2_t   = 25; //25;   // contactor #2 coil energize-closure (timeout delay ms)
-	p->open1_t    = 15;   // contactor #1 coil de-energize-open (timeout delay ms)
-	p->open2_t    = 15;   // contactor #2 coil de-energize-open (timeout delay ms)
-	p->hv2stable_t=  5;   // hv 2 reading stable after closure (duration ms)
+	p->prechgmax_t= 6000; // allowable delay for diffafter to reach closure point (timeout delay ms)
+	p->close1_t   = 500; //25;   // contactor #1 coil energize-closure (timeout delay ms)
+	p->close2_t   = 500; //25;   // contactor #2 coil energize-closure (timeout delay ms)
+	p->open1_t    = 25;   // contactor #1 coil de-energize-open (timeout delay ms)
+	p->open2_t    = 25;   // contactor #2 coil de-energize-open (timeout delay ms)
+	p->hv2stable_t= 30;   // hv 2 reading stable after closure (duration ms)
 	p->keepalive_t= 1000; // keep-alive timeout (timeout delay ms)
 	p->hbct1_t    = 1000; // Heartbeat ct: ticks between sending msgs hv1:cur1
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2
 
-/* PWM durations (0.0- 100.0) */
-	p->fpwmpct1  = 40.0;  // Percent PWM after closure delay at 100% coil #1
-	p->fpwmpct2  = 40.3;  // Percent PWM after closure delay at 100% coil #2
+/* PWM durations as percent (0.0- 100.0) */
+	p->fpwmpct1  = 50.0;  // Percent PWM after closure delay at 100% coil #1
+	p->fpwmpct2  = 50.0;  // Percent PWM after closure delay at 100% coil #2
 
 	// Battery_minus-to-contactor #1
 	p->calhv[IDXHV1].iir.k     = 3;

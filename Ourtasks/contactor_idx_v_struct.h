@@ -29,7 +29,7 @@
 #define	IDXHV2  1 // High voltage reading: DMOC+ side of contactor
 #define	IDXHV3  2 // High voltage reading: across pre-charge resistor (two contactors)
 
-#define HVSCALE (1 << 24) // High voltage integer scaling for hvcal
+#define HVSCALE (1 << 17) // High voltage integer scaling for hvcal
 
 
 /* Calibration parameter, float */

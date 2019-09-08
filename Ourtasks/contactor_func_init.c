@@ -45,7 +45,7 @@ void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* p
 		p->hv[i].iir.pprm = &p->lc.calhv[i].iir;
 
 		// Calibration volts per adc ct
-		p->hv[i].dscale = p->lc.calhv[i].dvcal / (p->lc.calhv[i].adchv-p->lc.calhv[i].offset);
+		p->hv[i].dscale = p->lc.calhv[i].dvcal / (p->lc.calhv[i].adchv - p->lc.calhv[i].offset);
 
 		// Calibration volts per adc ct scaled up for integers
 		p->hv[i].hvcal = ((double)HVSCALE * p->hv[i].dscale);
@@ -55,13 +55,15 @@ void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* p
 	p->ibattlow = p->lc.fbattlow / p->hv[IDXHV1].dscale;
 
 	/* Prep-charge end volts threshold */
+
 	// Two contactor mode uses HV3 (voltage across pre-chg resistor)
 	p->iprechgendv  = (p->lc.ddiffb4 / p->hv[IDXHV3].dscale);
+
 	// One contactor mode uses (HV1-HV2) (voltage across pre-chg resistor)
-	p->iprechgendvb = (((1<<ADCSCALEbits) * p->lc.ddiffb4) / p->hv[IDXHV1].dscale);
+	p->iprechgendvb = ((p->lc.ddiffb4 * (double)p->hv[IDXHV1].hvcal) / p->hv[IDXHV1].dscale);
 
 	/* Voltage across contactor #1 after expected closure. */
-	p->idiffafter   = (((1<<ADCSCALEbits) * p->lc.fdiffafter) /  p->hv[IDXHV1].dscale);
+	p->idiffafter   = ((p->lc.fdiffafter * (double)p->hv[IDXHV1].hvcal) / p->hv[IDXHV1].dscale);
 
 	/* Convert ms to timer ticks. */
 p->ka_k        = pdMS_TO_TICKS(p->lc.ka_t);        // Command/Keep-alive CAN msg timeout duration.

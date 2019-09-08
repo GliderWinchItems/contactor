@@ -956,7 +956,7 @@ osDelay(1000);
 #define SHOWHVUARTDATA
 #ifdef  SHOWHVUARTDATA
 
-yprintf(&pbuf1,"UART ctr: %i\n\rhv %8i %9i %9i\n\r",dbgCE1-dbgCE1_prev,
+yprintf(&pbuf1,"UART ctr: %i\n\ruart_hv%8i %9i %9i\n\r",dbgCE1-dbgCE1_prev,
   pcf->hv[0].hv,pcf->hv[1].hv,pcf->hv[2].hv);
 dbgCE1_prev = dbgCE1;
 
@@ -971,11 +971,15 @@ for (i = 0; i < 3; i++)
 {
 	pcf->hv[i].dhvc = (double)pcf->hv[i].dscale * (double)pcf->hv[i].hv;
 }
-yprintf(&pbuf1,"D %0.7f %0.7f %0.7f\n\r",pcf->hv[0].dscale,pcf->hv[1].dscale,pcf->hv[2].dscale);
+yprintf(&pbuf1,"dscale%9.7f %9.7f %9.7f\n\r",pcf->hv[0].dscale,pcf->hv[1].dscale,pcf->hv[2].dscale);
 
-yprintf(&pbuf1,"hvc %7i %9i %9i\n\r",pcf->hv[0].hvcal,pcf->hv[1].hvcal,pcf->hv[2].hvcal);
+yprintf(&pbuf1,"hvcal %9i %9i %9i\n\r",pcf->hv[0].hvcal,pcf->hv[1].hvcal,pcf->hv[2].hvcal);
 
-yprintf(&pbuf1,"dhvc%8.2f%9.2f %9.2f\n\r",pcf->hv[0].dhvc,pcf->hv[1].dhvc,pcf->hv[2].dhvc);
+yprintf(&pbuf1,"hvc   %9i %9i %9i\n\r",pcf->hv[0].hvc,pcf->hv[1].hvc,pcf->hv[2].hvc);
+
+yprintf(&pbuf1,"hv    %9i %9i %9i\n\r",pcf->hv[0].hv,pcf->hv[1].hv,pcf->hv[2].hv);
+
+yprintf(&pbuf1,"dhvc  %9.2f %9.2f %9.2f\n\r",pcf->hv[0].dhvc,pcf->hv[1].dhvc,pcf->hv[2].dhvc);
 
 #endif
 
@@ -1032,8 +1036,9 @@ yprintf(&pbuf1,"HV by-pass pin: %i\n\r",pin);
 
 int aa = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
 if (aa < 0 ) aa = -aa;
-int bb = pcf->idiffafter;
-yprintf (&pbuf1,"THRES: %d %d %d %d\n\r",aa,bb,pcf->hv[IDXHV1].hvc,pcf->hv[IDXHV2].hvc);
+int bb = pcf->iprechgendvb;
+extern int dbgstmp;
+yprintf (&pbuf1,"THRES: %7d %7d %7d %7d %7d\n\r",aa,bb,pcf->hv[IDXHV1].hvc,pcf->hv[IDXHV2].hvc,dbgstmp);
 
 #endif
 
