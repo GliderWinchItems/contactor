@@ -914,7 +914,7 @@ osDelay(1000);
 		yprintf(&pbuf1, " :%7i %8.1f\n\r ", pcf->padc->intern.adcfiltemp, (double)(pcf->padc->intern.adcfilvref)/pcf->padc->intern.iiradcvref.pprm->scale);
 #endif
 
-//#define SHOWEXTENDEDSUMMEDADCCHANNELS
+#define SHOWEXTENDEDSUMMEDADCCHANNELS
 #ifdef  SHOWEXTENDEDSUMMEDADCCHANNELS
 		yprintf(&pbuf1, "\n\r     5v    cur1    cur2     12v    temp    vref\n\rA ");
 		// Following loop takes about 450000 sysclock ticks 6.2 ms (includes waits for serial port)
@@ -925,7 +925,7 @@ osDelay(1000);
 		yprintf(&pbuf1,"\n\r");
 #endif
 
-//#define SHOWINTERNALTEMPERATURECALCULATIONS 
+#define SHOWINTERNALTEMPERATURECALCULATIONS 
 #ifdef SHOWINTERNALTEMPERATURECALCULATIONS
 	/* Internal temperature computation check. */
 	// The following takes 1418 sysclock ticks

@@ -86,6 +86,16 @@ $U23
 $U24
  -4: Hall-effect current sensor-battery string
 
+Color coding of purchased 6P6C cables
+Pin desc    Cable 
+1 GND FET   gry  not used
+2 FET DRV   yel  not used
+3 HE GND    grn  Tamura HE
+4 HE SIG    red  Tamura HE
+5 +5v       blk  Tamura HE
+6 +12V      wht  not used
+Same pinout as fethe subboard and CSA power unit
+
 $U26
  -2: TIM4_CH3 coil drive #1
  -4: Contactor Aux #2
@@ -119,4 +129,17 @@ bc = jumper to signal program to by-pass high voltage sensing
 
 def = PA4 configured ADC, spare current sensor
   b = gnd; e = signal; f = +5v
+
+
+
+Color coding of Flying Lead Jack (FLJ), purchased 6P6C cables, and
+Blue Pill wiring--
+
+Pin desc  FLJ  Cable BPill
+1 GND FET wht  gry   --
+2 FET DRV blk  yel   --
+3 HE GND  red  grn   blk
+4 HE SIG  grn  red   grn
+5 +5v     yel  blk   red
+6 +12V    blu  wht   --
 

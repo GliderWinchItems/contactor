@@ -148,8 +148,9 @@ void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 		transition_connecting(pcf);
 		return;
 	}
-	/* JIC.  Be sure Updates have both coils de-energized. */
-	pcf->outstat &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw);
+	/* JIC.  Be sure Updates have both coils de-energized. DMOC hw disabled */
+	pcf->outstat &= ~(CNCTOUT00K1 | CNCTOUT01K2 | CNCTOUT06KAw | CNCTOUT07KAw |
+        CNCTOUT04EN);
 	pcf->outstat_prev |= (CNCTOUT00K1 | CNCTOUT01K2); // jic
 	return;
 }
@@ -510,6 +511,7 @@ void ContactorStates_connected(struct CONTACTORFUNCTION* pcf)
 		transition_disconnecting(pcf);
 	}
 	/* Continue connection. */
+	pcf->outstat |= CNCTOUT04EN; // DMOC enabled
 	return;
 }
 /* ===== xDISCONNECTING ================================================= */

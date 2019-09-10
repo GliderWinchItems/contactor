@@ -90,6 +90,16 @@ void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 		}
 	}
 
+	/* DMOC FET enabling. */
+	if ((pcf->outstat & CNCTOUT04EN) != 0)
+	{ // Turn on FET for DMOC hardware enable
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
+	}
+	else
+	{ // Turn FET off.
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+	}
+
 	return;
 }
 
