@@ -154,6 +154,12 @@ Vr = (k5/ke) * ((ADC[ke]/ADC[k5]) - koffset) * scale
     (k5/ke) * (ADC[ke]/ADC[k5]) is always less than 2^32
 
 */
+uint32_t dbgadcfil;
+uint64_t dbgadcke;
+uint64_t dbgadcratio64;
+uint32_t dbgadcratio;
+int32_t dbgtmp;
+
 static void ratiometric5v(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pr, uint8_t idx)
 {
 /* NOTE: Ratiometric is based on the ratio of the reading of the 5v supply 
@@ -173,16 +179,20 @@ static void ratiometric5v(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pr, uint
 	pr->adcfil = iir_filter_lx_do(&pr->iir, &p->chan[idx].sum);
 
 	/* Compute ratio of sensor reading to 5v supply reading. */
-	uint64_t adcke = (pr->adcfil << ADCSCALEbits); // Scale before divide
-	uint64_t adcratio64 = adcke / p->chan[ADC1IDX_5VOLTSUPPLY].sum;
-	uint32_t adcratio = (adcratio64 >> ADCSCALEbits);
+	uint64_t adcke = (pr->adcfil * pr->irk5ke);
+	uint64_t adcratio64  = adcke / p->chan[ADC1IDX_5VOLTSUPPLY].sum;
+	uint32_t adcratio = (adcratio64);// >> ADCSCALEbits);
 
 	/* Subtract offset (note result is now signed). */
 	int32_t tmp = (adcratio - pr->irko); 
 
-	/* Apply adjustment for unequal resistor dividers. */
-	int64_t tmp64 = (pr->irk5ke * tmp);
-	pr->iI = (tmp64 >> ADCSCALEbits);
+dbgadcfil=pr->adcfil;
+dbgadcke=adcke;
+dbgadcratio64=adcratio64;
+dbgadcratio=adcratio;
+dbgtmp = tmp;
+
+	pr->iI = tmp >> ADCSCALEbits;
 
 	return;
 }
@@ -208,7 +218,7 @@ void adcparams_cal(void)
 
 	ratiometric5v(p, &p->cur1, ADC1IDX_CURRENTTOTAL); // Battery string sensor
 
-	ratiometric5v(p, &p->cur2, ADC1IDX_CURRENTMOTOR); // Spare, or motor sensor
+//	ratiometric5v(p, &p->cur2, ADC1IDX_CURRENTMOTOR); // Spare, or motor sensor
 
 	return;
 }

@@ -953,7 +953,7 @@ osDelay(1000);
 	  (pcf->padc->v12.k * (double)pcf->padc->v12.ival * (1.0/(1<<ADCSCALEbits))) );
 #endif
 
-#define SHOWHVUARTDATA
+//#define SHOWHVUARTDATA
 #ifdef  SHOWHVUARTDATA
 
 yprintf(&pbuf1,"UART ctr: %i\n\ruart_hv%8i %9i %9i\n\r",dbgCE1-dbgCE1_prev,
@@ -1024,21 +1024,66 @@ dbgmsg1ctr_prev = dbgmsg1ctr;
 dbgkactr_prev = dbgkactr;
 prev = pcf->pmbx_cid_gps_sync->ctr;
 dbgmbxctr_prev = dbgmbxctr;
-
 #endif
 
-#define TESTHVBYPASSPIN
+//#define TESTHVBYPASSPIN
 #ifdef  TESTHVBYPASSPIN
 /* Should show '1' when jumper removed; '0' when present. */
 int pin = 0;
 if (HAL_GPIO_ReadPin(HVBYPASSPINPORT,  HVBYPASSPINPIN) == GPIO_PIN_SET) pin = 1;
 yprintf(&pbuf1,"HV by-pass pin: %i\n\r",pin);
+#endif
 
+//#define TESTTHESHOLDPARAM
+#ifdef  TESTTHESHOLDPARAM
 int aa = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
 if (aa < 0 ) aa = -aa;
 int bb = pcf->iprechgendvb;
 extern int dbgstmp;
 yprintf (&pbuf1,"THRES: %7d %7d %7d %7d %7d\n\r",aa,bb,pcf->hv[IDXHV1].hvc,pcf->hv[IDXHV2].hvc,dbgstmp);
+#endif
+
+#define TESTRATIOMETRICCALIBRATION
+#ifdef  TESTRATIOMETRICCALIBRATION
+/*
+struct ADCRATIOMETRIC
+{
+	struct IIRFILTERL iir;    // Intermediate filter params
+	double drk5ke;    // Ratio k5/ke resistor dividers ratio (~1.0)
+	double drko;      // Offset ratio: double (~0.5)
+	double dscale;    // Scale factor
+	uint32_t adcfil;  // Filtered ADC reading
+	int32_t irk5ke;   // Ratio k5/ke ratio: scale int (~32768)
+	int32_t irko;     // Offset ratio: scale int (~32768)
+	int32_t iI;       // integer result w offset, not final scaling
+}; */
+yprintf(&pbuf1,"\n\rRATIOMETRIC: struct ADCRATIOMETRIC for cur1--\n\r");
+yprintf(&pbuf1,"drk5ke %0.4f\n\rdrko   %0.5f\n\rdscale %0.6f\n\r",
+	pcf->padc->cur1.drk5ke,  /* Ratio k5/ke resistor dividers ratio (~1.0)*/
+	pcf->padc->cur1.drko,    /* Offset ratio: double (~0.5)               */
+	pcf->padc->cur1.dscale); /* Scale factor                              */
+yprintf(&pbuf1,"adcfil %i\n\rirk5ke %i\n\rirko   %i\n\riI     %i\n\r",
+	pcf->padc->cur1.adcfil,  /* Filtered ADC reading                      */
+	pcf->padc->cur1.irk5ke,  /* Ratio k5/ke ratio: scale int (~32768)     */
+	pcf->padc->cur1.irko,    /* Offset ratio: scale int (~32768)          */
+	pcf->padc->cur1.iI );    /* integer result w offset, not final scaling*/
+
+double dI = pcf->padc->cur1.iI;
+dI = dI * pcf->padc->cur1.dscale;
+yprintf(&pbuf1,"calib %0.5f\n\r",dI);
+
+// Debug
+extern uint32_t dbgadcfil;
+extern uint64_t dbgadcke;
+extern uint64_t dbgadcratio64;
+extern uint32_t dbgadcratio;
+extern int32_t dbgtmp;
+yprintf(&pbuf1,"dadcfil %i\n\rdadck %lli\n\rratio64%lli\n\rratio  %i\n\rtmp    %d\n\r",
+dbgadcfil,
+dbgadcke,
+dbgadcratio64,
+dbgadcratio,
+dbgtmp  );
 
 #endif
 

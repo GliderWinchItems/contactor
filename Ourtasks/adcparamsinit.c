@@ -15,6 +15,8 @@ by the java program from the sql database.
 #include "ADCTask.h"
 #include "morse.h"
 
+static void ratiometric_cal(struct ADCRATIOMETRIC* p, struct ADCCALHE* plc);
+
 /*                        Min  Typ  Max 
 Internal reference F103: 1.16 1.20 1.26 V 
 Internal reference F407: 1.18 1.20 1.24 V 
@@ -154,8 +156,25 @@ struct ADCABSOLUTE
 	p->v5.k   = (p->lc.cal_5v.dvn / p->intern.dvref) * (dadc / p->lc.cal_5v.adcvn);
 	p->chan[ADC1IDX_5VOLTSUPPLY].dscale = p->v5.dscale;
 
+/* Ratiometric: battery string current. */
+	ratiometric_cal(&p->cur1, &p->lc.cal_cur1);
+	p->chan[ADC1IDX_CURRENTTOTAL].dscale = p->cur1.dscale; // For convenient access
 
+/* Ratiometric: spare current. */
+	ratiometric_cal(&p->cur2, &p->lc.cal_cur2);
+	p->chan[ADC1IDX_CURRENTMOTOR].dscale = p->cur2.dscale; // For convenient access
 
+	return;
+}
+
+/* *************************************************************************
+static void ratiometric_cal(struct ADCRATIOMETRIC* p, struct ADCCALHE* plc);
+ *	@brief	: Compute calibration constants for ratiometric sensor
+ * @param	: p = points to struct with computed results
+ * @param	: plc = points to parameter struct for this sensor
+ * *************************************************************************/
+static void ratiometric_cal(struct ADCRATIOMETRIC* p, struct ADCCALHE* plc)
+{
 /* Reproduced for convenience
 struct ADCRATIOMETRIC
 {
@@ -170,36 +189,22 @@ struct ADCRATIOMETRIC
 }; */
 
 /* Ratiometric: battery string current. */
-	p->cur1.iir.pprm = &p->lc.cal_cur1.iir; // Filter param pointer
+	p->iir.pprm = &plc->iir; // Filter param pointer
 	
 	// Jumpered readings -> resistor divider ratio (~ 1.00)
-	p->cur1.drk5ke = (double)p->lc.cal_cur1.j5adcv5 / (double)p->lc.cal_cur1.j5adcve;
-	p->cur1.irk5ke *= (p->cur1.drk5ke * (1 << ADCSCALEbits) );
+	p->drk5ke = (double)plc->j5adcv5 / (double)plc->j5adcve;
+	p->irk5ke = (p->drk5ke * (1 << ADCSCALEbits) ); // Scaled integer
 
 	// Sensor connected, no current -> offset ratio (~ 0.50)
-	p->cur1.drko  = (double)p->lc.cal_cur1.zeroadcve / (double)p->lc.cal_cur1.zeroadc5;
-	p->cur1.irko *= (p->cur1.drko * (1 << ADCSCALEbits) );
+	p->drko  = ((double)plc->zeroadcve / (double)plc->zeroadc5)
+                   * p->drk5ke;
+	p->irko  = (p->drko * (1 << ADCSCALEbits) );
 
-	// Sensor connected, test current applied -> scale factor
-	// dscale = (calibration ADC - offset) / calibration current; // adcticks/amp
-	p->cur1.dscale = (p->lc.cal_cur1.caladcve - p->lc.cal_cur1.zeroadcve) / p->lc.cal_cur1.dcalcur;
-	p->chan[ADC1IDX_CURRENTTOTAL].dscale = p->cur1.dscale; // For convenient access
+	// Sensor connected, test current applied with maybe more than one turn through sensor
+	// dscale = ((calibration ADC ratio - offset ratio) * divider ratio) / amp-turns
+	p->dscale = 
+		((((double)(plc->caladcve / (double)plc->zeroadc5) * p->drk5ke)
+      - p->drko)) / plc->dcalcur;
 
-/* Ratiometric: spare current. */
-	p->cur2.iir.pprm = &p->lc.cal_cur2.iir; // Filter param pointer
-
-	// Jumpered readings -> resistor divider ratio (~ 1.00)
-	p->cur2.drk5ke = (double)p->lc.cal_cur2.j5adcv5 / (double)p->lc.cal_cur2.j5adcve;
-	p->cur2.irk5ke *= (p->cur2.drk5ke * (1 << ADCSCALEbits) );
-
-	// Sensor connected, no current -> offset ratio (~ 0.50)
-	p->cur2.drko  = (double)p->lc.cal_cur2.zeroadcve / (double)p->lc.cal_cur2.zeroadc5;
-	p->cur2.irko *= (p->cur2.drko * (1 << ADCSCALEbits) );
-
-	// Sensor connected, test current applied -> scale factor
-	// dscale = (calibration ADC - offset) / calibration current; // adcticks/amp
-	p->cur2.dscale = (p->lc.cal_cur2.caladcve - p->lc.cal_cur2.zeroadcve) / p->lc.cal_cur2.dcalcur;
-	p->chan[ADC1IDX_CURRENTMOTOR].dscale = p->cur2.dscale; // For convenient access
-	
 	return;
 }

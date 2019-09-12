@@ -77,21 +77,21 @@ struct ADCCALHE
 	p->cal_cur1.iir.k     = 10;    // Filter time constant
 	p->cal_cur1.iir.scale = 2;     // Filter integer scaling
 	p->cal_cur1.j5adcve   = 59597; // jumpered to 5v: adc reading HE input
-	p->cal_cur1.j5adcv5   = 59597; // jumpered to 5v: adc reading 5v input
-	p->cal_cur1.zeroadcve = 29798; // connected, no current: HE adc reading
-	p->cal_cur1.zeroadc5  = 59597; // connected, no current: 5v adc reading 
-	p->cal_cur1.caladcve  = 30394; // connected, cal current: adc reading (400a unit)
-	p->cal_cur1.dcalcur   = 10.0;  // connected, cal current: current (400a unit @ 10a)
+	p->cal_cur1.j5adcv5   = 63969; // jumpered to 5v: adc reading 5v input
+	p->cal_cur1.zeroadcve = 27183; // connected, no current: HE adc reading
+	p->cal_cur1.zeroadc5  = 63969; // connected, no current: 5v adc reading 
+	p->cal_cur1.caladcve  = 30186; // connected, cal current: adc reading
+	p->cal_cur1.dcalcur   = 9.373;  // connected, cal current: current * turns
 
 	// Spare current: ADC1IDX_CURRENTMOTOR  2   // PA6 IN6  - Current sensor: motor
 	p->cal_cur2.iir.k     = 10;    // Filter time constant
 	p->cal_cur2.iir.scale = 2;     // Filter integer scaling
 	p->cal_cur2.j5adcve   = 59597; // jumpered to 5v: adc reading HE input
-	p->cal_cur2.j5adcv5   = 59597; // jumpered to 5v: adc reading 5v input
-	p->cal_cur2.zeroadcve = 29798; // connected, no current: HE adc reading
-	p->cal_cur2.zeroadc5  = 29798; // connected, no current: 5v adc reading 
-	p->cal_cur2.caladcve  = 30394; // connected, cal current: adc reading (400a unit)
-	p->cal_cur2.dcalcur   = 10.0;  // connected, cal current: current (400a unit @ 10a)
+	p->cal_cur2.j5adcv5   = 63969; // jumpered to 5v: adc reading 5v input
+	p->cal_cur2.zeroadcve = 27183; // connected, no current: HE adc reading
+	p->cal_cur2.zeroadc5  = 63969; // connected, no current: 5v adc reading 
+	p->cal_cur2.caladcve  = 30186; // connected, cal current:
+	p->cal_cur2.dcalcur   = 9.373; // connected, cal current: current * turns
 
 /*  Reproduced for convenience 
 struct ADCCALABS

@@ -86,15 +86,21 @@ $U23
 $U24
  -4: Hall-effect current sensor-battery string
 
-Color coding of purchased 6P6C cables
-Pin desc    Cable 
-1 GND FET   gry  not used
-2 FET DRV   yel  not used
-3 HE GND    grn  Tamura HE
-4 HE SIG    red  Tamura HE
-5 +5v       blk  Tamura HE
-6 +12V      wht  not used
-Same pinout as fethe subboard and CSA power unit
+Flying lead 6P6C jack (FLJ) and wiring to Tamura L01Z is intended to
+match the jack wiring for the pcb 'fethe' (in directory
+ ../embed/svn_sensor/hw/trunk/eagle/fethe)
+
+Color coding of Flying Lead Jack (FLJ), purchased 6P6C cables, and
+Blue Pill wiring--
+ 
+ RJ11          Phone
+ Pin desc FLJ  Cable 
+1 GND FET wht  gry   not used
+2 FET DRV blk  yel   not used
+3 HE GND  red  grn   Tamura HE 
+4 HE SIG  grn  red   Tamura HE
+5 +5v     yel  blk   Tanura HE
+6 +12V    blu  wht   not used
 
 $U26
  -2: TIM4_CH3 coil drive #1
