@@ -179,32 +179,24 @@ static void ratiometric_cal(struct ADCRATIOMETRIC* p, struct ADCCALHE* plc)
 struct ADCRATIOMETRIC
 {
 	struct IIRFILTERL iir;    // Intermediate filter params
-	double drk5ke;    // Ratio k5/ke resistor dividers ratio (~1.0)
 	double drko;      // Offset ratio: double (~0.5)
 	double dscale;    // Scale factor
 	uint32_t adcfil;  // Filtered ADC reading
-	int32_t irk5ke;   // Ratio k5/ke ratio: scale int (~32768)
 	int32_t irko;     // Offset ratio: scale int (~32768)
-	int32_t iI;       // integer result w offset, not scaled 
+	int32_t iI;       // integer result w offset, not final scaling
 }; */
 
 /* Ratiometric: battery string current. */
 	p->iir.pprm = &plc->iir; // Filter param pointer
 	
-	// Jumpered readings -> resistor divider ratio (~ 1.00)
-	p->drk5ke = (double)plc->j5adcv5 / (double)plc->j5adcve;
-	p->irk5ke = (p->drk5ke * (1 << ADCSCALEbits) ); // Scaled integer
-
 	// Sensor connected, no current -> offset ratio (~ 0.50)
-	p->drko  = ((double)plc->zeroadcve / (double)plc->zeroadc5)
-                   * p->drk5ke;
+	p->drko  = ((double)plc->zeroadcve / (double)plc->zeroadc5) ;
 	p->irko  = (p->drko * (1 << ADCSCALEbits) );
 
 	// Sensor connected, test current applied with maybe more than one turn through sensor
-	// dscale = ((calibration ADC ratio - offset ratio) * divider ratio) / amp-turns
-	p->dscale = 
-		((((double)(plc->caladcve / (double)plc->zeroadc5) * p->drk5ke)
-      - p->drko)) / plc->dcalcur;
+	// dscale = amp-turns / ((calibration ADC ratio - offset ratio) * divider ratio);
+	double dtmp = ( (double)plc->caladcve / (double)plc->zeroadc5 ) - p->drko ;
+	p->dscale = plc->dcalcur / dtmp;
 
 	return;
 }

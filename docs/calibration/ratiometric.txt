@@ -77,4 +77,33 @@ Calibrated current is--
 
 amps = (((ADCe / ADC5) * K5e) - x(0)) * scale
 
+==================================================
+
+A simplification can be made--
+
+Factor K5e from x(0)
+
+xx(0) = x(0) / K5e
+
+amps = ( (ADCe / ADC5) - xx(0)) * K5e * scale 
+
+Let,
+xscale = scale * K5e
+
+amps = ( (ADCe / ADC5) - xx(0)) * xscale 
+
+To determine xx(0), 
+record ADCe and ADC5 with no current 
+
+To determine xscale,
+record ADCe, ADC5, and calibration amp-turns
+
+xscale = amp-turns / ( (ADCe / ADC5) - xx(0))
+
+
+
+==================================================
+
+
+
 

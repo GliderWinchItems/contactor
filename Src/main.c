@@ -1058,32 +1058,23 @@ struct ADCRATIOMETRIC
 	int32_t iI;       // integer result w offset, not final scaling
 }; */
 yprintf(&pbuf1,"\n\rRATIOMETRIC: struct ADCRATIOMETRIC for cur1--\n\r");
-yprintf(&pbuf1,"drk5ke %0.4f\n\rdrko   %0.5f\n\rdscale %0.6f\n\r",
-	pcf->padc->cur1.drk5ke,  /* Ratio k5/ke resistor dividers ratio (~1.0)*/
+yprintf(&pbuf1,"drko   %0.5f\n\rdscale %0.6f\n\r",
 	pcf->padc->cur1.drko,    /* Offset ratio: double (~0.5)               */
 	pcf->padc->cur1.dscale); /* Scale factor                              */
-yprintf(&pbuf1,"adcfil %i\n\rirk5ke %i\n\rirko   %i\n\riI     %i\n\r",
+yprintf(&pbuf1,"adcfil %i\n\rirko   %i\n\riI     %i\n\r",
 	pcf->padc->cur1.adcfil,  /* Filtered ADC reading                      */
-	pcf->padc->cur1.irk5ke,  /* Ratio k5/ke ratio: scale int (~32768)     */
 	pcf->padc->cur1.irko,    /* Offset ratio: scale int (~32768)          */
 	pcf->padc->cur1.iI );    /* integer result w offset, not final scaling*/
 
-double dI = pcf->padc->cur1.iI;
-dI = dI * pcf->padc->cur1.dscale;
+double dI = (pcf->padc->cur1.iI * pcf->padc->cur1.dscale) / (1<<ADCSCALEbits);
 yprintf(&pbuf1,"calib %0.5f\n\r",dI);
 
 // Debug
 extern uint32_t dbgadcfil;
-extern uint64_t dbgadcke;
-extern uint64_t dbgadcratio64;
 extern uint32_t dbgadcratio;
-extern int32_t dbgtmp;
-yprintf(&pbuf1,"dadcfil %i\n\rdadck %lli\n\rratio64%lli\n\rratio  %i\n\rtmp    %d\n\r",
+yprintf(&pbuf1,"dadcfil %i\n\ratio  %i\n\r",
 dbgadcfil,
-dbgadcke,
-dbgadcratio64,
-dbgadcratio,
-dbgtmp  );
+dbgadcratio);
 
 #endif
 

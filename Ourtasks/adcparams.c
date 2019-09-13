@@ -138,27 +138,9 @@ static void absolute(struct ADCFUNCTION* p, struct ADCABSOLUTE* pa,uint8_t idx)
  * @param	: pr = Pointer to ratiometric working vars (within p->)
  * @param	: idx = index into ADC sum for sensor
  * *************************************************************************/
-/*
-Vr = (k5/ke) * ((ADC[ke]/ADC[k5]) - koffset) * scale
-  scale is only applied for when used for human consumption
-	
 
- Computation scaling--
--  K5 and Ke resistor dividers will be have a division ratio that is nearly
-  the same. Therefore, assume k5/ke is less than 2
-
--  scale k5/ke by 2^15 so max less than 65536,
-
--  ADC[ke]/ADC[k5] is always less than 1,
-   therefore,
-    (k5/ke) * (ADC[ke]/ADC[k5]) is always less than 2^32
-
-*/
 uint32_t dbgadcfil;
-uint64_t dbgadcke;
-uint64_t dbgadcratio64;
 uint32_t dbgadcratio;
-int32_t dbgtmp;
 
 static void ratiometric5v(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pr, uint8_t idx)
 {
@@ -171,28 +153,18 @@ static void ratiometric5v(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pr, uint
    2^16 scaled fraction during the initialization of parameters.  Therefore,
    the offset is typically, either zero (sensor is positive going only), to
    0.5 (therefore 32767) when the offset is at 1/2 Vsensor (2.5v).
-
-	The dividers for sensor and 5v supply are approximately equal, but the ratio
-   is calibrated.  The ratio is therefore close to 1.0.
 */
 	/* IIR filter adc reading. */
 	pr->adcfil = iir_filter_lx_do(&pr->iir, &p->chan[idx].sum);
 
 	/* Compute ratio of sensor reading to 5v supply reading. */
-	uint64_t adcke = (pr->adcfil * pr->irk5ke);
-	uint64_t adcratio64  = adcke / p->chan[ADC1IDX_5VOLTSUPPLY].sum;
-	uint32_t adcratio = (adcratio64);// >> ADCSCALEbits);
+	uint32_t adcratio = (pr->adcfil << ADCSCALEbits) / p->chan[ADC1IDX_5VOLTSUPPLY].sum;
 
 	/* Subtract offset (note result is now signed). */
-	int32_t tmp = (adcratio - pr->irko); 
+	pr->iI = (adcratio - pr->irko); 
 
 dbgadcfil=pr->adcfil;
-dbgadcke=adcke;
-dbgadcratio64=adcratio64;
 dbgadcratio=adcratio;
-dbgtmp = tmp;
-
-	pr->iI = tmp >> ADCSCALEbits;
 
 	return;
 }

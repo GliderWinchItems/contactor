@@ -57,27 +57,17 @@ struct ADCCALABS
 
 /* 5v supply ratiometric calibration, e.g. Hall effect sensors. */
 /*
-Jumpering to 5v provides a measurement of the 5v->Vdd (3.3v) resistor
-dividers to compute a ratio this adjusts the sensor readings for 
-changes in the 5v sensor supply.
-
-The sensor connected, with no current, provides the offset.  The 5v
-adc reading may have changed from the jumpered reading.
-
-Appling a known current and noting the adc reading calibrates the scale
-for the sensor. The current direction that reduces the adc reading
-from the no-current offset is negative.
+The calibrate current might be amp-turns if multiple turns are used
+for calibration using low currents.
 */
 struct ADCCALHE
 {
 	struct IIR_L_PARAM iir; // Filter: Time constant, integer scaling
 	double   scale;     // 
-	uint32_t j5adcve;   // jumpered to 5v: adc reading HE input
-	uint32_t j5adcv5;   // jumpered to 5v: adc reading 5v input
 	uint32_t zeroadcve; // connected, no current: HE adc reading
 	uint32_t zeroadc5;  // connected, no current: 5v adc reading 
-	uint32_t caladcve;  // connected, cal current: adc reading
-	double   dcalcur;   // connected, cal current: current
+	uint32_t caladcve;  // connected, calibrate current: adc reading
+	double   dcalcur;   // connected, calibrate current: current
 };
 
 /* Parameters for ADC. */

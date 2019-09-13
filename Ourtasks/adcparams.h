@@ -47,7 +47,7 @@ NOTE: 5v supply w LM2596 dc-dc switcher
 
 #define ADC1DMANUMSEQ        16 // Number of DMA scan sequences in 1/2 DMA buffer
 #define ADC1IDX_ADCSCANSIZE   6 // Number ADC channels read
-#define ADCSCALEbits         14 // 2^x scale large
+#define ADCSCALEbits         15 // 2^x scale large
 #define ADCSCALEbitsy         7 // 2^x scale small
 #define ADCSCALEbitsitmp      3 // 2^x scale just enough
 #define ADCEXTENDSUMCT     1024 // Sum of 1/2 DMA sums for addition averaging
@@ -142,11 +142,9 @@ struct ADCABSOLUTE
 struct ADCRATIOMETRIC
 {
 	struct IIRFILTERL iir;    // Intermediate filter params
-	double drk5ke;    // Ratio k5/ke resistor dividers ratio (~1.0)
 	double drko;      // Offset ratio: double (~0.5)
 	double dscale;    // Scale factor
 	uint32_t adcfil;  // Filtered ADC reading
-	int32_t irk5ke;   // Ratio k5/ke ratio: scale int (~32768)
 	int32_t irko;     // Offset ratio: scale int (~32768)
 	int32_t iI;       // integer result w offset, not final scaling
 };

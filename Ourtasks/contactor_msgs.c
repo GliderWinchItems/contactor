@@ -83,13 +83,13 @@ void contactor_msg1(struct CONTACTORFUNCTION* pcf, uint8_t w)
 	else
 		idx2 = CID_MSG1;
 
-	// Load Battery string voltage (IDXHV1) as float into payload
-	pcf->hv[IDXHV1].dhvc = (double)pcf->hv[IDXHV1].dscale * (double)pcf->hv[IDXHV1].hv;
-	tmp.f = pcf->hv[IDXHV1].dhvc; // Convert to float
-	load4(&pcf->canmsg[idx2].can.cd.uc[0],tmp.ui); // Load float
-
-	// Load high voltage 1 as a float into payload
+	// Load Battery string voltage (IDXHV1) as first float in payload
 	hvpayload(pcf, IDXHV1, idx2, 0);
+
+	// Battery string current as second float in payload
+	double dI = (pcf->padc->cur1.iI * pcf->padc->cur1.dscale) / (1<<ADCSCALEbits);
+	tmp.f = dI; // Convert to float
+	load4(&pcf->canmsg[idx2].can.cd.uc[4],tmp.ui); // Load float
 
 	pcf->canmsg[idx2].can.dlc = 8;
 
