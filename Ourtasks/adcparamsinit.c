@@ -166,6 +166,47 @@ struct ADCABSOLUTE
 
 	return;
 }
+/* *************************************************************************
+static int16_t void ratiometric_cal_zero(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pcur, uint16_t idx);
+ *	@brief	: Adjust no-current ratio for a Hall-effect sensor
+ * @param	: p = Pointer to struct "everything" for this ADC module
+ * @param	: pcur = Pointer to struct with values for the ratiometric sensor
+ * @param	: idx = index into ADC sum array for the sensor measurement
+ * @return	: 0 = no fault; -1 = out of tolerance
+ * *************************************************************************/
+static int16_t ratiometric_cal_zero(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pcur, uint16_t idx)
+{
+	double dtmp;
+
+	// Check that re-zero'ing is not some crazy value
+	dtmp  = ((double)p->chan[idx].sum / (double)p->chan[ADC1IDX_5VOLTSUPPLY].sum) ;
+	if ( (dtmp > (pcur->drko * (1+ZTOLERANCE))) || (dtmp < (pcur->drko * (1-ZTOLERANCE))) )
+	{
+		return -1;
+	}
+	else
+	{ // Here adjustment is considered reasonable.
+		pcur->drko = dtmp;
+		pcur->irko  =dtmp * (1 << ADCSCALEbits);
+	}
+	return 0;
+}
+
+/* *************************************************************************
+int16_t ratiometric_cal_zero_CURRENTTOTAL(struct ADCFUNCTION* p);
+int16_t ratiometric_cal_zero_CURRENTMOTOR(struct ADCFUNCTION* p);
+ *	@brief	: Adjust no-current ratio for Hall-effect sensors
+ * @param	: p = Pointer to struct "everything" for this ADC module
+ * @return	: 0 = no fault; -1 = out of tolerance
+ * *************************************************************************/
+int16_t ratiometric_cal_zero_CURRENTTOTAL(struct ADCFUNCTION* p)
+{
+	return ratiometric_cal_zero(p, &p->cur1, ADC1IDX_CURRENTTOTAL);
+}
+int16_t ratiometric_cal_zero_CURRENTMOTOR(struct ADCFUNCTION* p)
+{
+	return ratiometric_cal_zero(p, &p->cur1, ADC1IDX_CURRENTMOTOR);
+}
 
 /* *************************************************************************
 static void ratiometric_cal(struct ADCRATIOMETRIC* p, struct ADCCALHE* plc);
@@ -186,7 +227,6 @@ struct ADCRATIOMETRIC
 	int32_t iI;       // integer result w offset, not final scaling
 }; */
 
-/* Ratiometric: battery string current. */
 	p->iir.pprm = &plc->iir; // Filter param pointer
 	
 	// Sensor connected, no current -> offset ratio (~ 0.50)

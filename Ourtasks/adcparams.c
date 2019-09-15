@@ -155,13 +155,17 @@ static void ratiometric5v(struct ADCFUNCTION* p, struct ADCRATIOMETRIC* pr, uint
    0.5 (therefore 32767) when the offset is at 1/2 Vsensor (2.5v).
 */
 	/* IIR filter adc reading. */
-	pr->adcfil = iir_filter_lx_do(&pr->iir, &p->chan[idx].sum);
+//$	pr->adcfil = iir_filter_lx_do(&pr->iir, &p->chan[idx].sum);
 
 	/* Compute ratio of sensor reading to 5v supply reading. */
-	uint32_t adcratio = (pr->adcfil << ADCSCALEbits) / p->chan[ADC1IDX_5VOLTSUPPLY].sum;
+	uint16_t adcratio = (p->chan[idx].sum << ADCSCALEbits) / p->chan[ADC1IDX_5VOLTSUPPLY].sum;
+
+	/* Filter the ratio */
+	pr->adcfil = iir_filter_lx_do(&pr->iir, &adcratio);
 
 	/* Subtract offset (note result is now signed). */
-	pr->iI = (adcratio - pr->irko); 
+	pr->iI = (pr->adcfil - pr->irko); 
+
 
 dbgadcfil=pr->adcfil;
 dbgadcratio=adcratio;

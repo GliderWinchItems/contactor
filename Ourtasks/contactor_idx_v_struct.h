@@ -99,7 +99,7 @@ struct CONTACTORLC
 /* Allowable hv1-hv2 voltage difference after closure (volts) */
 	float fdiffafter;
 
-/* HV2 reading stable after clossure (duration ms) */
+/* HV2 reading stable after closure (duration ms) */
 	uint32_t hv2stable_t;
 
 /* PWM durations (0.0- 100.0) */

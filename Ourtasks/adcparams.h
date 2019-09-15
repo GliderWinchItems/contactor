@@ -51,6 +51,8 @@ NOTE: 5v supply w LM2596 dc-dc switcher
 #define ADCSCALEbitsy         7 // 2^x scale small
 #define ADCSCALEbitsitmp      3 // 2^x scale just enough
 #define ADCEXTENDSUMCT     1024 // Sum of 1/2 DMA sums for addition averaging
+#define ZTOLERANCE         0.05 // +/- tolerance for re-adjustment of Hall_effect sensor zero
+
 
 /* ADC reading sequence/array indices                         */
 /* These indices -=>MUST<= match the hardware ADC scan sequence    */

@@ -30,6 +30,8 @@
  * *************************************************************************/
 void ContactorEvents_00(struct CONTACTORFUNCTION* pcf)
 {
+	pcf->evstat |= CNCTEVADC; // Show new readings ready
+	return;
 }
 
 /* *************************************************************************
@@ -82,7 +84,8 @@ dbgev04 += 1;
 	pcf->evstat |= CNCTEVTIMER1;	// Set to show that TIMER1 timed out
 
 	/* Update connect command and reset status */
-	pcf->evstat &= ~(CNCTEVCMDCN | CNCTEVCMDRS);
+// Let ContactorStates go to faulting state
+//	pcf->evstat &= ~(CNCTEVCMDCN | CNCTEVCMDRS);
 
 	/* Send status msg as a status heartbeat. */
 //	contactor_msg_ka(pcf);

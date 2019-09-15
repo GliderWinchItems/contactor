@@ -16,6 +16,12 @@ void adcparamsinit_init(struct ADCFUNCTION* p);
 /*	@brief	: Load structs for compensation, calibration and filtering all ADC channels
  * @param	: p = Pointer to struct "everything" for this ADC module
  * *************************************************************************/
+int16_t ratiometric_cal_zero_CURRENTTOTAL(struct ADCFUNCTION* p);
+int16_t ratiometric_cal_zero_CURRENTMOTOR(struct ADCFUNCTION* p);
+/*	@brief	: Adjust no-current ratio for Hall-effect sensors
+ * @param	: p = Pointer to struct "everything" for this ADC module
+ * @return	: 0 = no fault; -1 = out of tolerance
+ * *************************************************************************/
 
 #endif
 

@@ -1072,7 +1072,7 @@ yprintf(&pbuf1,"calib %0.5f\n\r",dI);
 // Debug
 extern uint32_t dbgadcfil;
 extern uint32_t dbgadcratio;
-yprintf(&pbuf1,"dadcfil %i\n\ratio  %i\n\r",
+yprintf(&pbuf1,"dadcfil %i\n\rratio  %i\n\r",
 dbgadcfil,
 dbgadcratio);
 

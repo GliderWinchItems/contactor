@@ -29,6 +29,12 @@ extern TIM_HandleTypeDef htim4;
  * *************************************************************************/
 void ContactorUpdates(struct CONTACTORFUNCTION* pcf)
 {
+	/* Reset new ADC readings flag. */
+	if ((pcf->evstat & CNCTEVADC) != 0)
+	{
+			pcf->evstat &= ~CNCTEVADC;
+	}
+
 	/* Queue keep-alive status CAN msg */
 	if ((pcf->outstat & CNCTOUT05KA) != 0)
 	{

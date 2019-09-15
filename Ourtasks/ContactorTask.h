@@ -125,7 +125,8 @@ NOTES:
 #define CNCTEVCAPOL  (1 << 5) // 1 = CAN rcv: Poll
 #define CNCTEVCMDRS  (1 << 6) // 1 = Command to reset
 #define CNCTEVCMDCN  (1 << 7) // 1 = Command to connect
-#define CNCTEVHV     (1 << 8) // 1 = New HV reading
+#define CNCTEVHV     (1 << 8) // 1 = New HV readings
+#define CNCTEVADC    (1 << 9) // 1 = New ADC readings
 
 /* Output status bit assignments */
 #define CNCTOUT00K1  (1 << 0) // 1 = contactor #1 energized
@@ -185,6 +186,7 @@ enum CONTACTOR_FAULTCODE
 	CONTACTOR2_CLOSED_VOLTSTOOBIG,
 	KEEP_ALIVE_TIMER_TIMEOUT,
 	NO_UART3_HV_READINGS,
+	HE_AUTO_ZERO_TOLERANCE_ERR,
 };
 
 enum CONTACTOR_STATE

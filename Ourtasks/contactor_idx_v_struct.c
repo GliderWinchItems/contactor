@@ -39,7 +39,7 @@ void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
 	p->open1_t    = 25;   // contactor #1 coil de-energize-open (timeout delay ms)
 	p->open2_t    = 25;   // contactor #2 coil de-energize-open (timeout delay ms)
 	p->hv2stable_t= 30;   // hv 2 reading stable after closure (duration ms)
-	p->keepalive_t= 1000; // keep-alive timeout (timeout delay ms)
+	p->keepalive_t= 1555; // keep-alive timeout (timeout delay ms)
 	p->hbct1_t    = 1000; // Heartbeat ct: ticks between sending msgs hv1:cur1
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2
 

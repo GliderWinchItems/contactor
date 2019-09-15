@@ -15,6 +15,7 @@
 #include "ContactorTask.h"
 #include "contactor_idx_v_struct.h"
 #include "morse.h"
+#include "adcparamsinit.h"
 
 int dbgstmp;
 
@@ -81,9 +82,26 @@ void static transition_disconnected(struct CONTACTORFUNCTION* pcf)
 void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 {
 	uint32_t tmp;
+	int16_t ret;
+
+	if ((pcf->evstat & CNCTEVTIMER1) != 0)
+	{ // Keep-alive timer timout
+		transition_faulting(pcf,KEEP_ALIVE_TIMER_TIMEOUT);	
+		return;	
+	}
 
 	/* Get rid of prior fault codes, mostly for display purposes. */
 	pcf->faultcode = NOFAULT; // Reset code
+
+	/* Update zero offset for Hall-effect current sensor. */
+	if ((pcf->evstat & CNCTEVADC) != 0)
+	{ // Here, new set of ADC readings
+		ret = ratiometric_cal_zero_CURRENTTOTAL(pcf->padc);
+		if (ret != 0)// morse_trap(55);
+		{
+			transition_faulting(pcf,HE_AUTO_ZERO_TOLERANCE_ERR);
+		}
+	}
 
 	/* Install jumper to ignore HV readings. */
 	// I/O pin shows '1' when jumper removed; '0' when present.
@@ -280,11 +298,25 @@ if (pcf->prechgmin_k == 0) morse_trap(82); // Oops! Bad initialization
 			transition_faulting(pcf,NO_UART3_HV_READINGS);
 			return;
 		}
+
+		/* Check that we are still getting keep-alive msgs. */
+		if ((pcf->evstat & CNCTEVTIMER1) != 0)
+		{ // Keep-alive timer timout
+			transition_faulting(pcf,KEEP_ALIVE_TIMER_TIMEOUT);	
+			return;	
+		}
+
 		break;
 
 /* ...................................................................... */
-	case CONNECT_C3:
-		/* Check if voltage has reached cutoff. */
+	case CONNECT_C3: /* Check if voltage has reached cutoff. */
+
+		/* Check that we are still getting keep-alive msgs. */
+		if ((pcf->evstat & CNCTEVTIMER1) != 0)
+		{ // Keep-alive timer timout
+			transition_faulting(pcf,KEEP_ALIVE_TIMER_TIMEOUT);	
+			return;	
+		}
 
 // This may not be useful.
 		if ((pcf->evstat & CNCTEVHV) != 0)
@@ -331,6 +363,13 @@ if (pcf->close2_k == 0) morse_trap(88); // Initialization mistake
 		break;
 /* ...................................................................... */
 	case CONNECT_C4:  // Contactor #2 close
+
+		/* Check that we are still getting keep-alive msgs. */
+		if ((pcf->evstat & CNCTEVTIMER1) != 0)
+		{ // Keep-alive timer timout
+			transition_faulting(pcf,KEEP_ALIVE_TIMER_TIMEOUT);	
+			return;	
+		}
 
 		if ((pcf->evstat & CNCTEVTIMER2) != 0)
 		{ // Timer2 timed out: Contactor #2 should be closed
@@ -415,8 +454,14 @@ if (pcf->prechgmax_k == 0) morse_trap(83); // Oops! Bad initialization
 		break;
 
 /* ...................................................................... */
-	case CONNECT_C3B:
-		/* Check if voltage has reached cutoff. */
+	case CONNECT_C3B: /* Check if voltage has reached cutoff. */
+
+		/* Check that we are still getting keep-alive msgs. */
+		if ((pcf->evstat & CNCTEVTIMER1) != 0)
+		{ // Keep-alive timer timout
+			transition_faulting(pcf,KEEP_ALIVE_TIMER_TIMEOUT);	
+			return;	
+		}
 
 // This may not be useful.
 		if ((pcf->evstat & CNCTEVHV) != 0)
@@ -466,6 +511,13 @@ if (pcf->close1_k == 0) morse_trap(85); // Initialization mistake
 		break;
 /* ...................................................................... */
 	case CONNECT_C4B:  // Contactor #1 close
+
+		/* Check that we are still getting keep-alive msgs. */
+		if ((pcf->evstat & CNCTEVTIMER1) != 0)
+		{ // Keep-alive timer timout
+			transition_faulting(pcf,KEEP_ALIVE_TIMER_TIMEOUT);	
+			return;	
+		}
 
 		if ((pcf->evstat & CNCTEVTIMER2) == 0) break;
 
