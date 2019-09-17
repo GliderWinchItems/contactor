@@ -271,6 +271,9 @@ struct CONTACTORFUNCTION
 /* In the disconnect state the battery string voltage must be above the following. */
 	uint32_t ibattlow;   // Minimum battery volts required to connect
 
+/* Battery string current above which disconnecting is prevented. */
+	int32_t icurrentdisconnect; // Scale integer representation
+
 /* With two contactor config, (hv1-hv2) max when contactor #1 closes */
 /* In one contactor config, (hv1-hv2) max when contactor #2 closes */
 	uint32_t ihv1mhv2max;

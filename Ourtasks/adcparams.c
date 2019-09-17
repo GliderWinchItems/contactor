@@ -128,7 +128,7 @@ static void absolute(struct ADCFUNCTION* p, struct ADCABSOLUTE* pa,uint8_t idx)
 	/* IIR filter adc reading. */
 	pa->adcfil = iir_filter_lx_do(&pa->iir, &p->chan[idx].sum);
 
-	pa->ival = (p->intern.vref * pa->adcfil) / p->intern.adccmpvref;
+	pa->ival = ((1<<ADCSCALEbits) * pa->adcfil) / p->intern.adccmpvref;
 	return;
 }
 /* *************************************************************************

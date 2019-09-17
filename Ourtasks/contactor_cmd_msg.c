@@ -91,18 +91,34 @@ enum CONTACTOR_CMD_CODES
 	{
 	/* ADC readings */
 	case ADCRAW5V:         // PA0 IN0  - 5V sensor supply
-	case ADCRAWCUR1:       // PA5 IN5  - Current sensor: total battery current
-	case ADCRAWCUR2:       // PA6 IN6  - Current sensor: motor
+		dt1 = ((double)pcf->padc->v5.ival * (1.0/(1<<ADCSCALEbits)) * pcf->padc->v5.dscale);
+		loadadc(pcf,dt1,ADC1IDX_5VOLTSUPPLY); 
+		break;
+
 	case ADCRAW12V:        // PA7 IN7  - +12 Raw power to board
+		dt1 = ((double)pcf->padc->v12.ival * (1.0/(1<<ADCSCALEbits)) * pcf->padc->v12.dscale);
+		loadadc(pcf,dt1,ADC1IDX_12VRAWSUPPLY); 
+		break;
+
 	case ADCINTERNALVREF:  // IN18     - Internal voltage reference
-			loadadc(pcf,0,pay0); 
-			break;
+		loadadc(pcf,pcf->padc->intern.dvref,pay0); 
+		break;
+
+	case ADCRAWCUR1:       // PA5 IN5  - Current sensor: total battery current
+		dt1 = (pcf->padc->cur1.iI * pcf->padc->cur1.dscale) / (1<<ADCSCALEbits);
+		loadadc(pcf,dt1,ADCRAWCUR1); 
+		break;
+
+	case ADCRAWCUR2:       // PA6 IN6  - Current sensor: motor
+		dt1 = (pcf->padc->cur2.iI * pcf->padc->cur2.dscale) / (1<<ADCSCALEbits);
+		loadadc(pcf,dt1,ADCRAWCUR2); 
+		break;
 
 	case ADCINTERNALTEMP:  // IN17     - Internal temperature sensor
 		// Convert readings to degC
 		dt1 = (pcf->padc->intern.dx25 - (pcf->padc->intern.dxdvref * 
-          ((double)pcf->padc->intern.adcfiltemp / (double)pcf->padc->intern.adcfilvref ))) + 
-          pcf->padc->lc.calintern.drmtemp;
+         ((double)pcf->padc->intern.adcfiltemp / (double)pcf->padc->intern.adcfilvref ))) + 
+            pcf->padc->lc.calintern.drmtemp;
 		loadadc(pcf,dt1,pay0);
 		break;
 	

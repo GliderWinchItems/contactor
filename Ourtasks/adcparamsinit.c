@@ -149,11 +149,13 @@ struct ADCABSOLUTE
 /* Absolute: 12v supply. */
 	p->v12.iir.pprm = &p->lc.cal_12v.iir; // Filter param pointer
 	p->v12.k   = (p->lc.cal_12v.dvn / p->intern.dvref) * (dadc / p->lc.cal_12v.adcvn);
-	p->chan[ADC1IDX_12VRAWSUPPLY].dscale = p->v12.dscale;
+	p->v12.dscale = p->v12.k * p->intern.dvref;
+	p->chan[ADC1IDX_12VRAWSUPPLY].dscale = p->v12.k;
 
 /* Absolute:  5v supply. */
 	p->v5.iir.pprm = &p->lc.cal_5v.iir; // Filter param pointer
 	p->v5.k   = (p->lc.cal_5v.dvn / p->intern.dvref) * (dadc / p->lc.cal_5v.adcvn);
+	p->v5.dscale = p->v5.k * p->intern.dvref;
 	p->chan[ADC1IDX_5VOLTSUPPLY].dscale = p->v5.dscale;
 
 /* Ratiometric: battery string current. */

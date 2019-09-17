@@ -77,6 +77,9 @@ struct CONTACTORLC
 /* In the disconnect state the battery string voltage must be above the following. */
 	float fbattlow;      // Minimum battery volts required to connect
 
+/* Battery string current above which disconnecting is prevented. */
+	double dcurrentdisconnect;   // Parameter specification made in fp
+
 /* Contactor #1 closure time delay */
 	uint32_t close1_t;   // Delay: contactor #1 coil energize->closed
 

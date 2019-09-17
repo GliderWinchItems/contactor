@@ -54,6 +54,9 @@ void contactor_func_init_init(struct CONTACTORFUNCTION* p, struct ADCFUNCTION* p
 	/* Battery low voltage as scaled uint32_t. */
 	p->ibattlow = p->lc.fbattlow / p->hv[IDXHV1].dscale;
 
+	/* Battery string current above which disconnecting is prevented. */
+	p->icurrentdisconnect = ((p->lc.dcurrentdisconnect * (double)(1 << ADCSCALEbits)) / p->padc->cur1.dscale);
+
 	/* Prep-charge end volts threshold */
 
 	// Two contactor mode uses HV3 (voltage across pre-chg resistor)

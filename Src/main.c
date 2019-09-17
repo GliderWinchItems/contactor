@@ -1076,6 +1076,37 @@ yprintf(&pbuf1,"dadcfil %i\n\rratio  %i\n\r",
 dbgadcfil,
 dbgadcratio);
 
+yprintf(&pbuf1,"icurrentdisconnect %i iI %d\n\r",pcf->icurrentdisconnect,pcf->padc->cur1.iI);
+
+#endif
+
+#define TESTABSOLUTECALIBRATION
+#ifdef  TESTABSOLUTECALIBRATION
+
+double dt1 = ((double)pcf->padc->v5.ival * (1.0/(1<<ADCSCALEbits)) * pcf->padc->v5.dscale );
+yprintf(&pbuf1,"v5--\n\radc v5  %i\n\rival    %i\n\rk       %8.6f\n\rdref   %9.6f\n\r",
+pcf->padc->v5.adcfil,
+pcf->padc->v5.ival,
+pcf->padc->v5.k,
+pcf->padc->intern.dvref);
+yprintf(&pbuf1,"cmpvref %i\n\radcvref %i\n\rdscale  %8.6f\n\r5V %13.3f\n\r",
+pcf->padc->intern.adccmpvref,
+pcf->padc->intern.adcfilvref,
+pcf->padc->v5.dscale,
+dt1);
+
+dt1 = ((double)pcf->padc->v12.ival * (1.0/(1<<ADCSCALEbits)) * pcf->padc->v12.dscale );
+yprintf(&pbuf1,"v12--\n\radc v12 %i\n\rival    %i\n\rk       %8.6f\n\rdref   %9.6f\n\r",
+pcf->padc->v12.adcfil,
+pcf->padc->v12.ival,
+pcf->padc->v12.k,
+pcf->padc->intern.dvref);
+yprintf(&pbuf1,"cmpvref %i\n\radcvref %i\n\rdscale  %8.6f\n\r12V %12.3f\n\r",
+pcf->padc->intern.adccmpvref,
+pcf->padc->intern.adcfilvref,
+pcf->padc->v12.dscale,
+dt1);
+
 #endif
 
   } // END OF FOR LOOP

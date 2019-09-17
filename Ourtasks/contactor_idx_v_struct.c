@@ -28,6 +28,9 @@ void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
 	/* Threshold for minimum battery voltage. */
 	p->fbattlow   = 9.0;  // Battery string low voltage (volts)
 
+/* Battery string current above which disconnecting is prevented. */
+	p->dcurrentdisconnect = 5.5; // Disconnect threshold (amps)
+
 	/* Timings in milliseconds. Converted later to timer ticks. */
 	p->ka_t       = 1500; // Command/Keep-alive CAN msg timeout duration.
 	p->ddiffb4    = 0.6;  // hv3, or (hv1-hv2) voltage across pre-charge resistor

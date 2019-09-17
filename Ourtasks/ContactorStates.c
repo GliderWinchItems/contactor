@@ -557,6 +557,13 @@ default: morse_trap(69);break; // JIC bug trap
 /* ======= CONNECTED ==================================================== */
 void ContactorStates_connected(struct CONTACTORFUNCTION* pcf)
 {
+	/* Check that we are still getting keep-alive msgs. */
+	if ((pcf->evstat & CNCTEVTIMER1) != 0)
+	{ // Keep-alive timer timout
+		transition_faulting(pcf,KEEP_ALIVE_TIMER_TIMEOUT);	
+		return;	
+	}
+
 	/* Terminate CONNECTED if commands are disconnect or reset. */
 	if ( ((pcf->evstat & CNCTEVCMDCN) == 0) | ((pcf->evstat & CMDRESET) != 0) ) 
 	{ // 
@@ -569,6 +576,22 @@ void ContactorStates_connected(struct CONTACTORFUNCTION* pcf)
 /* ===== xDISCONNECTING ================================================= */
 static void transition_disconnecting(struct CONTACTORFUNCTION* pcf)
 {
+		/* Prevent opening contactors when battery current exceeds threshold. */
+		if (pcf->padc->cur1.iI >= 0)
+		{ // Positive current
+			if (pcf->padc->cur1.iI > pcf->icurrentdisconnect)
+			{
+				return;
+			}
+		}
+		else
+		{ // Negative current
+			if (pcf->padc->cur1.iI < -pcf->icurrentdisconnect)
+			{
+				return;
+			}
+		}
+
 		open_contactors(pcf);
 		new_state(pcf,DISCONNECTING);	
 		return;	
