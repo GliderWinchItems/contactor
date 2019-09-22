@@ -9,8 +9,8 @@
  bwid  = 63;
  
  bpbase = [138.2, bwid, thick]; // BP Motherboard base
- fbase  = [ 63.0, 44.6, thick]; // fethe subboard base
- sbase  = [ 93.0, 55.0, thick]; // simulator base
+ fbase  = [ 63.0, 46.5, thick]; // fethe subboard base
+ sbase  = [ 93.0, 56.0, thick]; // simulator base
  
  // BP Motherboard hole locations
  holeb1 = [  2.9 , 42.0,  0];  
@@ -82,10 +82,13 @@
      {
          difference()
         {
-            cylinder(d1=7,d2=4,h=(4+thick),center=false);
-            cylinder(d1=.1,d2=2,h=(4+thick+.01),center=false);
+            cylinder(d1=8.0, d2=5.5,h=(4+thick),center=false);
+            
+            translate([0,0,(4+thick)-3.5])
+            cylinder(d1=1.0, d2=2.8,h=3.5,center=false);
         }
      }
+     
      
  }
  
@@ -164,8 +167,8 @@
      }
  }
 total();
- translate([0,99.6+23,0])
+ translate([0,99.6+25,0])
     sim([27,0,0]);
- translate([35,99.6+6,0]) cube([80,5,1.5],false);
+ translate([35,99.6+8,0]) cube([80,5,1.5],false);
  
  

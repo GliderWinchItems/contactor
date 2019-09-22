@@ -149,3 +149,74 @@ Pin desc  FLJ  Cable BPill
 5 +5v     yel  blk   red
 6 +12V    blu  wht   --
 
+
+Part values and board mods--
+
+1. LM7805
+
+The dc-dc switcher resistor set to give about 7v.
+The LM7805 smooths out the switche ripple for less
+ADC jitter.
+
+Rdc 2.12K -> 7.04v  (used 2.2K?)
+
+2. Population parts
+
+5v supply divider (A0)
+R3 2.2K to gnd
+R4 1.8K signal
+
+12v raw supply divider (A7)
+R11 2.2K to gnd
+R12 10K signal
+
+Aux #2 (A5)
+R14 10K series
+R45 10K 3.3v pullup
+
+Aux #1 (A1)
+R18 10K series
+R44 10K 3.3v pullup
+
+ADC current sense #1 (A2)
+R9  8.2K via R21 to gnd
+R10 6.8K signal
+R21 Zero to gnd
+
+HV by-pass selection (A3)
+2 pin hdr for jumper
+R16 8.2K series (protection)
+R24 zero via pin hdr to gnd
+
+ADC current sense #2 spare (A4)
+R7 8.2K via R40 to gnd
+R8 6.8K signal
+R40 zero to gnd
+
+Q8 FET DMOC enable
+MTM232270LBF 20v 2a
+
+HC14 buffering
+IC1
+IC2
+
+Input protection
+R1 1 ohm 1/4w
+D 1N4007
+
+By-pass caps
+C1 100u 50v
+C2 100u 50v
+C5,6,7 0.1u
+
+5v isolation
+BEAD
+
+3. Additional hacks--
+
+Pull-downs to bridge FET enables during bootup
+A0 100K - gnd
+B8 100K - gnd
+B5 100K - gnd
+
+
