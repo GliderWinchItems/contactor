@@ -76,10 +76,10 @@ struct ADCCALHE
 	// Battery current: ADC1IDX_CURRENTTOTAL  1   // PA5 IN5  - Current sensor: total battery current
 	p->cal_cur1.iir.k     = 10;    // Filter time constant
 	p->cal_cur1.iir.scale = 2;     // Filter integer scaling
-	p->cal_cur1.zeroadcve = 27183; // connected, no current: HE adc reading
+	p->cal_cur1.zeroadcve = 27082; // connected, no current: HE adc reading
 	p->cal_cur1.zeroadc5  = 63969; // connected, no current: 5v adc reading 
-	p->cal_cur1.caladcve  = 30186; // connected, cal current: adc reading
-	p->cal_cur1.dcalcur   = 9.373;  // connected, cal current: current * turns
+	p->cal_cur1.caladcve  = 29880; // connected, cal current: adc reading
+	p->cal_cur1.dcalcur   = 16.03;  // connected, cal current: current * turns
 
 	// Spare current: ADC1IDX_CURRENTMOTOR  2   // PA6 IN6  - Current sensor: motor
 	p->cal_cur2.iir.k     = 10;    // Filter time constant
