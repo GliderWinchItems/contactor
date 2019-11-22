@@ -42,7 +42,7 @@ void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
 	p->open1_t    = 25;   // contactor #1 coil de-energize-open (timeout delay ms)
 	p->open2_t    = 25;   // contactor #2 coil de-energize-open (timeout delay ms)
 	p->hv2stable_t= 30;   // hv 2 reading stable after closure (duration ms)
-	p->keepalive_t= 1555; // keep-alive timeout (timeout delay ms)
+	p->keepalive_t= 2555; // keep-alive timeout (timeout delay ms)
 	p->hbct1_t    = 1000; // Heartbeat ct: ticks between sending msgs hv1:cur1
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2
 
@@ -53,21 +53,21 @@ void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
 	// Battery_minus-to-contactor #1
 	p->calhv[IDXHV1].iir.k     = 3;
 	p->calhv[IDXHV1].iir.scale = 2;
- 	p->calhv[IDXHV1].dvcal  = 12.99; // Applied voltage
+ 	p->calhv[IDXHV1].dvcal  = 13.93; // Applied voltage
 	p->calhv[IDXHV1].adchv  = 1396;  // ADC reading (received from uart)
 	p->calhv[IDXHV1].offset =  3;    // ADC reading zero volts
 
 	// Battery_minus-to-contactor #1 DMOC_plus
 	p->calhv[IDXHV2].iir.k     = 3;
 	p->calhv[IDXHV2].iir.scale = 2;
- 	p->calhv[IDXHV2].dvcal  = 12.99; // Applied voltage
+ 	p->calhv[IDXHV2].dvcal  = 13.93; // Applied voltage
 	p->calhv[IDXHV2].adchv  = 1442;  // ADC reading (received from uart)
 	p->calhv[IDXHV2].offset =  7;    // ADC reading zero volts
 
 	// Battery_minus-to-contactor #1 DMOC_minus
 	p->calhv[IDXHV3].iir.k     = 3;
 	p->calhv[IDXHV3].iir.scale = 2;
- 	p->calhv[IDXHV3].dvcal  = 12.99; // Applied voltage
+ 	p->calhv[IDXHV3].dvcal  = 13.93; // Applied voltage
 	p->calhv[IDXHV3].adchv  = 1436;  // ADC reading (received from uart)
 	p->calhv[IDXHV3].offset =  3;    // ADC reading zero volts
 

@@ -953,7 +953,7 @@ osDelay(1000);
 	  (pcf->padc->v12.k * (double)pcf->padc->v12.ival * (1.0/(1<<ADCSCALEbits))) );
 #endif
 
-//#define SHOWHVUARTDATA
+#define SHOWHVUARTDATA
 #ifdef  SHOWHVUARTDATA
 
 yprintf(&pbuf1,"UART ctr: %i\n\ruart_hv%8i %9i %9i\n\r",dbgCE1-dbgCE1_prev,

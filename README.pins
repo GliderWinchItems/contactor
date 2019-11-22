@@ -99,7 +99,7 @@ Blue Pill wiring--
 2 FET DRV blk  yel   not used
 3 HE GND  red  grn   Tamura HE 
 4 HE SIG  grn  red   Tamura HE
-5 +5v     yel  blk   Tanura HE
+5 +5v     yel  blk   Tamura HE
 6 +12V    blu  wht   not used
 
 $U26
