@@ -201,22 +201,6 @@ enum CONTACTOR_STATE
 	OTOSETTLING,    /*  7 one time intializing. */
 };
 
-/* Substates for CONNECTING state */
-enum CONTACTOR_SUBSTATEC
-{
-/* Two contactor mode */
-	CONNECTING1,   /*  0 */
-	CONNECTING2,   /*  1 */
-	CONNECTING3,   /*  2 */
-	CONNECTING4,   /*  3 */
-/* One contactor mode: #1 is contactor, #2 pre-chg relay */
-	CONNECTING1B,  /*  4 */
-	CONNECTING2B,  /*  5 */
-	CONNECTING3B,  /*  6 */
-	CONNECTING4B,  /*  7 */
-
-};
-
 /* Function command response payload codes. */
 enum CONTACTOR_CMD_CODES
 {
