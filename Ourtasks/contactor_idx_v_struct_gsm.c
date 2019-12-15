@@ -17,7 +17,7 @@ void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
 {
 	p->size       = 47;
 	p->crc        = 0;   // TBD
-   p->version    = 1;   // 
+        p->version    = 1;   // 
 
 	/* Bits that define the hw configuration and features. */
 	p->hwconfig   = 0; // Default configuration
@@ -54,28 +54,31 @@ void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
 	p->calhv[IDXHV1].iir.k     = 3;
 	p->calhv[IDXHV1].iir.scale = 2;
  	p->calhv[IDXHV1].dvcal  = 13.93; // Applied voltage
-	p->calhv[IDXHV1].adchv  = 1396;  // ADC reading (received from uart)
+	// p->calhv[IDXHV1].adchv  = 1396;  // ADC reading (received from uart)
+        p->calhv[IDXHV1].adchv  = 1700;  // ratiometric update; GSM 191214
 	p->calhv[IDXHV1].offset =  3;    // ADC reading zero volts
-
+        
 	// Battery_minus-to-contactor #1 DMOC_plus
 	p->calhv[IDXHV2].iir.k     = 3;
 	p->calhv[IDXHV2].iir.scale = 2;
  	p->calhv[IDXHV2].dvcal  = 13.93; // Applied voltage
-	p->calhv[IDXHV2].adchv  = 1442;  // ADC reading (received from uart)
+	// p->calhv[IDXHV2].adchv  = 1442;  // ADC reading (received from uart)
+        p->calhv[IDXHV2].adchv  = 1710;  // ratiometric update; GSM 191214
 	p->calhv[IDXHV2].offset =  7;    // ADC reading zero volts
-
+        
 	// Battery_minus-to-contactor #1 DMOC_minus
 	p->calhv[IDXHV3].iir.k     = 3;
 	p->calhv[IDXHV3].iir.scale = 2;
  	p->calhv[IDXHV3].dvcal  = 13.93; // Applied voltage
-	p->calhv[IDXHV3].adchv  = 1436;  // ADC reading (received from uart)
+	// p->calhv[IDXHV3].adchv  = 1436;  // ADC reading (received from uart)
+        p->calhv[IDXHV3].adchv  = 1700;  // GSM update to set nominal gain 191214
 	p->calhv[IDXHV3].offset =  3;    // ADC reading zero volts
 
    //                 CANID_HEX      CANID_NAME       CAN_MSG_FMT     DESCRIPTION
 	p->cid_hb1        = 0xFF800000; // CANID_HB_CNTCTR1V  : FF_FF : Contactor1: Heartbeat: High voltage1:Current sensor1
 	p->cid_hb2        = 0xFF000000; // CANID_HB_CNTCTR1A  : FF_FF : Contactor1: Heartbeat: High voltage2:Current sensor2
-   p->cid_msg1       = 0x50400000; // CANID_MSG_CNTCTR1V : FF_FF : Contactor1: poll response: High voltage1:Current sensor1
-   p->cid_msg2       = 0x50600000; // CANID_MSG_CNTCTR1A : FF_FF : Contactor1: poll response: battery gnd to: DMOC+, DMOC-
+        p->cid_msg1       = 0x50400000; // CANID_MSG_CNTCTR1V : FF_FF : Contactor1: poll response: High voltage1:Current sensor1
+        p->cid_msg2       = 0x50600000; // CANID_MSG_CNTCTR1A : FF_FF : Contactor1: poll response: battery gnd to: DMOC+, DMOC-
 	p->cid_cmd_r      = 0xE3600000; // CANID_CMD_CNTCTR1R : U8_VAR: Contactor1: R: Command response
 	p->cid_keepalive_r= 0xE3C00000; // CANID_CMD_CNTCTRKAR: U8_U8 : Contactor1: R KeepAlive response
 
