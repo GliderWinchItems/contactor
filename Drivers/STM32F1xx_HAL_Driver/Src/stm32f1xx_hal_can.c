@@ -182,7 +182,7 @@
 /** @defgroup CAN_Private_Constants CAN Private Constants
   * @{
   */
-#define CAN_TIMEOUT_VALUE 100U
+#define CAN_TIMEOUT_VALUE 10U
 /**
   * @}
   */
