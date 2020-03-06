@@ -27,29 +27,31 @@ void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
 
 	/* Threshold for minimum battery voltage. */
 	p->fbattlow   = 9.0;  // Battery string low voltage (volts)
+	// p->fbattlow   = 270.0;  // Battery string low voltage (volts)
 
 /* Battery string current above which disconnecting is prevented. */
 	p->dcurrentdisconnect = 5.5; // Disconnect threshold (amps)
 
 	/* Timings in milliseconds. Converted later to timer ticks. */
 	p->ka_t       = 1500; // Command/Keep-alive CAN msg timeout duration.
-	p->ddiffb4    = 0.6;  // hv3, or (hv1-hv2) voltage across pre-charge resistor
-	p->fdiffafter = 0.7;  // allowable (hv1-hv2) voltage difference after closure (volts)
+	p->ddiffb4    = 2.0;  // hv3, or (hv1-hv2) voltage across pre-charge resistor before allowing clousure of #2 contactor
+	p->fdiffafter = 1.5;  // allowable (hv1-hv2) voltage difference after closure (volts)
 	p->prechgmin_t= 4000; // always allow this amount of time after closing contactor #1 (timeout delay ms)
-	p->prechgmax_t= 6000; // allowable delay for diffafter to reach closure point (timeout delay ms)
-	p->close1_t   = 500; //25;   // contactor #1 coil energize-closure (timeout delay ms)
-	p->close2_t   = 500; //25;   // contactor #2 coil energize-closure (timeout delay ms)
-	p->open1_t    = 25;   // contactor #1 coil de-energize-open (timeout delay ms)
-	p->open2_t    = 25;   // contactor #2 coil de-energize-open (timeout delay ms)
-	p->hv2stable_t= 30;   // hv 2 reading stable after closure (duration ms)
-	p->keepalive_t= 2555; // keep-alive timeout (timeout delay ms)
+	p->prechgmax_t= 4000; // allowable delay for diffafter to reach closure point (timeout delay ms)
+	p->close1_t   = 100;  // contactor #1 coil energize-closure (timeout delay ms)
+	p->close2_t   = 100;  // contactor #2 coil energize-closure (timeout delay ms)
+	p->open1_t    = 50;   // contactor #1 coil de-energize-open (timeout delay ms)
+	p->open2_t    = 50;   // contactor #2 coil de-energize-open (timeout delay ms)
+	//p->hv2stable_t= 30;   // hv 2 reading stable after closure (duration ms); possibly not used and could be removed
+	//p->keepalive_t= 2555; // keep-alive timeout (timeout delay ms); possibly not used and could be removed
 	p->hbct1_t    = 1000; // Heartbeat ct: ticks between sending msgs hv1:cur1
 	p->hbct2_t    = 1000; // Heartbeat ct: ticks between sending msgs hv2:cur2
 
 /* PWM durations as percent (0.0- 100.0) */
 	p->fpwmpct1  = 100.0;  // Percent PWM after closure delay at 100% coil #1
 	p->fpwmpct2  = 100.0;  // Percent PWM after closure delay at 100% coil #2
-
+/*	present system uses k to divide IIR difference into integrator. The IIR sample rate is 499 Hz. Consider computing k to give set bandwidth
+	where the IIR sample is computed based on the processor and its setup.	*/ 
 	// Battery_minus-to-contactor #1
 	p->calhv[IDXHV1].iir.k     = 3;
 	p->calhv[IDXHV1].iir.scale = 2;
