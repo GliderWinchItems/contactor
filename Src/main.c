@@ -98,6 +98,8 @@ extern osThreadId CanRxTaskHandle;
 extern osThreadId GatewayTaskHandle;
 extern osThreadId ADCTaskHandle;
 
+uint16_t m_trap = 440;
+
 uint8_t canflag;
 uint8_t canflag1;
 
@@ -195,6 +197,14 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+	if (hcan.ErrorCode != HAL_CAN_ERROR_NONE)
+	{ // CAN init returned with an error
+		if ((hcan.ErrorCode & HAL_CAN_ERROR_TIMEOUT) != 0)
+			morse_trap(61);
+		else
+			morse_trap(62);
+	}
+
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -242,11 +252,13 @@ int main(void)
 
   /* definition and creation of CanTxTask - CAN driver TX interface. */
   Qidret = xCanTxTaskCreate(1, 32); // CanTask priority, Number of msgs in queue
-	if (Qidret < 0) morse_trap(5); // Panic LED flashing
+	if (Qidret < 0) morse_trap(5);   // Queue creation
+	if (CanTxTaskHandle == NULL) morse_trap(51); // Task creation 
 
   /* definition and creation of CanRxTask - CAN driver RX interface. */
 //  Qidret = xCanRxTaskCreate(1, 32); // CanTask priority, Number of msgs in extern osThreadId SerialTaskReceiveHandle;queue
-//	if (Qidret < 0) morse_trap(6); // Panic LED flashing
+//	if (Qidret < 0) morse_trap(6);     // Queue creation
+//	if (CanRxTaskHandle == NULL) morse_trap(61); // Task creation 
 
 	/* Setup TX linked list for CAN  */
    // CAN1 (CAN_HandleTypeDef *phcan, uint8_t canidx, uint16_t numtx, uint16_t numrx);
@@ -367,7 +379,7 @@ static void MX_ADC1_Init(void)
 {
 
   /* USER CODE BEGIN ADC1_Init 0 */
-
+	m_trap = 447; // morse_trap(447);
   /* USER CODE END ADC1_Init 0 */
 
   ADC_ChannelConfTypeDef sConfig = {0};
@@ -453,7 +465,7 @@ static void MX_CAN_Init(void)
 {
 
   /* USER CODE BEGIN CAN_Init 0 */
-
+	m_trap = 446; // morse_trap(446);
   /* USER CODE END CAN_Init 0 */
 
   /* USER CODE BEGIN CAN_Init 1 */
@@ -490,7 +502,7 @@ static void MX_TIM1_Init(void)
 {
 
   /* USER CODE BEGIN TIM1_Init 0 */
-
+	m_trap = 445; // morse_trap(445);
   /* USER CODE END TIM1_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
@@ -576,7 +588,7 @@ static void MX_TIM3_Init(void)
 {
 
   /* USER CODE BEGIN TIM3_Init 0 */
-
+	m_trap = 444; // morse_trap(444);
   /* USER CODE END TIM3_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
@@ -635,7 +647,7 @@ static void MX_TIM4_Init(void)
 {
 
   /* USER CODE BEGIN TIM4_Init 0 */
-
+	m_trap = 443; // morse_trap(443);
   /* USER CODE END TIM4_Init 0 */
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
@@ -694,7 +706,7 @@ static void MX_USART1_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART1_Init 0 */
-
+	m_trap = 442; // morse_trap(442);
   /* USER CODE END USART1_Init 0 */
 
   /* USER CODE BEGIN USART1_Init 1 */
@@ -727,7 +739,7 @@ static void MX_USART3_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART3_Init 0 */
-
+	m_trap = 441; // morse_trap(441);
   /* USER CODE END USART3_Init 0 */
 
   /* USER CODE BEGIN USART3_Init 1 */
@@ -1143,6 +1155,7 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
+	morse_trap(m_trap); // Trap any HAL Init
 
   /* USER CODE END Error_Handler_Debug */
 }
