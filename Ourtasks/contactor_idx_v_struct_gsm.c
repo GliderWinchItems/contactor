@@ -26,7 +26,7 @@ void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
 	p->hwconfig  |= PWMCONTACTOR2;  // PWM coil #2
 
 	/* Threshold for minimum battery voltage. */
-	p->fbattlow   = 9.0;  // Battery string low voltage (volts)
+	p->fbattlow   = 30.0;  // Battery string low voltage (volts)
 	// p->fbattlow   = 270.0;  // Battery string low voltage (volts)
 
 /* Battery string current above which disconnecting is prevented. */
@@ -34,10 +34,10 @@ void contactor_idx_v_struct_hardcode_params(struct CONTACTORLC* p)
 
 	/* Timings in milliseconds. Converted later to timer ticks. */
 	p->ka_t       = 1500; // Command/Keep-alive CAN msg timeout duration.
-	p->ddiffb4    = 2.0;  // hv3, or (hv1-hv2) voltage across pre-charge resistor before allowing clousure of #2 contactor
-	p->fdiffafter = 1.5;  // allowable (hv1-hv2) voltage difference after closure (volts)
+	p->ddiffb4    = 3.0;  // hv3, or (hv1-hv2) voltage across pre-charge resistor before allowing clousure of #2 contactor
+	p->fdiffafter = 3.0;  // allowable (hv1-hv2) voltage difference after closure (volts)
 	p->prechgmin_t= 4000; // always allow this amount of time after closing contactor #1 (timeout delay ms)
-	p->prechgmax_t= 4000; // allowable delay for diffafter to reach closure point (timeout delay ms)
+	p->prechgmax_t= 6000; // allowable delay for diffafter to reach closure point (timeout delay ms)
 	p->close1_t   = 100;  // contactor #1 coil energize-closure (timeout delay ms)
 	p->close2_t   = 100;  // contactor #2 coil energize-closure (timeout delay ms)
 	p->open1_t    = 50;   // contactor #1 coil de-energize-open (timeout delay ms)
