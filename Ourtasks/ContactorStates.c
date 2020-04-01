@@ -19,7 +19,6 @@
 
 int dbgstmp;
 
-void static transition_disconnected(struct CONTACTORFUNCTION* pcf);
 static void transition_connecting(struct CONTACTORFUNCTION* pcf);
 static void transition_disconnecting(struct CONTACTORFUNCTION* pcf);
 static void new_state(struct CONTACTORFUNCTION* pcf, uint32_t newstate);
@@ -72,12 +71,7 @@ void ContactorStates_otosettling_init(struct CONTACTORFUNCTION* pcf)
 	return;
 }
 
-/* ==== xDISCONNECTED ======================================= */
-void static transition_disconnected(struct CONTACTORFUNCTION* pcf)
-{ // Intialize disconnected state
-	new_state(pcf,DISCONNECTED);
-	return;
-}
+
 /* ==== DISCONNECTED ======================================== */
 void ContactorStates_disconnected(struct CONTACTORFUNCTION* pcf)
 {
@@ -258,7 +252,10 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 
 			if ((pcf->lc.hwconfig & ONECONTACTOR) == 0)
 			{ // Here, two contactor config, so voltage should jump up
-				if ((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) < pcf->ihv1mhv2max) // 
+//				if ((pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc) < pcf->ihv1mhv2max) // 
+				stmp = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
+				if (stmp < 0) stmp = -stmp;
+				if ( stmp > pcf->idiffafter ) 
 				{
 					transition_faulting(pcf,CONTACTOR1_DOES_NOT_APPEAR_CLOSED); 
 //morse_trap(67);
@@ -266,7 +263,7 @@ void ContactorStates_connecting(struct CONTACTORFUNCTION* pcf)
 				}
 			}
 			else
-			{ // Two contactor configuration
+			{ // One contactor configuration
 				// Voltage across contacts should be very small unless it didn't close
 				// In case calibration makes diff negative, use absolute diff
 				stmp = (pcf->hv[IDXHV1].hvc - pcf->hv[IDXHV2].hvc);
@@ -587,6 +584,18 @@ void ContactorStates_connected(struct CONTACTORFUNCTION* pcf)
 static void transition_disconnecting(struct CONTACTORFUNCTION* pcf)
 {
 		/* Prevent opening contactors when battery current exceeds threshold. */
+#ifdef WAITFORCURRENTTOSUBSIDE
+/*
+This code is by-passed becasue an open connection from the current sensor will
+prevent the contactor from ever opening.
+
+Better would be to sense the the open circuit value (which should(!) show up as
+a negative pcf->padc->cur1.irk0 (the zero offset). The 'if' below with
+// *** HAS NOT BEEN verified as correct!
+
+The expedient solution is to simply allow opening the contactors regardless of
+the current being drawn.
+*/
 		if (pcf->padc->cur1.iI >= 0)
 		{ // Positive current
 			if (pcf->padc->cur1.iI > pcf->icurrentdisconnect)
@@ -598,10 +607,11 @@ static void transition_disconnecting(struct CONTACTORFUNCTION* pcf)
 		{ // Negative current
 			if (pcf->padc->cur1.iI < -pcf->icurrentdisconnect)
 			{
+				if (pcf->padc->cur1.iI > -pcf->padc->cur1.irk0) // ***
 				return;
 			}
 		}
-
+#endif
 		open_contactors(pcf);
 		new_state(pcf,DISCONNECTING);	
 		return;	

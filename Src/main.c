@@ -873,21 +873,12 @@ extern uint32_t adcdbg2;
 extern uint32_t dbgCE1;
 uint32_t dbgCE1_prev = dbgCE1;
 
-extern uint32_t dbgev04;
-
-
 #define LOOPDELAY 1000
-uint32_t tickct = xTaskGetTickCount();
-int32_t loopdelay;
 
   /* Infinite loop */
   for(;;)
   {
-//	tickct += LOOPDELAY;
-//	loopdelay = (tickct - xTaskGetTickCount());
-//	if (loopdelay < 1) morse_trap(333);
-//   osDelay(loopdelay);
-osDelay(1000);
+	osDelay(LOOPDELAY);
 //while( (dbggpsflag-dbggpsflag_prev) == 0);
 //dbggpsflag_prev = dbggpsflag;
 
@@ -1026,6 +1017,7 @@ uint32_t prev = 0;
 extern uint32_t dbgmbxctr;
 uint32_t dbgmbxctr_prev = dbgmbxctr;
 
+extern uint32_t dbgev04;
 
 yprintf(&pbuf1,"TIMER1 CT: %i rxct: %i txct: %i msg1ct: %i kact: %i diff: %i mbxctr: %i %i\n\r",dbgev04,dbgcanrxctr-dbgcanrxctr_prev, dbgcantxctr-dbgcantxctr_prev,
 	dbgmsg1ctr-dbgmsg1ctr_prev,  dbgkactr-dbgkactr_prev,(int)(dbgcantxctr-dbgmsg1ctr),pcf->pmbx_cid_gps_sync->ctr-prev,dbgmbxctr-dbgmbxctr_prev);
