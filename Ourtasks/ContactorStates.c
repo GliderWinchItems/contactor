@@ -201,6 +201,8 @@ static void transition_connecting(struct CONTACTORFUNCTION* pcf)
 
 		/* Energize coil #2: (Pre-charge relay) */
 		pcf->outstat |= CNCTOUT01K2; // Energize coil during update section
+pcf->outstat |= CNCTOUT01K2;  // Energize #2 during update section
+new_state(pcf,CONNECTED);		
 		pcf->outstat &= ~CNCTOUT07KAw; // No pwm, JIC
 	}
 	pcf->evstat &= ~CNCTEVTIMER2; // Reset sw2 timer timeout bit
